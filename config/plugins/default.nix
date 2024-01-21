@@ -8,5 +8,8 @@
     ./which-key.nix
     ./noice.nix
     ./lualine.nix
+    ./treesitter.nix
+    ./lsp.nix
+    ./conform-nvim.nix
   ];
 }
