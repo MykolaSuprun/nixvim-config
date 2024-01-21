@@ -53,5 +53,32 @@
       };
       action = "<cmd>BufferLineMoveNext<cr>";
     }
+    # fix smartindent behavior for # character
+    {
+      mode = "i";
+      key = "#";
+      options = {
+        silent = true;
+        unique = true;
+      };
+      action = "X<BS>#";
+    }
+    # better indenting
+    {
+      mode = "v";
+      key = "<";
+      options = {
+        silent = true;
+      };
+      action = "<gv";
+    }
+    {
+      mode = "v";
+      key = ">";
+      options = {
+        silent = true;
+      };
+      action = ">gv";
+    }
   ];
 }

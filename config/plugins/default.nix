@@ -7,5 +7,6 @@
     ./nvim-tree.nix
     ./which-key.nix
     ./noice.nix
+    ./lualine.nix
   ];
 }
