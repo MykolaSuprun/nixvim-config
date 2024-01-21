@@ -40,7 +40,7 @@
           module = config;
           # You can use `extraSpecialArgs` to pass additional arguments to your module files
           extraSpecialArgs = {
-            # inherit (inputs) pkgs;
+            inherit (inputs) outputs ultimate-autopair-src;
           };
         };
       in {
