@@ -2,10 +2,10 @@
   colorschemes = {
     catppuccin = {
       enable = true;
-      flavour = "latte";
+      flavour = "mocha";
       showBufferEnd = true;
-      terminalColors = false;
-      transparentBackground = false;
+      terminalColors = true;
+      transparentBackground = true;
     };
   };
 }

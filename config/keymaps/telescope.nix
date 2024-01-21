@@ -1,0 +1,30 @@
+{
+  keymaps = [
+    # find file
+    {
+      key = "<leader>f";
+      options = {
+        unique = true;
+      };
+      action = ''
+        function()
+          require("telescope.builtin").find_files({ layout_strategy = getLayoutStrategy() })
+        end
+      '';
+      lua = true;
+    }
+    # live grep
+    {
+      key = "<leader>F";
+      options = {
+        unique = true;
+      };
+      action = ''
+        function()
+          require("telescope.builtin").live_grep({ layout_strategy = getLayoutStrategy() })
+        end
+      '';
+      lua = true;
+    }
+  ];
+}

@@ -4,5 +4,6 @@
     ./plugins
     ./keymaps
     ./colorschemes.nix
+    ./options.nix
   ];
 }
