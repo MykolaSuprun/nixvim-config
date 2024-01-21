@@ -1,6 +1,6 @@
 {
-  config = { 
-      options = { 
+  config = {
+    options = {
       # use spaces instead of tabs
       expandtab = true;
       # set tab lenght and indent shift to 2
@@ -18,7 +18,7 @@
       # confirm save on closing buffer
       confirm = true;
       # completion options, for more info: https://neovim.io/doc/user/options.html#'completeopt'
-      completeopt = "menu,menuone,preview,noinsert,noselect";
+      completeopt = "menu,menuone,noselect";
       # use smartcase for search
       smartcase = true;
       # how to split windows
@@ -26,6 +26,6 @@
       splitbelow = true;
       # enable 24-bit RGB color support
       termguicolors = true;
-    }; 
+    };
   };
 }

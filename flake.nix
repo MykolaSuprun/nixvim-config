@@ -5,6 +5,12 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
+
+    # neovim plugins
+    ultimate-autopair-src = {
+      url = "https://github.com/altermo/ultimate-autopair.nvim";
+      flake = false;
+    };
   };
 
   outputs = {

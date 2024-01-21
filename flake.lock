@@ -241,7 +241,8 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
-        "nixvim": "nixvim"
+        "nixvim": "nixvim",
+        "ultimate-autopair-src": "ultimate-autopair-src"
       }
     },
     "systems": {
@@ -257,6 +258,18 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "ultimate-autopair-src": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-Raf0ySB6OUSM748zmiQRlgSrXjzDrxzVNLIgwXovknk=",
+        "type": "file",
+        "url": "https://github.com/altermo/ultimate-autopair.nvim"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/altermo/ultimate-autopair.nvim"
       }
     }
   },

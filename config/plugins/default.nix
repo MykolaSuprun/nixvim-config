@@ -11,5 +11,7 @@
     ./treesitter.nix
     ./lsp.nix
     ./conform-nvim.nix
+    ./nvim-cmp.nix
+    ./obsidian.nix
   ];
 }
