@@ -13,6 +13,6 @@
     ./conform-nvim.nix
     ./nvim-cmp.nix
     ./obsidian.nix
-    ./ultimate-autopair.nix
+    ./nvim-autopairs.nix
   ];
 }

@@ -7,8 +7,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     # neovim plugins
-    ultimate-autopair-src = {
-      url = "https://github.com/altermo/ultimate-autopair.nvim";
+    rainbow-csv-src = {
+      url = "github:cameron-wags/rainbow_csv.nvim";
       flake = false;
     };
   };
@@ -40,7 +40,7 @@
           module = config;
           # You can use `extraSpecialArgs` to pass additional arguments to your module files
           extraSpecialArgs = {
-            inherit (inputs) outputs ultimate-autopair-src;
+            inherit (inputs) outputs rainbow-csv-src;
           };
         };
       in {

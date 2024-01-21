@@ -237,12 +237,28 @@
         "type": "github"
       }
     },
+    "rainbow-csv-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1701224093,
+        "narHash": "sha256-e3ocRWQdxKKgNonRlMwf8AoER0+HMKq4FdaMC2ElEMs=",
+        "owner": "cameron-wags",
+        "repo": "rainbow_csv.nvim",
+        "rev": "a520dabf1c74d7d7d8341dd3f3570063ef51b3aa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cameron-wags",
+        "repo": "rainbow_csv.nvim",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
         "nixvim": "nixvim",
-        "ultimate-autopair-src": "ultimate-autopair-src"
+        "rainbow-csv-src": "rainbow-csv-src"
       }
     },
     "systems": {
@@ -258,18 +274,6 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
-      }
-    },
-    "ultimate-autopair-src": {
-      "flake": false,
-      "locked": {
-        "narHash": "sha256-Raf0ySB6OUSM748zmiQRlgSrXjzDrxzVNLIgwXovknk=",
-        "type": "file",
-        "url": "https://github.com/altermo/ultimate-autopair.nvim"
-      },
-      "original": {
-        "type": "file",
-        "url": "https://github.com/altermo/ultimate-autopair.nvim"
       }
     }
   },
