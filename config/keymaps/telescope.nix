@@ -87,6 +87,14 @@
       };
       action = "<cmd>Telescope yank_history<cr>";
     }
+    # Telescop todo-comments
+    {
+      key = "<leader>tt";
+      options = {
+        unique = true;
+      };
+      action = "<cmd>TodoTelescope<cr>";
+    }
     # LSP info
     {
       key = "<leader>lI";

@@ -4,5 +4,6 @@
     ./telescope.nix
     ./keymaps.nix
     ./yanky.nix
+    ./fterm.nix
   ];
 }

@@ -16,5 +16,7 @@
     ./nvim-autopairs.nix
     ./yanky.nix
     ./comment-nvim.nix
+    ./todo-comments.nix
+    ./fterm.nix
   ];
 }
