@@ -15,5 +15,6 @@
     ./obsidian.nix
     ./nvim-autopairs.nix
     ./yanky.nix
+    ./comment-nvim.nix
   ];
 }
