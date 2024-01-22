@@ -1,12 +1,12 @@
-{
-  plugins.nvim-cmp = {
-    enable = true;
-    sources = [
-      {name = "nvim_lsp";}
-    ];
-    completion = {
-      completeopt = "menu,menuone,preview,noinsert,noselect";
-    };
-  };
-  plugins.cmp-nvim-lsp.enable = true;
+{pkgs, ...}: {
+  # keymaps for this plugin are difined in config/keymaps/window-movements module
+  extraPlugins = with pkgs.vimPlugins; [
+    nvim-cmp
+    {
+      plugin = nvim-cmp;
+      config = ''
+
+      '';
+    }
+  ];
 }

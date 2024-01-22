@@ -11,8 +11,9 @@
     ./treesitter.nix
     ./lsp.nix
     ./conform-nvim.nix
-    ./nvim-cmp.nix
+    #    ./nvim-cmp.nix
     ./obsidian.nix
     ./nvim-autopairs.nix
+    ./yanky.nix
   ];
 }
