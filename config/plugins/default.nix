@@ -1,6 +1,6 @@
 {
   imports = [
-    ./bufferline.nix
+    ./barbar.nix
     # ./tmux-navigator.nix
     ./vim-tmux-navigator.nix
     ./telescope.nix
