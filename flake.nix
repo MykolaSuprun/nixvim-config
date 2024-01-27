@@ -5,12 +5,6 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
-
-    # neovim plugins
-    rainbow-csv-src = {
-      url = "github:cameron-wags/rainbow_csv.nvim";
-      flake = false;
-    };
   };
 
   outputs = {
@@ -40,7 +34,7 @@
           module = config;
           # You can use `extraSpecialArgs` to pass additional arguments to your module files
           extraSpecialArgs = {
-            inherit (inputs) outputs rainbow-csv-src;
+            inherit (inputs) outputs;
           };
         };
       in {
