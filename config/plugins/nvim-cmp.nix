@@ -3,7 +3,7 @@
     enable = true;
 
     completion = {
-      completeopt = "menu,menuone,preview,popup";
+      completeopt = "menu,menuone,noselect,noinsert";
     };
 
     sources = [
@@ -31,10 +31,14 @@
     mapping = {
       "<C-n>" = "cmp.mapping(cmp.mapping.select_next_item())";
       "<C-p>" = "cmp.mapping(cmp.mapping.select_prev_item())";
+      "<C-e>" = "cmp.mapping.abort()";
+      "<C-y>" = "cmp.mapping.confirm()";
       "<C-f>" = "cmp.mapping.scroll_docs(4)";
-      "<CR>" = "cmp.mapping.confirm({ select = true })";
+      "<CR>" = "cmp.mapping.confirm({ select = false })";
     };
+    preselect = "None";
   };
+
   plugins.cmp-nvim-lsp.enable = true;
   plugins.cmp-git.enable = true;
   plugins.cmp-rg.enable = true;

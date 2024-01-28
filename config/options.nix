@@ -18,7 +18,7 @@
       # confirm save on closing buffer
       confirm = true;
       # completion options, for more info: https://neovim.io/doc/user/options.html#'completeopt'
-      completeopt = "menu,menuone,noinsert";
+      completeopt = "menu,menuone,noselect,noinsert";
       # use smartcase for search
       smartcase = true;
       # how to split windows
