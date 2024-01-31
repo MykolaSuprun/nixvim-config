@@ -18,5 +18,6 @@
     ./comment-nvim.nix
     ./todo-comments.nix
     ./fterm.nix
+    ./nvim-surround.nix
   ];
 }

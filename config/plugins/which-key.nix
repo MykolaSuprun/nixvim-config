@@ -12,6 +12,11 @@
       "<leader>tD" = "LSP diagnostics for the project";
       "<leader>l" = "LSP...";
       "<leader>lI" = "LSP informartion";
+      "<leader>bp" = "Toggle buffer pin";
+      "<leader>bob" = "Order by buffer number";
+      "<leader>bod" = "Order buffers by directory";
+      "<leader>bow" = "Order by window number";
+      "<leader>bol" = "Order by language";
     };
   };
 }

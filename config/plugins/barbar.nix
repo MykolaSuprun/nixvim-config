@@ -14,6 +14,11 @@
       next = "<S-l>";
       previous = "<S-h>";
       pick = "<leader><space>";
+      pin = "<leader>bp";
+      orderByBufferNumber = "<leader>bob";
+      orderByDirectory = "<leader>bod";
+      orderByWindowNumber = "<leader>bow";
+      orderByLanguage = "<leader>bol";
     };
   };
 
