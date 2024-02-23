@@ -4,6 +4,8 @@
     formattersByFt = {
       lua = ["stylua"];
       nix = ["alejandra"];
+      # python = ["autoflake" "isort" "ssort" "black"];
+      python = ["black"];
     };
   };
   extraConfigLuaPre = ''

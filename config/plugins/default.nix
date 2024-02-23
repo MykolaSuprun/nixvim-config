@@ -1,5 +1,6 @@
 {
   imports = [
+    ./extra-packages.nix
     ./barbar.nix
     # ./tmux-navigator.nix
     ./vim-tmux-navigator.nix
@@ -12,7 +13,7 @@
     ./lsp.nix
     ./conform-nvim.nix
     ./nvim-cmp.nix
-    ./obsidian.nix
+    # ./obsidian.nix
     ./nvim-autopairs.nix
     ./yanky.nix
     ./comment-nvim.nix
