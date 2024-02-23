@@ -14,5 +14,6 @@
     black
     alejandra
     stylua
+    yamlfmt
   ];
 }

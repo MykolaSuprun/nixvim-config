@@ -6,6 +6,7 @@
       nix = ["alejandra"];
       # python = ["autoflake" "isort" "ssort" "black"];
       python = ["black"];
+      yaml = ["yamlfmt"];
     };
   };
   extraConfigLuaPre = ''
