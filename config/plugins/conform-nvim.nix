@@ -5,7 +5,7 @@
       lua = ["stylua"];
       nix = ["alejandra"];
       # python = ["autoflake" "isort" "ssort" "black"];
-      python = ["black"];
+      python = ["isort" "black"];
       yaml = ["yamlfmt"];
     };
   };
