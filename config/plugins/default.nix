@@ -20,5 +20,6 @@
     ./todo-comments.nix
     ./fterm.nix
     ./nvim-surround.nix
+    ./gitblame.nix
   ];
 }
