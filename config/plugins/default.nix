@@ -21,5 +21,6 @@
     ./fterm.nix
     ./nvim-surround.nix
     ./gitblame.nix
+    ./leap.nix
   ];
 }
