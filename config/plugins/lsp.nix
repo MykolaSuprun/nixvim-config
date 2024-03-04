@@ -7,6 +7,7 @@
       lua-ls.enable = true;
       pyright.enable = true;
       ruff-lsp.enable = true;
+      dockerls.enable = true;
     };
   };
 }

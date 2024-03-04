@@ -7,6 +7,7 @@
       # python = ["autoflake" "isort" "ssort" "black"];
       python = ["isort" "black"];
       yaml = ["yamlfmt"];
+      docker = ["dockerls"];
     };
   };
   extraConfigLuaPre = ''
