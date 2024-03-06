@@ -22,5 +22,6 @@
     ./nvim-surround.nix
     ./gitblame.nix
     ./leap.nix
+    ./refactoring.nix
   ];
 }
