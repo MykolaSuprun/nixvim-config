@@ -2,7 +2,7 @@
   colorschemes = {
     catppuccin = {
       enable = true;
-      flavour = "mocha";
+      flavour = "latte";
       showBufferEnd = true;
       terminalColors = true;
       transparentBackground = true;
