@@ -12,11 +12,11 @@
     ./treesitter.nix
     ./lsp.nix
     ./conform-nvim.nix
-    ./nvim-cmp.nix
+    ./cmp.nix
     # ./obsidian.nix
     ./nvim-autopairs.nix
     ./yanky.nix
-    ./comment-nvim.nix
+    ./comment.nix
     ./todo-comments.nix
     ./fterm.nix
     ./nvim-surround.nix

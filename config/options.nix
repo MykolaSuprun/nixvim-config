@@ -1,6 +1,6 @@
 {
   config = {
-    options = {
+    opts = {
       # use spaces instead of tabs
       expandtab = true;
       # set tab lenght and indent shift to 2
@@ -26,6 +26,8 @@
       splitbelow = true;
       # enable 24-bit RGB color support
       termguicolors = true;
+      timeout = true;
+      timeoutlen = 300;
     };
   };
 }

@@ -8,6 +8,7 @@
       pyright.enable = true;
       ruff-lsp.enable = true;
       dockerls.enable = true;
+      jsonls.enable = true;
     };
   };
 }

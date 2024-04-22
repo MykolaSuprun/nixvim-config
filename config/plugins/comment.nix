@@ -1,8 +1,8 @@
 {
-  plugins.nvim-autopairs = {
+  plugins.comment = {
     enable = true;
     settings = {
-      checkTs = true;
+      padding = true;
     };
   };
 }
