@@ -15,5 +15,6 @@
     alejandra
     stylua
     yamlfmt
+    jq
   ];
 }

@@ -8,6 +8,7 @@
       python = ["isort" "black"];
       yaml = ["yamlfmt"];
       docker = ["dockerls"];
+      json = ["jq"];
     };
   };
   extraConfigLuaPre = ''
