@@ -23,5 +23,6 @@
     ./gitblame.nix
     ./leap.nix
     ./refactoring.nix
+    ./firenvim.nix
   ];
 }
