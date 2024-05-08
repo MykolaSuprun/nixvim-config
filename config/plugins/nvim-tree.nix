@@ -6,6 +6,7 @@
     disableNetrw = true;
     hijackNetrw = true;
     hijackUnnamedBufferWhenOpening = true;
+    view.number = true;
+    view.relativenumber = true;
   };
-
 }
