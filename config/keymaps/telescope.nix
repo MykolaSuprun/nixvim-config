@@ -56,6 +56,20 @@
       '';
       lua = true;
     }
+    # list active buffers
+    {
+      key = "<leader><space>";
+      options = {
+        unique = true;
+        remap = true;
+      };
+      action = ''
+        function()
+            require("telescope.builtin").buffers({ layout_strategy = getLayoutStrategy() })
+        end
+      '';
+      lua = true;
+    }
     # Telescope buffer diagnostics
     {
       key = "<leader>td";

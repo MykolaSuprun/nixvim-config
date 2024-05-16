@@ -1,6 +1,6 @@
 {
   plugins.nvim-tree = {
-    enable = true;
+    enable = false;
     openOnSetup = true;
     preferStartupRoot = true;
     disableNetrw = true;
