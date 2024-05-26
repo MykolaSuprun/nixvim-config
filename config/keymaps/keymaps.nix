@@ -5,7 +5,7 @@
   };
 
   keymaps = [
-    # Rnvimr file manager
+    # Toggle NvimTree
     {
       mode = "n";
       key = "<leader>e";
@@ -13,7 +13,7 @@
         silent = true;
         unique = true;
       };
-      action = "<cmd>RnvimrToggle<cr>";
+      action = "<cmd>NvimTreeToggle<cr>";
     }
     {
       mode = "i";

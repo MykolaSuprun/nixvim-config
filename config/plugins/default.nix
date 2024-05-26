@@ -5,7 +5,7 @@
     # ./tmux-navigator.nix
     ./vim-tmux-navigator.nix
     ./telescope.nix
-    # ./nvim-tree.nix
+    ./nvim-tree.nix
     ./which-key.nix
     ./noice.nix
     ./lualine.nix
@@ -25,6 +25,5 @@
     ./refactoring.nix
     ./firenvim.nix
     ./harpoon2.nix
-    ./rnvimr.nix
   ];
 }
