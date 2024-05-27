@@ -9,6 +9,7 @@
       ruff-lsp.enable = true;
       dockerls.enable = true;
       jsonls.enable = true;
+      metals.enable = true;
     };
   };
 }

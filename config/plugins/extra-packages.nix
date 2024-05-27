@@ -20,5 +20,6 @@
     stylua
     yamlfmt
     jq
+    scalafmt
   ];
 }
