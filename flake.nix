@@ -38,14 +38,6 @@
             inherit (inputs) outputs;
           };
         };
-        vscode-nvim = nixvim'.makeNixvimWithModule {
-          inherit pkgs;
-          module = vs-config;
-          # You can use `extraSpecialArgs` to pass additional arguments to your module files
-          extraSpecialArgs = {
-            inherit (inputs) outputs;
-          };
-        };
       in {
         checks = {
           # Run `nix flake check .` to verify that your config is not broken
@@ -58,7 +50,6 @@
         packages = {
           # Lets you run `nix run .` to start nixvim
           default = nvim;
-          nvcode = vscode-nvim;
         };
       };
     };

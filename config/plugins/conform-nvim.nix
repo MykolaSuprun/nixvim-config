@@ -9,6 +9,7 @@
       yaml = ["yamlfmt"];
       docker = ["dockerls"];
       json = ["jq"];
+      scala = ["scalafmt"];
     };
   };
   extraConfigLuaPre = ''

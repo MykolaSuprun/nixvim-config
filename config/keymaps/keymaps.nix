@@ -41,5 +41,19 @@
       };
       action = ">gv";
     }
+    {
+      mode = "n";
+      key = "gl";
+      options = {
+        silent = true;
+        unique = true;
+      };
+      action = ''
+        function()
+          vim.diagnostic.open_float(0, {scope="line"})
+        end
+      '';
+      lua = true;
+    }
   ];
 }
