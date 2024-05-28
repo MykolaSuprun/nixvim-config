@@ -13,7 +13,6 @@
     ...
   } @ inputs: let
     config = import ./config {nvim-mode = "nvim";}; # import the module directly
-    vs-config = import ./config {nvim-mode = "vscode";}; # import the module directly
   in
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [

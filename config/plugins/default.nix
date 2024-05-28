@@ -21,7 +21,8 @@
     ./fterm.nix
     ./nvim-surround.nix
     ./gitblame.nix
-    ./leap.nix
+    ./flash.nix
+    # ./leap.nix
     ./refactoring.nix
     ./firenvim.nix
     ./harpoon2.nix
