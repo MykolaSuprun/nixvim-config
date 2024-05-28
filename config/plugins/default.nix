@@ -25,5 +25,6 @@
     ./refactoring.nix
     ./firenvim.nix
     ./harpoon2.nix
+    ./oil.nix
   ];
 }
