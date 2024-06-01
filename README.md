@@ -19,5 +19,5 @@ nix run .
 or 
 
 ```
-nix run github:MykolaSuprun/nixvim-config .
+nix run github:MykolaSuprun/nixvim-config -- 
 ```
