@@ -23,12 +23,11 @@
         silent = true;
         unique = true;
       };
-      action = ''
+      action.__raw = ''
         function()
           require("oil").toggle_float(require("oil").get_current_dir())
         end
       '';
-      lua = true;
     }
     # flash jump
     {
@@ -39,8 +38,7 @@
         # unique = true;
         desc = "Flash jump";
       };
-      action = ''function() require("flash").jump() end'';
-      lua = true;
+      action.__raw = ''function() require("flash").jump() end'';
     }
     {
       mode = ["n" "x" "o"];
@@ -50,8 +48,7 @@
         # unique = true;
         desc = "Flash treesitter";
       };
-      action = ''function() require("flash").treesitter() end'';
-      lua = true;
+      action.__raw = ''function() require("flash").treesitter() end'';
     }
     {
       mode = "i";
@@ -86,12 +83,11 @@
         silent = true;
         unique = true;
       };
-      action = ''
+      action.__raw = ''
         function()
           vim.diagnostic.open_float(0, {scope="line"})
         end
       '';
-      lua = true;
     }
   ];
 }

@@ -4,7 +4,8 @@
     registrations = {
       "<leader>f" = "Find file";
       "<leader>F" = "Live grep";
-      "<leader>e" = "Toggle NvimTree";
+      "<leader>E" = "Toggle NvimTree";
+      "<leader>e" = "Toggle Oil";
       "<leader>/" = "Fuzzy find in the buffer";
       "<leader>t" = "Telescope...";
       "<leader>th" = "Toggle Telescope help";

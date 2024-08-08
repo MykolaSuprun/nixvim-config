@@ -27,5 +27,6 @@
     ./firenvim.nix
     ./harpoon2.nix
     ./oil.nix
+    ./remote-containers.nix
   ];
 }

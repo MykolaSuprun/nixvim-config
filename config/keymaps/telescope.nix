@@ -7,12 +7,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
           require("telescope.builtin").find_files({ layout_strategy = getLayoutStrategy() })
         end
       '';
-      lua = true;
     }
     # live grep
     {
@@ -21,12 +20,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
           require("telescope.builtin").live_grep({ layout_strategy = getLayoutStrategy() })
         end
       '';
-      lua = true;
     }
     # find help
     {
@@ -35,12 +33,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
           require("telescope.builtin").help_tags({ layout_strategy = getLayoutStrategy() })
         end
       '';
-      lua = true;
     }
     # find in current buffer
     {
@@ -49,12 +46,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
             require("telescope.builtin").current_buffer_fuzzy_find({ layout_strategy = getLayoutStrategy() })
         end
       '';
-      lua = true;
     }
     # list active buffers
     {
@@ -63,12 +59,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
             require("telescope.builtin").buffers({ layout_strategy = getLayoutStrategy() })
         end
       '';
-      lua = true;
     }
     # Telescope buffer diagnostics
     {
@@ -86,12 +81,11 @@
         unique = true;
         remap = true;
       };
-      action = ''
+      action.__raw = ''
         function()
             require("telescope.builtin").diagnostics(require("telescope.themes").get_ivy({}))
         end
       '';
-      lua = true;
     }
     # Yanky history
     {
