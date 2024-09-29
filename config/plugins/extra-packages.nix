@@ -18,7 +18,7 @@
     black
     alejandra
     stylua
-    yamlfmt
+    yamlfix
     jq
     scalafmt
   ];

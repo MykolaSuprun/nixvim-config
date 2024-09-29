@@ -6,7 +6,7 @@
       nix = ["alejandra"];
       # python = ["autoflake" "isort" "ssort" "black"];
       python = ["isort" "black"];
-      yaml = ["yamlfmt"];
+      yaml = ["yamlfix"];
       docker = ["dockerls"];
       json = ["jq"];
       scala = ["scalafmt"];
