@@ -1,15 +1,17 @@
 {
   plugins.conform-nvim = {
     enable = true;
-    formattersByFt = {
-      lua = ["stylua"];
-      nix = ["alejandra"];
-      # python = ["autoflake" "isort" "ssort" "black"];
-      python = ["isort" "black"];
-      yaml = ["yamlfix"];
-      docker = ["dockerls"];
-      json = ["jq"];
-      scala = ["scalafmt"];
+    settings = {
+      formattersByFt = {
+        lua = ["stylua"];
+        nix = ["alejandra"];
+        # python = ["autoflake" "isort" "ssort" "black"];
+        python = ["isort" "black"];
+        yaml = ["yamlfix"];
+        docker = ["dockerls"];
+        json = ["jq"];
+        scala = ["scalafmt"];
+      };
     };
   };
   extraConfigLuaPre = ''

@@ -1,7 +1,7 @@
 {
   plugins.lualine = {
     enable = true;
-    extensions = [
+    settings.extensions = [
       "nvim-tree"
       "fzf"
       "fugitive"

@@ -1,6 +1,8 @@
 {
   plugins.flash = {
     enable = true;
-    jump.autojump = true;
+    settings = {
+      jump.autojump = true;
+    };
   };
 }

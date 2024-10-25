@@ -28,5 +28,6 @@
     ./harpoon2.nix
     ./oil.nix
     ./remote-containers.nix
+    ./web-devicons.nix
   ];
 }
