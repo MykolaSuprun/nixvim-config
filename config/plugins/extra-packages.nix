@@ -21,5 +21,6 @@
     yamlfix
     jq
     scalafmt
+    nufmt
   ];
 }

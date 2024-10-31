@@ -4,7 +4,9 @@
     vim-tmux-navigator
     {
       plugin = vim-tmux-navigator;
-      config = ''let g:tmux_navigator_no_mappings = 1'';
+      config = ''
+        let g:tmux_navigator_no_mappings = 1
+      '';
     }
   ];
 }

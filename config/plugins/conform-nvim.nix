@@ -6,6 +6,7 @@
         lua = ["stylua"];
         nix = ["alejandra"];
         # python = ["autoflake" "isort" "ssort" "black"];
+        nushell =["nufmt"];
         python = ["isort" "black"];
         yaml = ["yamlfix"];
         docker = ["dockerls"];

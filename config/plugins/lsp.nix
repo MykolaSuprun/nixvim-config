@@ -10,6 +10,9 @@
       dockerls.enable = true;
       jsonls.enable = true;
       metals.enable = true;
+      nushell.enable = true;
+      yamlls.enable = true;
+      sqls.enable = true;
     };
   };
 }
