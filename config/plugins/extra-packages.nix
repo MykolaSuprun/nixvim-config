@@ -11,6 +11,7 @@
     git
     python312Packages.pynvim
     ueberzugpp
+    treesitter-nu-grammar-src
 
     #formatters
     isort
