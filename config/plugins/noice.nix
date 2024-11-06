@@ -1,6 +1,1 @@
-{
-  plugins.noice = {
-    enable = true;
-    messages.enabled = false;
-  };
-}
+{ plugins.noice = { enable = true; }; }

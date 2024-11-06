@@ -1,5 +1,1 @@
-{pkgs, ...}: {
-  plugins.web-devicons = {
-    enable = true;
-  };
-}
+{ pkgs, ... }: { plugins.web-devicons = { enable = true; }; }

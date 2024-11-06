@@ -1,9 +1,10 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   extraPackages = with pkgs; [
     #file manager
-    ranger
+    lf
     # core tools
     ripgrep
+    ast-grep
     fd
     lazygit
     tree-sitter

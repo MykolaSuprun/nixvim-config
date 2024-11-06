@@ -29,5 +29,6 @@
     ./oil.nix
     ./remote-containers.nix
     ./web-devicons.nix
+    ./grug-far.nix
   ];
 }

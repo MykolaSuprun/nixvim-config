@@ -1,9 +1,7 @@
 {
   plugins.oil = {
     enable = true;
-    settings = {
-      default_file_explorer = true;
-    };
+    settings = { default_file_explorer = true; };
   };
   extraConfigLua = ''
 
