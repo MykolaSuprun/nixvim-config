@@ -7,20 +7,13 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = {
-    nixvim,
-    flake-parts,
-    ...
-  } @ inputs: let
-    config = import ./config {nvim-mode = "nvim";}; # import the module directly
-  in
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
+  outputs = { nixvim, flake-parts, ... }@inputs:
+    let
+      config =
+        import ./config { nvim-mode = "nvim"; }; # import the module directly
+    in flake-parts.lib.mkFlake { inherit inputs; } {
+      systems =
+        [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
 
       perSystem = {
         pkgs,
