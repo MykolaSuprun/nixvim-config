@@ -20,7 +20,8 @@
     ./todo-comments.nix
     ./fterm.nix
     ./nvim-surround.nix
-    ./gitblame.nix
+    # ./gitblame.nix
+    ./gitsigns.nix
     ./flash.nix
     # ./leap.nix
     ./refactoring.nix
