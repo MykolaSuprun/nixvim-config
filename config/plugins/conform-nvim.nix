@@ -3,20 +3,16 @@
     enable = true;
     settings = {
       formattersByFt = {
-        lua = ["stylua"];
-        nix = ["alejandra"];
+        lua = [ "stylua" ];
+        nix = [ "alejandra" ];
         # python = ["autoflake" "isort" "ssort" "black"];
-        nu =["nufmt"];
-        python = ["isort" "black"];
-        yaml = ["yamlfix"];
-        docker = ["dockerls"];
-        json = ["jq"];
-        scala = ["scalafmt"];
-        "_" = [
-          "squeeze_blanks"
-          "trim_whitespace"
-          "trim_newlines"
-        ];
+        nu = [ "nufmt" ];
+        python = [ "isort" "black" ];
+        yaml = [ "yamlfix" ];
+        docker = [ "dockerls" ];
+        json = [ "jq" ];
+        scala = [ "scalafmt" ];
+        "_" = [ "squeeze_blanks" "trim_whitespace" "trim_newlines" ];
       };
 
       format_on_save = # Lua
@@ -58,9 +54,9 @@
       notify_on_error = false;
       notify_no_formatters = false;
     };
-  luaConfig.pre = ''
-    local slow_format_filetypes = {}
-  '';
+    luaConfig.pre = ''
+      local slow_format_filetypes = {}
+    '';
   };
 
   # extraConfigLuaPre = ''

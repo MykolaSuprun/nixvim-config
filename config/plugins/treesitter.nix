@@ -1,13 +1,11 @@
-{pkgs, ...}: 
-{
+{ pkgs, ... }: {
   plugins = {
     treesitter = {
       enable = true;
       # folding = true;
       nixvimInjections = true;
-      grammarPackages = pkgs.vimPlugins.nvim-treesitter.passthru.allGrammars ++ [
-        pkgs.treesitter-nu-grammar
-      ];
+      grammarPackages = pkgs.vimPlugins.nvim-treesitter.passthru.allGrammars
+        ++ [ pkgs.treesitter-nu-grammar ];
       settings = {
         indent.enable = true;
         highlight.enable = true;
@@ -50,8 +48,6 @@
       }
     end
   '';
-  extraPlugins = [
-    pkgs.treesitter-nu-grammar
-  ];
+  extraPlugins = [ pkgs.treesitter-nu-grammar ];
 
 }
