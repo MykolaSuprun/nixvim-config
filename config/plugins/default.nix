@@ -31,5 +31,6 @@
     ./remote-containers.nix
     ./web-devicons.nix
     ./grug-far.nix
+    ./zen-mode.nix
   ];
 }

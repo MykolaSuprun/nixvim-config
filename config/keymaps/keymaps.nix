@@ -109,5 +109,16 @@
       '';
 
     }
+    # zen-mode 
+    {
+      mode = "n";
+      key = "<leader>m";
+      options = {
+        silent = true;
+        unique = true;
+        desc = "Toggle Zen mode";
+      };
+      action = "<cmd>ZenMode<cr>";
+    }
   ];
 }
