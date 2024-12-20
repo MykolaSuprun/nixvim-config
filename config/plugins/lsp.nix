@@ -6,7 +6,6 @@
       nixd.enable = true;
       lua_ls.enable = true;
       pyright.enable = true;
-      ruff_lsp.enable = true;
       dockerls.enable = true;
       jsonls.enable = true;
       metals.enable = true;
