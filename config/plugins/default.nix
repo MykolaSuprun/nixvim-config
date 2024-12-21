@@ -7,16 +7,17 @@
     ./telescope.nix
     ./nvim-tree.nix
     ./which-key.nix
-    ./noice.nix
+    # ./noice.nix
     ./lualine.nix
     ./treesitter.nix
     ./lsp.nix
-    ./conform-nvim.nix
+    ./lsp-format.nix
+    ./none-ls.nix
+    # ./conform-nvim.nix
     ./cmp.nix
     # ./obsidian.nix
     ./nvim-autopairs.nix
     ./yanky.nix
-    ./comment.nix
     ./todo-comments.nix
     ./fterm.nix
     ./nvim-surround.nix
@@ -25,7 +26,7 @@
     ./flash.nix
     # ./leap.nix
     ./refactoring.nix
-    ./firenvim.nix
+    # ./firenvim.nix
     ./harpoon2.nix
     ./oil.nix
     ./remote-containers.nix
