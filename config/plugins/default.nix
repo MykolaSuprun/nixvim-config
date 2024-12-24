@@ -7,7 +7,7 @@
     ./telescope.nix
     ./nvim-tree.nix
     ./which-key.nix
-    # ./noice.nix
+    ./noice.nix
     ./lualine.nix
     ./treesitter.nix
     ./lsp.nix
