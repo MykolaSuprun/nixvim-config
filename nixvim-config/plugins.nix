@@ -115,7 +115,7 @@
     };
 
     zellij-nav = {
-      enable = true;
+      enable = false;
     };
 
     noice = {

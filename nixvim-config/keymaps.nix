@@ -754,79 +754,42 @@
       action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
-    # Zellij pane navigation
+    # Tmux pane navigation
     {
       key = "<M-h>";
       options = {
         silent = true;
-        desc = "Window - Move Left";
+        desc = "Tmux - Move Left";
       };
       mode = ["n"];
-      action = "<cmd>:ZellijNavigateLeft<CR>";
+      action = "<cmd>:TmuxNavigateLeft<CR>";
     }
     {
       key = "<M-l>";
       options = {
         silent = true;
-        desc = "Window - Move Right";
+        desc = "Tmux - Move Right";
       };
       mode = ["n"];
-      action = "<cmd>:ZellijNavigateRight<CR>";
+      action = "<cmd>:TmuxNavigateRight<CR>";
     }
     {
       key = "<M-k>";
       options = {
         silent = true;
-        desc = "Window - Move Up";
+        desc = "Tmux - Move Up";
       };
       mode = ["n"];
-      action = "<cmd>:ZellijNavigateUp<CR>";
+      action = "<cmd>:TmuxNavigateUp<CR>";
     }
     {
       key = "<M-j>";
       options = {
         silent = true;
-        desc = "Window - Move Down";
+        desc = "Tmux - Move Down";
       };
       mode = ["n"];
-      action = "<cmd>:ZellijNavigateDown<CR>";
-    }
-    # Zellij tab navigation
-    {
-      key = "<M-S-h>";
-      options = {
-        silent = true;
-        desc = "Window - Move Left";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateLeftTab<CR>";
-    }
-    {
-      key = "<M-S-l>";
-      options = {
-        silent = true;
-        desc = "Window - Move Right";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateRightTab<CR>";
-    }
-    {
-      key = "<M-S-k>";
-      options = {
-        silent = true;
-        desc = "Window - Move Up";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateUpTab<CR>";
-    }
-    {
-      key = "<M-S-j>";
-      options = {
-        silent = true;
-        desc = "Window - Move Down";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateDownTab<CR>";
+      action = "<cmd>:TmuxNavigateDown<CR>";
     }
     # Flash
     {
