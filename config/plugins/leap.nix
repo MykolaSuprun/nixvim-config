@@ -1,1 +1,0 @@
-{ plugins.leap = { enable = true; }; }

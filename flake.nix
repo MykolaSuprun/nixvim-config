@@ -2,18 +2,17 @@
   description = "A nixvim configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
   outputs = {
+    nixpkgs,
     nixvim,
     flake-parts,
     ...
-  } @ inputs: let
-    config = import ./config {nvim-mode = "nvim";}; # import the module directly
-  in
+  } @ inputs:
     flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "x86_64-linux"
@@ -22,53 +21,81 @@
         "aarch64-darwin"
       ];
 
-      perSystem = { pkgs, system, ... }:
-        let
-          nixvimLib = nixvim.lib.${system};
-          nixvim' = nixvim.legacyPackages.${system};
-          nvim = nixvim'.makeNixvimWithModule {
-            pkgs = pkgs;
-            module = config;
-            # You can use `extraSpecialArgs` to pass additional arguments to your module files
-            extraSpecialArgs = { inherit (inputs) outputs; };
-          };
-        in {
-          _module.args.pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [
-              (final: prev: {
-                treesitter-nu-grammar-src = prev.fetchFromGitHub {
-                  owner = "nushell";
-                  repo = "tree-sitter-nu";
-                  rev = "1561a947a5505d373e11ca337898e048ac2e389e";
-                  hash = "sha256-RAAMBVov4q8b8MJZVlf1qwbLK8hE5AxPK1IV9TMCrTs=";
-                };
-              })
-              (final: prev: {
-                treesitter-nu-grammar = prev.tree-sitter.buildGrammar {
-                  language = "nu";
-                  version = "1561a947a5505d373e11ca337898e048ac2e389e";
-                  src = prev.treesitter-nu-grammar-src;
-                  meta.homepage = "https://github.com/nushell/tree-sitter-nu";
-                };
-              })
-              # ./overlays/treesitter-nu-grammar.nix
-            ];
-            config = { };
-          };
+      perSystem = {system, ...}: let
+        nixvimLib = nixvim.lib.${system};
+        nixvim' = nixvim.legacyPackages.${system};
 
-          checks = {
-            # Run `nix flake check .` to verify that your config is not broken
-            default = nixvimLib.check.mkTestDerivationFromNvim {
-              inherit nvim;
-              name = "A nixvim configuration";
-            };
-          };
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [];
+        };
 
-          packages = {
-            # Lets you run `nix run .` to start nixvim
-            default = nvim;
+        nixvimModule = {
+          inherit system; # or alternatively, set `pkgs`
+          module = import ./nixvim-config; # import the module directly
+          # You can use `extraSpecialArgs` to pass additional arguments to your module files
+          extraSpecialArgs = {
+            # inherit (inputs) foo;
           };
         };
+
+        lazyvimModule = {
+          inherit system; # or alternatively, set `pkgs`
+          module = import ./lazyvim-config; # import the module directly
+          # You can use `extraSpecialArgs` to pass additional arguments to your module files
+          extraSpecialArgs = {
+            # inherit (inputs) foo;
+          };
+        };
+
+        nix_vim = nixvim'.makeNixvimWithModule nixvimModule;
+        lazy_vim = nixvim'.makeNixvimWithModule lazyvimModule;
+
+        # Wrapper scripts to create executables for different builds
+        nixvim-wrapper = pkgs.writeShellScriptBin "nixvim" ''
+          exec ${nix_vim}/bin/nvim "$@"
+        '';
+        nvim-wrapper = pkgs.writeShellScriptBin "nvim" ''
+          exec ${nix_vim}/bin/nvim "$@"
+        '';
+        lazyvim-wrapper = pkgs.writeShellScriptBin "lazyvim" ''
+          exec ${lazy_vim}/bin/nvim "$@"
+        '';
+      in {
+        checks = {
+          # Run `nix flake check .` to verify that your config is not broken
+          NixVim = nixvimLib.check.mkTestDerivationFromNixvimModule nixvimModule;
+          LazyVim = nixvimLib.check.mkTestDerivationFromNixvimModule lazyvimModule;
+        };
+        packages = {
+          # Original packages
+          NixVim = nix_vim;
+          LazyVim = lazy_vim;
+
+          # Wrapper scripts
+          nixvim = nixvim-wrapper;
+          lazyvim = lazyvim-wrapper;
+          nvim = nvim-wrapper;
+
+          default = nixvim-wrapper;
+        };
+        apps = {
+          NixVim = {
+            type = "app";
+            program = "${nix_vim}/bin/nvim";
+            meta = {
+              description = "Custom NixVim configuration";
+            };
+          };
+          LazyVim = {
+            type = "app";
+            program = "${lazy_vim}/bin/nvim";
+            meta = {
+              description = "LazyVim-based NixVim configuration";
+            };
+          };
+        };
+      };
     };
 }
