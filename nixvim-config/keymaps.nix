@@ -10,7 +10,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.smart({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.smart({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>,";
@@ -21,7 +23,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.buffers({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.buffers({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>ff";
@@ -32,7 +36,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.files({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.files({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>fg";
@@ -43,7 +49,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_files({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.git_files({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>fr";
@@ -54,7 +62,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.recent({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.recent({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>ft";
@@ -65,7 +75,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.treesitter() end'';
+        ''
+          function() Snacks.picker.treesitter() end
+        '';
     }
     {
       key = "<leader>/";
@@ -76,7 +88,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.grep({layout = "ivy_split"}) end'';
+        ''
+          function() Snacks.picker.grep({layout = "ivy_split"}) end
+        '';
     }
     {
       key = "<leader>:";
@@ -87,7 +101,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        "function() Snacks.picker.command_history() end";
+        ''
+          function() Snacks.picker.command_history() end
+        '';
     }
     {
       key = "<leader>fn";
@@ -98,7 +114,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.notifications({layout = "vertical"}) end'';
+        ''
+          function() Snacks.picker.notifications({layout = "vertical"}) end
+        '';
     }
     {
       key = "<leader>E";
@@ -109,7 +127,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        "function() Snacks.picker.explorer() end";
+        ''
+          function() Snacks.picker.explorer() end
+        '';
     }
     # Git
     {
@@ -121,7 +141,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_branches() end'';
+        ''
+          function() Snacks.picker.git_branches() end
+        '';
     }
     {
       key = "<leader>gl";
@@ -132,7 +154,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_log_line() end'';
+        ''
+          function() Snacks.picker.git_log_line() end
+        '';
     }
     {
       key = "<leader>gL";
@@ -143,7 +167,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_log() end'';
+        ''
+          function() Snacks.picker.git_log() end
+        '';
     }
     {
       key = "<leader>gs";
@@ -154,7 +180,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_status() end'';
+        ''
+          function() Snacks.picker.git_status() end
+        '';
     }
     {
       key = "<leader>gS";
@@ -165,7 +193,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_stash() end'';
+        ''
+          function() Snacks.picker.git_stash() end
+        '';
     }
     {
       key = "<leader>gd";
@@ -176,7 +206,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_stash() end'';
+        ''
+          function() Snacks.picker.git_stash() end
+        '';
     }
     {
       key = "<leader>gf";
@@ -187,7 +219,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.git_log_file() end'';
+        ''
+          function() Snacks.picker.git_log_file() end
+        '';
     }
     {
       key = "<leader>fd";
@@ -198,7 +232,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.diagnostics() end'';
+        ''
+          function() Snacks.picker.diagnostics() end
+        '';
     }
     {
       key = "<leader>fD";
@@ -209,19 +245,23 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.diagnostics_buffer() end'';
+        ''
+          function() Snacks.picker.diagnostics_buffer() end
+        '';
     }
     # Grep
     {
       key = "<leader>sb";
       options = {
         silent = true;
-        desc = "Grep Buffer Lines";
+        desc = "Grep Current Buffer";
       };
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lines() end'';
+        ''
+          function() Snacks.picker.grep({ buffers = true }) end
+        '';
     }
     {
       key = "<leader>sB";
@@ -232,7 +272,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.grep_buffers() end'';
+        ''
+          function() Snacks.picker.grep_buffers() end
+        '';
     }
     {
       key = "<leader>sd";
@@ -243,7 +285,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.diagnostics() end'';
+        ''
+          function() Snacks.picker.diagnostics() end
+        '';
     }
     {
       key = "<leader>sD";
@@ -254,7 +298,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.diagnostics_buffer() end'';
+        ''
+          function() Snacks.picker.diagnostics_buffer() end
+        '';
     }
     {
       key = "<leader>sw";
@@ -265,7 +311,9 @@
       mode = ["n" "x"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.grep_word() end'';
+        ''
+          function() Snacks.picker.grep_word() end
+        '';
     }
     # Search
 
@@ -278,7 +326,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.registers() end'';
+        ''
+          function() Snacks.picker.registers() end
+        '';
     }
     {
       key = "<leader>s/";
@@ -289,7 +339,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.search_history() end'';
+        ''
+          function() Snacks.picker.search_history() end
+        '';
     }
     {
       key = "<leader>sa";
@@ -300,7 +352,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.autocmds() end'';
+        ''
+          function() Snacks.picker.autocmds() end
+        '';
     }
     {
       key = "<leader>sc";
@@ -311,7 +365,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.commands() end'';
+        ''
+          function() Snacks.picker.commands() end
+        '';
     }
     {
       key = "<leader>sh";
@@ -322,7 +378,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.help() end'';
+        ''
+          function() Snacks.picker.help() end
+        '';
     }
     {
       key = "<leader>sH";
@@ -333,7 +391,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.highlights() end'';
+        ''
+          function() Snacks.picker.highlights() end
+        '';
     }
     {
       key = "<leader>si";
@@ -344,7 +404,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.icons() end'';
+        ''
+          function() Snacks.picker.icons() end
+        '';
     }
     {
       key = "<leader>sj";
@@ -355,7 +417,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.jumps() end'';
+        ''
+          function() Snacks.picker.jumps() end
+        '';
     }
     {
       key = "<leader>sk";
@@ -366,7 +430,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.keymaps() end'';
+        ''
+          function() Snacks.picker.keymaps() end
+        '';
     }
     {
       key = "<leader>sl";
@@ -377,7 +443,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.loclist() end'';
+        ''
+          function() Snacks.picker.loclist() end
+        '';
     }
     {
       key = "<leader>sm";
@@ -388,7 +456,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.marks() end'';
+        ''
+          function() Snacks.picker.marks() end
+        '';
     }
     {
       key = "<leader>sM";
@@ -399,7 +469,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.man() end'';
+        ''
+          function() Snacks.picker.man() end
+        '';
     }
     {
       key = "<leader>sq";
@@ -410,7 +482,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.qflist() end'';
+        ''
+          function() Snacks.picker.qflist() end
+        '';
     }
     {
       key = "<leader>sr";
@@ -421,7 +495,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.resume() end'';
+        ''
+          function() Snacks.picker.resume() end
+        '';
     }
     {
       key = "<leader>su";
@@ -432,7 +508,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.undo() end'';
+        ''
+          function() Snacks.picker.undo() end
+        '';
     }
     # LSP
     {
@@ -444,7 +522,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_definitions() end'';
+        ''
+          function() Snacks.picker.lsp_definitions() end
+        '';
     }
     {
       key = "gD";
@@ -455,7 +535,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_declarations() end'';
+        ''
+          function() Snacks.picker.lsp_declarations() end
+        '';
     }
     {
       key = "gr";
@@ -466,7 +548,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_references() end'';
+        ''
+          function() Snacks.picker.lsp_references() end
+        '';
     }
     {
       key = "gI";
@@ -477,7 +561,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_implementations() end'';
+        ''
+          function() Snacks.picker.lsp_implementations() end
+        '';
     }
     {
       key = "gy";
@@ -488,7 +574,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_type_definition() end'';
+        ''
+          function() Snacks.picker.lsp_type_definition() end
+        '';
     }
     {
       key = "<leader>ss";
@@ -499,7 +587,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_symbols() end'';
+        ''
+          function() Snacks.picker.lsp_symbols() end
+        '';
     }
     {
       key = "<leader>sS";
@@ -510,7 +600,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.lsp_workspace_symbols() end'';
+        ''
+          function() Snacks.picker.lsp_workspace_symbols() end
+        '';
     }
 
     # To do
@@ -523,7 +615,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.todo_comments() end'';
+        ''
+          function() Snacks.picker.todo_comments() end
+        '';
     }
     {
       key = "<leader>sT";
@@ -534,7 +628,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() Snacks.picker.todo_comments({ keywords = { "TODO", "FIX", "FIXME" } }) end'';
+        ''
+          function() Snacks.picker.todo_comments({ keywords = { "TODO", "FIX", "FIXME" } }) end
+        '';
     }
     # Git
     {
@@ -691,17 +787,15 @@
       action = "<cmd>:TSModuleInfo<CR>";
     }
     # UI
-    # {
-    #   key = "<leader>uC";
-    #   options = {
-    #     silent = true;
-    #     desc = "Colorschemes";
-    #   };
-    #   mode = ["n"];
-    #   action.__raw =
-    #     #lua
-    #     ''function() Snacks.picker.corlorschemes() end'';
-    # }
+    {
+      key = "<leader>uC";
+      options = {
+        silent = true;
+        desc = "Colorschemes";
+      };
+      mode = ["n"];
+      action = "<cmd>:lua Snacks.picker.colorschemes()<CR>";
+    }
     # Toggle indent guides
     {
       key = "<leader>umr";
@@ -754,42 +848,79 @@
       action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
-    # Tmux pane navigation
+    # Zellij pane navigation
     {
       key = "<M-h>";
       options = {
         silent = true;
-        desc = "Tmux - Move Left";
+        desc = "Window - Move Left";
       };
       mode = ["n"];
-      action = "<cmd>:TmuxNavigateLeft<CR>";
+      action = "<cmd>:ZellijNavigateLeft<CR>";
     }
     {
       key = "<M-l>";
       options = {
         silent = true;
-        desc = "Tmux - Move Right";
+        desc = "Window - Move Right";
       };
       mode = ["n"];
-      action = "<cmd>:TmuxNavigateRight<CR>";
+      action = "<cmd>:ZellijNavigateRight<CR>";
     }
     {
       key = "<M-k>";
       options = {
         silent = true;
-        desc = "Tmux - Move Up";
+        desc = "Window - Move Up";
       };
       mode = ["n"];
-      action = "<cmd>:TmuxNavigateUp<CR>";
+      action = "<cmd>:ZellijNavigateUp<CR>";
     }
     {
       key = "<M-j>";
       options = {
         silent = true;
-        desc = "Tmux - Move Down";
+        desc = "Window - Move Down";
       };
       mode = ["n"];
-      action = "<cmd>:TmuxNavigateDown<CR>";
+      action = "<cmd>:ZellijNavigateDown<CR>";
+    }
+    # Zellij tab navigation
+    {
+      key = "<M-S-h>";
+      options = {
+        silent = true;
+        desc = "Window - Move Left";
+      };
+      mode = ["n"];
+      action = "<cmd>:ZellijNavigateLeftTab<CR>";
+    }
+    {
+      key = "<M-S-l>";
+      options = {
+        silent = true;
+        desc = "Window - Move Right";
+      };
+      mode = ["n"];
+      action = "<cmd>:ZellijNavigateRightTab<CR>";
+    }
+    {
+      key = "<M-S-k>";
+      options = {
+        silent = true;
+        desc = "Window - Move Up";
+      };
+      mode = ["n"];
+      action = "<cmd>:ZellijNavigateUpTab<CR>";
+    }
+    {
+      key = "<M-S-j>";
+      options = {
+        silent = true;
+        desc = "Window - Move Down";
+      };
+      mode = ["n"];
+      action = "<cmd>:ZellijNavigateDownTab<CR>";
     }
     # Flash
     {
@@ -801,7 +932,9 @@
       mode = ["n"];
       action.__raw =
         #lua
-        ''function() require("flash").treesitter() end'';
+        ''
+          function() require("flash").treesitter() end
+        '';
     }
     {
       key = "<S-s>";
@@ -812,7 +945,9 @@
       mode = ["n" "x"];
       action.__raw =
         #lua
-        ''function() require("flash").jump() end'';
+        ''
+          function() require("flash").jump() end
+        '';
     }
     # Tabs
     # Bufferline tab navigation with Shift+H/L

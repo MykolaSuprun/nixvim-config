@@ -37,7 +37,6 @@
           "ruff"
           "codespell"
           "bandit"
-          "flake8"
         ];
         nix = [
           "statix"
@@ -58,13 +57,14 @@
         ];
         yaml = [
           "yamllint"
-          "yq"
+          "codespell"
         ];
         markdown = [
           "markdownlint-cli2"
         ];
         lua = [
           "selene"
+          "codespell"
         ];
         zsh = [
           "zsh"
