@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{...}: {
   keymaps = [
     # Pickers
     {
@@ -260,7 +260,7 @@
       action.__raw =
         #lua
         ''
-          function() Snacks.picker.grep({ buffers = true }) end
+          function() Snacks.picker.grep({ buffers = true, layout = "ivy_split" }) end
         '';
     }
     {
@@ -842,86 +842,86 @@
       key = "<leader>uth";
       options = {
         silent = true;
-        desc = "Toggle Treesitter hightlight";
+        desc = "Toggle Treesitter highlight";
       };
       mode = ["n"];
       action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
     # Zellij pane navigation
-    {
-      key = "<M-h>";
-      options = {
-        silent = true;
-        desc = "Window - Move Left";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateLeft<CR>";
-    }
-    {
-      key = "<M-l>";
-      options = {
-        silent = true;
-        desc = "Window - Move Right";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateRight<CR>";
-    }
-    {
-      key = "<M-k>";
-      options = {
-        silent = true;
-        desc = "Window - Move Up";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateUp<CR>";
-    }
-    {
-      key = "<M-j>";
-      options = {
-        silent = true;
-        desc = "Window - Move Down";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateDown<CR>";
-    }
-    # Zellij tab navigation
-    {
-      key = "<M-S-h>";
-      options = {
-        silent = true;
-        desc = "Window - Move Left";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateLeftTab<CR>";
-    }
-    {
-      key = "<M-S-l>";
-      options = {
-        silent = true;
-        desc = "Window - Move Right";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateRightTab<CR>";
-    }
-    {
-      key = "<M-S-k>";
-      options = {
-        silent = true;
-        desc = "Window - Move Up";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateUpTab<CR>";
-    }
-    {
-      key = "<M-S-j>";
-      options = {
-        silent = true;
-        desc = "Window - Move Down";
-      };
-      mode = ["n"];
-      action = "<cmd>:ZellijNavigateDownTab<CR>";
-    }
+    # {
+    #   key = "<M-h>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Left";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateLeft<CR>";
+    # }
+    # {
+    #   key = "<M-l>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Right";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateRight<CR>";
+    # }
+    # {
+    #   key = "<M-k>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Up";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateUp<CR>";
+    # }
+    # {
+    #   key = "<M-j>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Down";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateDown<CR>";
+    # }
+    # # Zellij tab navigation
+    # {
+    #   key = "<M-S-h>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Left";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateLeftTab<CR>";
+    # }
+    # {
+    #   key = "<M-S-l>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Right";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateRightTab<CR>";
+    # }
+    # {
+    #   key = "<M-S-k>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Up";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateUpTab<CR>";
+    # }
+    # {
+    #   key = "<M-S-j>";
+    #   options = {
+    #     silent = true;
+    #     desc = "Window - Move Down";
+    #   };
+    #   mode = ["n"];
+    #   action = "<cmd>:ZellijNavigateDownTab<CR>";
+    # }
     # Flash
     {
       key = "<C-s>";
