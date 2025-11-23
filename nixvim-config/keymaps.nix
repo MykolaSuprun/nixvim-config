@@ -848,80 +848,52 @@
       action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
-    # Zellij pane navigation
-    # {
-    #   key = "<M-h>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Left";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateLeft<CR>";
-    # }
-    # {
-    #   key = "<M-l>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Right";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateRight<CR>";
-    # }
-    # {
-    #   key = "<M-k>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Up";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateUp<CR>";
-    # }
-    # {
-    #   key = "<M-j>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Down";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateDown<CR>";
-    # }
-    # # Zellij tab navigation
-    # {
-    #   key = "<M-S-h>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Left";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateLeftTab<CR>";
-    # }
-    # {
-    #   key = "<M-S-l>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Right";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateRightTab<CR>";
-    # }
-    # {
-    #   key = "<M-S-k>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Up";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateUpTab<CR>";
-    # }
-    # {
-    #   key = "<M-S-j>";
-    #   options = {
-    #     silent = true;
-    #     desc = "Window - Move Down";
-    #   };
-    #   mode = ["n"];
-    #   action = "<cmd>:ZellijNavigateDownTab<CR>";
-    # }
+    # Tmux pane navigation
+    {
+      key = "<M-h>";
+      options = {
+        silent = true;
+        desc = "Window - Move Left";
+      };
+      mode = ["n"];
+      action = "<cmd>:TmuxNavigateLeft<CR>";
+    }
+    {
+      key = "<M-l>";
+      options = {
+        silent = true;
+        desc = "Window - Move Right";
+      };
+      mode = ["n"];
+      action = "<cmd>:TmuxNavigateRight<CR>";
+    }
+    {
+      key = "<M-k>";
+      options = {
+        silent = true;
+        desc = "Window - Move Up";
+      };
+      mode = ["n"];
+      action = "<cmd>:TmuxNavigateUp<CR>";
+    }
+    {
+      key = "<M-j>";
+      options = {
+        silent = true;
+        desc = "Window - Move Down";
+      };
+      mode = ["n"];
+      action = "<cmd>:TmuxNavigateDown<CR>";
+    }
+    {
+      key = "<C-\\>";
+      options = {
+        silent = true;
+        desc = "Window - Move to previous";
+      };
+      mode = ["n"];
+      action = "TmuxNavigatePrevious";
+    }
     # Flash
     {
       key = "<C-s>";
