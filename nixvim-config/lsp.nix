@@ -48,7 +48,6 @@
           # "dockle"
         ];
         json = [
-          "jsonlint"
           "codespell"
         ];
         sql = [

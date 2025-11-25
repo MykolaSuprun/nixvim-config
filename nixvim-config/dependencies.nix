@@ -38,7 +38,6 @@
     python313Packages.cssbeautifier
     python313Packages.flake8
     go
-    nodePackages.jsonlint
     zsh
   ];
   extraLuaPackages = ps: [ps.magick];

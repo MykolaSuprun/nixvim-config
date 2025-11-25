@@ -168,10 +168,6 @@
                 __raw =
                   #lua
                   ''
-                    {
-                      ["<S-k>"] = { "preview_scroll_up", mode = { "i", "n" } },
-                      ["<S-j>"] = { "preview_scroll_down", mode = { "i", "n" } },
-                    }
                   '';
               };
             };
@@ -180,10 +176,6 @@
                 __raw =
                   #lua
                   ''
-                    {
-                      ["<S-k>"] = { "preview_scroll_up", mode = { "i", "n" } },
-                      ["<S-j>"] = { "preview_scroll_down", mode = { "i", "n" } },
-                    }
                   '';
               };
             };
