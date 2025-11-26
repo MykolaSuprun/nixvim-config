@@ -146,19 +146,6 @@
         '';
     }
     {
-      key = "<leader>gl";
-      options = {
-        silent = true;
-        desc = "Git Log Line";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() Snacks.picker.git_log_line() end
-        '';
-    }
-    {
       key = "<leader>gL";
       options = {
         silent = true;
@@ -641,6 +628,28 @@
       };
       mode = ["n"];
       action = "<cmd>:LazyGit<CR>";
+    }
+    {
+      key = "<leader>glt";
+      options = {
+        silent = true;
+        desc = "Git Log Line";
+      };
+      mode = ["n"];
+      action = "<cmd>Gitsigns toggle_current_line_blame<cr>";
+    }
+    {
+      key = "<leader>gll";
+      options = {
+        silent = true;
+        desc = "Toggle blame";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() Snacks.picker.git_log_line() end
+        '';
     }
     {
       key = "<leader>glb";

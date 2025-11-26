@@ -48,8 +48,10 @@
     treesitter-textobjects.enable = true;
     diffview = {
       enable = true;
-      useIcons = true;
-      watchIndex = true;
+      settings = {
+        use_icons = true;
+        watch_index = true;
+      };
     };
 
     lazygit = {
@@ -162,24 +164,24 @@
             #lua
             "{ layout = { backdrop = false } }";
 
-          win = {
-            input = {
-              keys = {
-                __raw =
-                  #lua
-                  ''
-                  '';
-              };
-            };
-            list = {
-              keys = {
-                __raw =
-                  #lua
-                  ''
-                  '';
-              };
-            };
-          };
+          # win = {
+          #   input = {
+          #     keys = {
+          #       __raw =
+          #         #lua
+          #         ''
+          #         '';
+          #     };
+          #   };
+          #   list = {
+          #     keys = {
+          #       __raw =
+          #         #lua
+          #         ''
+          #         '';
+          #     };
+          #   };
+          # };
         };
       };
     };
@@ -187,7 +189,22 @@
     ts-comments.enable = true;
 
     # Git
-    gitsigns.enable = true;
+    gitsigns = {
+      enable = true;
+      lazyLoad = {
+        settings = {
+          event = ["BufEnter"];
+        };
+      };
+      settings = {
+        current_line_blame = false;
+        current_line_blame_opts = {
+          delay = 100;
+          virt_text = true;
+          virt_text_pos = "eol";
+        };
+      };
+    };
 
     # LLM
     copilot-lua = {
