@@ -82,16 +82,16 @@
         win_options = {
           signcolumn = "yes:2";
         };
-        float.__raw =
-          #lua
-          ''
-            {
-              padding = 2,
-              max_width = 0.8,
-              max_height = 0.8,
-              border = "rounded",
-            }
-          '';
+        # float.__raw =
+        #   #lua
+        #   ''
+        #     {
+        #       padding = 2,
+        #       max_width = 0.8,
+        #       max_height = 0.8,
+        #       border = "rounded",
+        #     }
+        #   '';
       };
       luaConfig.post =
         #lua
