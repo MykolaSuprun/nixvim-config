@@ -185,7 +185,15 @@
         };
       };
     };
-
+    hardtime = {
+      enable = true;
+      settings.enabled = true;
+      lazyLoad = {
+        settings = {
+          event = ["BufEnter"];
+        };
+      };
+    };
     ts-comments.enable = true;
 
     # Git

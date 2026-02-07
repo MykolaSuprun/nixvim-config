@@ -848,6 +848,24 @@
         '';
     }
     {
+      key = "<leader>uht";
+      options = {
+        silent = true;
+        desc = "Toggle Hardtime";
+      };
+      mode = ["n"];
+      action = "<cmd>:Hardtime toggle<CR>";
+    }
+    {
+      key = "<leader>uhr";
+      options = {
+        silent = true;
+        desc = "Hardtime report";
+      };
+      mode = ["n"];
+      action = "<cmd>:Hardtime report<CR>";
+    }
+    {
       key = "<leader>uth";
       options = {
         silent = true;

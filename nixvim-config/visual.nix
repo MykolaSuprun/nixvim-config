@@ -2,48 +2,55 @@
   colorschemes = {
     base16 = {
       enable = true;
-      colorscheme = "catppuccin-latte";
+      # colorscheme = "catppuccin-latte";
     };
-    # catppuccin = {
-    #   enable = true;
-    #   autoLoad = true;
-    #   settings = {
-    #     flavour = "latte";
-    #     integrations = {
-    #       cmp = true;
-    #       gitsigns = true;
-    #       telescope = true;
-    #       headlines = true;
-    #       illuminate = true;
-    #       fzf = true;
-    #       treesitter = true;
-    #       treesitter_context = true;
-    #       # harpoon = true;
-    #       # nvim-cmp = true;
-    #       notifier = true;
-    #       noice = true;
-    #       notify = true;
-    #       # dap = true;
-    #       # dap-ui = true;
-    #       semantic_tokens = true;
-    #       native_lsp = {
-    #         enabled = true;
-    #         underlines = {
-    #           errors = ["undercurl"];
-    #           hints = ["undercurl"];
-    #           warnings = ["undercurl"];
-    #           information = ["undercurl"];
-    #         };
-    #       };
-    #       snacks = true;
-    #       window_picker = true;
-    #       # indent-blankline = {enabled = true;};
-    #       mini = true;
-    #       which_key = true;
-    #       markdown = true;
-    #     };
-    #   };
-    # };
+    catppuccin = {
+      enable = true;
+      autoLoad = true;
+      settings = {
+        flavour = "latte";
+        integrations = {
+          cmp = true;
+          blink = true;
+          gitsigns = true;
+          bufferline = true;
+          telescope = true;
+          headlines = true;
+          illuminate = true;
+          fzf = true;
+          flash = true;
+          treesitter = true;
+          treesitter_context = true;
+          # harpoon = true;
+          # nvim-cmp = true;
+          notifier = true;
+          noice = true;
+          notify = true;
+          snacks = {
+            enabled = true;
+            indent_scope_color = "lavender";
+          };
+          # dap = true;
+          # dap-ui = true;
+          semantic_tokens = true;
+          native_lsp = {
+            enabled = true;
+            underlines = {
+              errors = ["undercurl"];
+              hints = ["undercurl"];
+              warnings = ["undercurl"];
+              information = ["undercurl"];
+            };
+          };
+          window_picker = true;
+          # indent-blankline = {enabled = true;};
+          mini = true;
+          which_key = true;
+          markdown = true;
+          overseer = true;
+        };
+      };
+    };
   };
   plugins = {
     nui.enable = true;
@@ -184,8 +191,8 @@
 
     -- If the environment variable is set, construct and apply the colorscheme
     if local_colorscheme then
-      local colorscheme = 'base16-' .. local_colorscheme
-      pcall(vim.cmd, 'colorscheme ' .. colorscheme)
+      -- local colorscheme = 'base16-' .. local_colorscheme
+      pcall(vim.cmd, 'colorscheme ' .. local_colorscheme)
     end
 
     -- Macro recording indicator using autocommands
