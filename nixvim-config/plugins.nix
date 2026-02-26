@@ -44,7 +44,6 @@
         };
       };
     };
-    treesitter-refactor.enable = true;
     treesitter-textobjects.enable = true;
     diffview = {
       enable = true;
@@ -326,6 +325,23 @@
           })
         '';
     };
+
+    otter = {
+      enable = true;
+      autoActivate = true;
+      settings = {
+        handle_leading_whitespace = true;
+        lsp.diagnostic_update_events = [
+          "BufWritePost"
+          "InsertLeave"
+        ];
+      };
+      # lazyLoad = {
+      #   settings = {
+      #     event = ["BufEnter"];
+      #   };
+    };
+
     avante = {
       enable = true;
       lazyLoad = {
@@ -353,6 +369,22 @@
             icon = " ";
           };
         };
+      };
+    };
+    obsidian = {
+      enable = true;
+      # lazyLoad = {
+      #   settings = {
+      #     cmd = "Obsidian";
+      #   };
+      # };
+      settings = {
+        workspaces = [
+          {
+            name = "general-1";
+            path = "~/Documents/obsidian/general-1/";
+          }
+        ];
       };
     };
   };

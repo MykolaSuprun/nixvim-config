@@ -1203,7 +1203,7 @@
         desc = "Copilot auth";
       };
       mode = ["n"];
-      action = "Copilot auth";
+      action = "<cmd>Copilot auth<cr>";
     }
     {
       key = "<leader>Cs";
