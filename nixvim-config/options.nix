@@ -22,6 +22,9 @@
     # how to split windows
     splitright = true;
     splitbelow = true;
+    # configure grep to use ripgrep
+    grepprg = "rg --vimgrep --no-heading --smart-case";
+    grepformat = "%f:%l:%c:%m,%f:%l:%m";
   };
   globals = {
     # set up leader key

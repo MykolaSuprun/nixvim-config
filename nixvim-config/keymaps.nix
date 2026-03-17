@@ -1232,6 +1232,15 @@
       mode = ["n"];
       action = "<cmd>Copilot version<cr>";
     }
+    {
+      key = "<leader>o";
+      options = {
+        silent = true;
+        desc = "Obsidian";
+      };
+      mode = ["n"];
+      action = "<cmd>Obsidian<cr>";
+    }
   ];
   plugins.which-key.settings.spec = [
     {
@@ -1272,6 +1281,7 @@
     {
       __unkeyed-1 = "<leader>C";
       group = "copilot";
+      icon = "";
     }
     {
       __unkeyed-1 = "<leader>ct";
@@ -1298,7 +1308,11 @@
     {
       __unkeyed-1 = "<leader>x";
       group = "trouble";
-      icon = "󰞵";
+    }
+    {
+      __unkeyed-1 = "<leader>o";
+      group = "obsidian";
+      icon = "󱞁";
     }
   ];
   lsp.keymaps = [

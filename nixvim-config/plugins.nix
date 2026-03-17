@@ -373,16 +373,20 @@
     };
     obsidian = {
       enable = true;
-      # lazyLoad = {
-      #   settings = {
-      #     cmd = "Obsidian";
-      #   };
-      # };
+      lazyLoad = {
+        settings = {
+          cmd = "Obsidian";
+        };
+      };
       settings = {
         workspaces = [
           {
             name = "general-1";
             path = "~/Documents/obsidian/general-1/";
+          }
+          {
+            name = "work-1";
+            path = "/mnt/c/obsidian/work-1";
           }
         ];
       };
