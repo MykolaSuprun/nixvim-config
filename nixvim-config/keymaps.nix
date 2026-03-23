@@ -1241,6 +1241,81 @@
       mode = ["n"];
       action = "<cmd>Obsidian<cr>";
     }
+    # Search and replace
+    {
+      key = "<leader>rr";
+      options = {
+        silent = true;
+        desc = "Find and replace with <ast-grep>";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("grug-far").open({ engine = "astgrep" }) end
+        '';
+    }
+    {
+      key = "<leader>rR";
+      options = {
+        silent = true;
+        desc = "Find and replace <rg>";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("grug-far").open({ engine = "ripgrep" }) end
+        '';
+    }
+    {
+      key = "<leader>rw";
+      options = {
+        silent = true;
+        desc = "Find and replace <word>";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end
+        '';
+    }
+    {
+      key = "<leader>rf";
+      options = {
+        silent = true;
+        desc = "Find and replace in file with <ast-grep>";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("grug-far").open({ engine = "astgrep", prefills = { paths = vim.fn.expand("%") } }) end
+        '';
+    }
+    {
+      key = "<leader>rF";
+      options = {
+        silent = true;
+        desc = "Find and replace in file with <rg>";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("grug-far").open({ engine = "ripgrep", prefills = { paths = vim.fn.expand("%") } }) end
+        '';
+    }
+    {
+      key = "<leader>rv";
+      options = {
+        silent = true;
+        desc = "Find and replace in visual selection";
+      };
+      mode = ["n"];
+      action = "<cmd>GrugFarWithin<cr>";
+    }
   ];
   plugins.which-key.settings.spec = [
     {
@@ -1313,6 +1388,11 @@
       __unkeyed-1 = "<leader>o";
       group = "obsidian";
       icon = "󱞁";
+    }
+    {
+      __unkeyed-1 = "<leader>r";
+      group = "find and Replace";
+      icon = "";
     }
   ];
   lsp.keymaps = [

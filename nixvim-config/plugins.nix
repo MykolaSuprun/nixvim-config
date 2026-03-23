@@ -371,6 +371,14 @@
         };
       };
     };
+    grug-far = {
+      enable = true;
+      lazyLoad = {
+        settings = {
+          event = ["VimEnter"];
+        };
+      };
+    };
     obsidian = {
       enable = true;
       lazyLoad = {

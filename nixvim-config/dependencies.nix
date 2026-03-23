@@ -17,6 +17,7 @@
     ripgrep
     jq
     black
+    ast-grep
     isort
     stylua
     selene
