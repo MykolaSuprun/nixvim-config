@@ -352,6 +352,14 @@
       settings = {
         auto_suggestions_provider = "copilot";
         provider = "copilot";
+        providers = {
+          openrouter = {
+            __inherited_from = "openai";
+            endpoint = "https://openrouter.ai/api/v1";
+            api_key_name = "OPENROUTER_API_KEY";
+            model = "z-ai/glm-5";
+          };
+        };
         web_search_engine = {
           provider = "kagi";
         };

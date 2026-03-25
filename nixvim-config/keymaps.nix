@@ -1241,6 +1241,61 @@
       mode = ["n"];
       action = "<cmd>Obsidian<cr>";
     }
+    # Overseer
+    {
+      key = "<leader>Ot";
+      options = {
+        silent = true;
+        desc = "Toggle task list";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerToggle<CR>";
+    }
+    {
+      key = "<leader>Or";
+      options = {
+        silent = true;
+        desc = "Run task";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerRun<CR>";
+    }
+    {
+      key = "<leader>Oa";
+      options = {
+        silent = true;
+        desc = "Task action";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerTaskAction<CR>";
+    }
+    {
+      key = "<leader>Oo";
+      options = {
+        silent = true;
+        desc = "Open task list";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerOpen<CR>";
+    }
+    {
+      key = "<leader>Oc";
+      options = {
+        silent = true;
+        desc = "Close task list";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerClose<CR>";
+    }
+    {
+      key = "<leader>Os";
+      options = {
+        silent = true;
+        desc = "Run shell command as task";
+      };
+      mode = ["n"];
+      action = "<cmd>OverseerShell<CR>";
+    }
     # Search and replace
     {
       key = "<leader>rr";
@@ -1393,6 +1448,11 @@
       __unkeyed-1 = "<leader>r";
       group = "find and Replace";
       icon = "";
+    }
+    {
+      __unkeyed-1 = "<leader>O";
+      group = "overseer";
+      icon = "󰓧";
     }
   ];
   lsp.keymaps = [
