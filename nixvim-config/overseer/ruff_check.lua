@@ -1,7 +1,7 @@
 -- Register the ruff check template with proper output parsing and diagnostics integration
 require("overseer").register_template({
 	name = "ruff check",
-	builder = function()
+	builder = function(params)
 		return {
 			cmd = { "ruff" },
 			-- Use concise format so each violation is on a single parseable line:
@@ -16,15 +16,16 @@ require("overseer").register_template({
 					problem_matcher = {
 						owner = "ruff",
 						fileLocation = "relative",
+						severity = "warning",
 						pattern = {
-							regexp = "^(.+):(\\d+):(\\d+): (\\S+) (.+)$",
-							file = 1,
-							line = 2,
-							column = 3,
-							code = 4,
-							message = 5,
-							-- Treat all ruff violations as warnings
-							severity = "warning",
+							{
+								regexp = "^(.+):(\\d+):(\\d+): (\\S+) (.+)$",
+								file = 1,
+								line = 2,
+								column = 3,
+								code = 4,
+								message = 5,
+							},
 						},
 					},
 				},
@@ -33,17 +34,13 @@ require("overseer").register_template({
 					"on_result_diagnostics",
 					remove_on_restart = true,
 				},
-				-- Notify only when the result changes (success <-> failure)
-				{
-					"on_result_notify",
-					on_change = true,
-				},
 				-- Ensure only one ruff check task runs at a time
 				{
 					"unique",
 					replace = true,
 				},
-				"default",
+				"on_exit_set_status",
+				{ "on_complete_dispose", timeout = 30 },
 			},
 		}
 	end,
@@ -56,7 +53,7 @@ require("overseer").register_template({
 vim.api.nvim_create_autocmd("BufWritePost", {
 	pattern = "*.py",
 	callback = function()
-		require("overseer").run_task({
+		require("overseer").run_template({
 			name = "ruff check",
 			-- Take the first match without showing a picker
 			first = true,

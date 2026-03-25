@@ -1246,7 +1246,7 @@
       key = "<leader>Ot";
       options = {
         silent = true;
-        desc = "Toggle task list";
+        desc = "Toggle active/running tasks list";
       };
       mode = ["n"];
       action = "<cmd>OverseerToggle<CR>";
@@ -1255,7 +1255,7 @@
       key = "<leader>Or";
       options = {
         silent = true;
-        desc = "Run task";
+        desc = "Run task (Pick a template to run)";
       };
       mode = ["n"];
       action = "<cmd>OverseerRun<CR>";
@@ -1264,7 +1264,7 @@
       key = "<leader>Oa";
       options = {
         silent = true;
-        desc = "Task action";
+        desc = "Task action (for active tasks)";
       };
       mode = ["n"];
       action = "<cmd>OverseerTaskAction<CR>";
@@ -1273,7 +1273,7 @@
       key = "<leader>Oo";
       options = {
         silent = true;
-        desc = "Open task list";
+        desc = "Open active tasks list";
       };
       mode = ["n"];
       action = "<cmd>OverseerOpen<CR>";
@@ -1282,7 +1282,7 @@
       key = "<leader>Oc";
       options = {
         silent = true;
-        desc = "Close task list";
+        desc = "Close active tasks list";
       };
       mode = ["n"];
       action = "<cmd>OverseerClose<CR>";
