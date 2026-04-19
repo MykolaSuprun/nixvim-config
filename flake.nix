@@ -49,8 +49,17 @@
           };
         };
 
+        codevimModule = {
+          inherit system;
+          module = import ./codevim-config;
+          extraSpecialArgs = {
+            # inherit (inputs) foo;
+          };
+        };
+
         nix_vim = nixvim'.makeNixvimWithModule nixvimModule;
         lazy_vim = nixvim'.makeNixvimWithModule lazyvimModule;
+        code_vim = nixvim'.makeNixvimWithModule codevimModule;
 
         # Wrapper scripts to create executables for different builds
         nixvim-wrapper = pkgs.writeShellScriptBin "nixvim" ''
@@ -62,20 +71,26 @@
         lazyvim-wrapper = pkgs.writeShellScriptBin "lazyvim" ''
           exec ${lazy_vim}/bin/nvim "$@"
         '';
+        codevim-wrapper = pkgs.writeShellScriptBin "codevim" ''
+          exec ${code_vim}/bin/nvim "$@"
+        '';
       in {
         checks = {
           # Run `nix flake check .` to verify that your config is not broken
           NixVim = nixvimLib.check.mkTestDerivationFromNixvimModule nixvimModule;
           LazyVim = nixvimLib.check.mkTestDerivationFromNixvimModule lazyvimModule;
+          CodeVim = nixvimLib.check.mkTestDerivationFromNixvimModule codevimModule;
         };
         packages = {
           # Original packages
           NixVim = nix_vim;
           LazyVim = lazy_vim;
+          CodeVim = code_vim;
 
           # Wrapper scripts
           nixvim = nixvim-wrapper;
           lazyvim = lazyvim-wrapper;
+          codevim = codevim-wrapper;
           nvim = nvim-wrapper;
 
           default = nixvim-wrapper;
@@ -93,6 +108,13 @@
             program = "${lazy_vim}/bin/nvim";
             meta = {
               description = "LazyVim-based NixVim configuration";
+            };
+          };
+          CodeVim = {
+            type = "app";
+            program = "${code_vim}/bin/nvim";
+            meta = {
+              description = "VSCode-embedded Neovim configuration";
             };
           };
         };

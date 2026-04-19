@@ -1,45 +1,21 @@
-{pkgs, ...}: {
+# nixvim-specific option overrides — settings that only apply to full Neovim
+# (not the VSCode embedded codevim build). Shared opts live in ../shared/options.nix.
+{...}: {
   opts = {
-    # use spaces instead of tabs
-    expandtab = true;
-    # set tab lenght and indent shift to 2
-    tabstop = 2;
+    # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;
-    shiftwidth = 2;
-    # smart auto tab
-    smarttab = true;
-    smartindent = true;
-    breakindent = true;
-    # round indents
-    shiftround = true;
-    # enable relative line number
-    number = true;
-    relativenumber = true;
-    # enable 24-bit RGB color support
-    termguicolors = true;
-    timeout = true;
-    timeoutlen = 300;
-    # how to split windows
-    splitright = true;
-    splitbelow = true;
-    # configure grep to use ripgrep
-    grepprg = "rg --vimgrep --no-heading --smart-case";
-    grepformat = "%f:%l:%c:%m,%f:%l:%m";
   };
   globals = {
-    # set up leader key
-    mapleader = " ";
-    maplocalleader = "\\";
+    # Enable snacks indent guides by default; exposed as a toggle via <leader>ui
     snacks_indent_enabled = true;
   };
   clipboard = {
+    # Override shared clipboard register to empty — nixvim uses native providers
+    # instead of unnamedplus so that xclip/wl-copy handle the bridge explicitly.
     register = "";
     providers = {
       xclip.enable = true;
       wl-copy.enable = true;
     };
-  };
-  performance = {
-    byteCompileLua.enable = true;
   };
 }
