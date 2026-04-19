@@ -54,7 +54,7 @@
   };
   plugins = {
     nui.enable = true;
-    web-devicons.enable = true;
+    # web-devicons is declared in ../shared/plugins.nix
 
     bufferline = {
       enable = true;

@@ -3,48 +3,12 @@
   lib,
   ...
 }: {
-  #TODO:lazy load as much as possible
+  # NOTE: lz-n, treesitter, treesitter-textobjects, nvim-autopairs, mini-align,
+  # ts-comments, flash, nvim-surround, illuminate, and todo-comments are declared
+  # in ../shared/editing.nix and apply to both nixvim and codevim.
+  # gitsigns, treesitter-context, grug-far, persistence, and web-devicons are
+  # declared in ../shared/plugins.nix and apply to both nixvim and codevim.
   plugins = {
-    lz-n = {
-      enable = true;
-    };
-    treesitter = {
-      enable = true;
-      nixvimInjections = true;
-      settings = {
-        indent.enable = true;
-        highlight.enable = true;
-        incremental_selection = {
-          enable = true;
-          # keymaps = {
-          #   init_selection = false;
-          #   node_decremental = "grm";
-          #   node_incremental = "grn";
-          #   scope_incremental = "grc";
-          # };
-        };
-      };
-      lazyLoad = {
-        settings = {
-          event = ["BufEnter"];
-        };
-      };
-    };
-    treesitter-context = {
-      enable = true;
-      settings = {
-        enable = true;
-        line_numbers = true;
-        max_lines = 3;
-        mode = "cursor";
-      };
-      lazyLoad = {
-        settings = {
-          event = ["BufEnter"];
-        };
-      };
-    };
-    treesitter-textobjects.enable = true;
     diffview = {
       enable = true;
       settings = {
@@ -67,7 +31,7 @@
       enable = true;
     };
 
-    web-devicons.enable = true;
+    # web-devicons is declared in ../shared/plugins.nix
 
     oil = {
       enable = true;
@@ -193,25 +157,8 @@
         };
       };
     };
-    ts-comments.enable = true;
-
-    # Git
-    gitsigns = {
-      enable = true;
-      lazyLoad = {
-        settings = {
-          event = ["BufEnter"];
-        };
-      };
-      settings = {
-        current_line_blame = false;
-        current_line_blame_opts = {
-          delay = 100;
-          virt_text = true;
-          virt_text_pos = "eol";
-        };
-      };
-    };
+    # ts-comments is in ../shared/editing.nix
+    # gitsigns is in ../shared/plugins.nix
 
     # LLM
     copilot-lua = {
@@ -224,32 +171,8 @@
       };
     };
 
-    # Code
-    nvim-autopairs = {
-      enable = true;
-      lazyLoad = {
-        settings = {
-          event = ["BufEnter"];
-        };
-      };
-      settings = {
-        check_ts = true;
-      };
-    };
-    mini-align = {
-      enable = true;
-    };
-    flash = {
-      enable = true;
-      settings = {
-        label.rainbow.enable = true;
-        modes = {
-          char = {
-            enabled = true;
-          };
-        };
-      };
-    };
+    # Code — nvim-autopairs, mini-align, flash, nvim-surround, illuminate, ts-comments
+    # are now in ../shared/editing.nix. Only nixvim-specific code plugins below.
 
     # Formatting
     conform-nvim = {
@@ -285,8 +208,8 @@
           ];
           css = ["`css_beautify`"];
           json = ["jq"];
-          yaml = ["yamlftm"];
-          sql = ["sqlruff"];
+          yaml = ["yamlfmt"];
+          sql = ["sqruff"];
           "_" = ["trim_whitespace"];
         };
         formatters = {
@@ -379,14 +302,7 @@
         };
       };
     };
-    grug-far = {
-      enable = true;
-      lazyLoad = {
-        settings = {
-          event = ["VimEnter"];
-        };
-      };
-    };
+    # grug-far is in ../shared/plugins.nix
     obsidian = {
       enable = true;
       lazyLoad = {
@@ -407,15 +323,34 @@
         ];
       };
     };
+
+    # persistence is in ../shared/plugins.nix
+
+    # Unified test runner — supersedes overseer python test templates
+    neotest = {
+      enable = true;
+      lazyLoad.settings.event = ["BufEnter"];
+      adapters.python = {
+        enable = true;
+        settings = {
+          runner = "pytest";
+        };
+      };
+    };
   };
 
   autoCmd = [
     {
-      event = [
-        "VimLeave"
-      ];
+      event = ["VimLeave"];
       pattern = ["*"];
-      command = "silent !zellij action switch-mode normal";
+      # Only run zellij mode reset when actually inside a Zellij session
+      callback.__raw = ''
+        function()
+          if os.getenv("ZELLIJ") then
+            vim.fn.system("zellij action switch-mode normal")
+          end
+        end
+      '';
     }
   ];
 

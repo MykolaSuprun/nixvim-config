@@ -145,32 +145,7 @@
           function() Snacks.picker.git_branches() end
         '';
     }
-    {
-      key = "<leader>gL";
-      options = {
-        silent = true;
-        desc = "Git Log";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() Snacks.picker.git_log() end
-        '';
-    }
-    {
-      key = "<leader>gs";
-      options = {
-        silent = true;
-        desc = "Git Status";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() Snacks.picker.git_status() end
-        '';
-    }
+    # <leader>gL (Git Log) and <leader>gs (Git Status) are in ../shared/keymaps.nix
     {
       key = "<leader>gS";
       options = {
@@ -194,7 +169,7 @@
       action.__raw =
         #lua
         ''
-          function() Snacks.picker.git_stash() end
+          function() Snacks.picker.git_diff() end
         '';
     }
     {
@@ -629,84 +604,7 @@
       mode = ["n"];
       action = "<cmd>:LazyGit<CR>";
     }
-    {
-      key = "<leader>glt";
-      options = {
-        silent = true;
-        desc = "Toggle blame";
-      };
-      mode = ["n"];
-      action = "<cmd>Gitsigns toggle_current_line_blame<cr>";
-    }
-    {
-      key = "<leader>gll";
-      options = {
-        silent = true;
-        desc = "Git Log Line";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() Snacks.picker.git_log_line() end
-        '';
-    }
-    {
-      key = "<leader>glb";
-      options = {
-        silent = true;
-        desc = "Git blame line";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            Snacks.git.blame_line()
-          end
-        '';
-    }
-    {
-      key = "<leader>glB";
-      options = {
-        silent = true;
-        desc = "Git browse line";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            Snacks.gitbrowse()
-          end
-        '';
-    }
-    # Oil
-    {
-      key = "<leader>e";
-      options = {
-        silent = true;
-        desc = "File explorer (Oil)";
-      };
-      mode = ["n"];
-      action = ''<cmd>:Oil<cr>'';
-    }
-    # Notiications
-    {
-      key = "<leader>n";
-      options = {
-        silent = true;
-        desc = "Notifications History";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            Snacks.notifier.show_history()
-          end
-        '';
-    }
+    # <leader>glt/gll/glb/glB and <leader>n are in ../shared/keymaps.nix
     # Visual
     {
       key = "<leader>m";
@@ -723,69 +621,7 @@
           end
         '';
     }
-    # Code
-    {
-      key = "<leader>cff";
-      options = {
-        silent = true;
-        desc = "Format";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''function() require("conform").format() end'';
-    }
-    {
-      key = "<leader>cfF";
-      options = {
-        silent = true;
-        desc = "Format Injected Langs";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            require("conform").format({ formatters = { "injected" }, timeout_ms = 3000 })
-          end
-        '';
-    }
-    {
-      key = "<leader>cft";
-      options = {
-        silent = true;
-        desc = "Enable Format On Save";
-      };
-      mode = ["n"];
-      action = "<cmd>:FormatEnable<CR>";
-    }
-    {
-      key = "<leader>cfT";
-      options = {
-        silent = true;
-        desc = "Disable Format On Save";
-      };
-      mode = ["n"];
-      action = "<cmd>:FormatDisable<CR>";
-    }
-    {
-      key = "<leader>cti";
-      options = {
-        silent = true;
-        desc = "Treesitter - applied groups [word]";
-      };
-      mode = ["n"];
-      action = "<cmd>:Inspect<CR>";
-    }
-    {
-      key = "<leader>ctt";
-      options = {
-        silent = true;
-        desc = "Treesitter - inspect tree";
-      };
-      mode = ["n"];
-      action = "<cmd>:InspectTree<CR>";
-    }
+    # Code — <leader>cff/cfF/cft/cfT/cti/ctt are in ../shared/keymaps.nix
     {
       key = "<leader>ctm";
       options = {
@@ -919,35 +755,9 @@
         desc = "Window - Move to previous";
       };
       mode = ["n"];
-      action = "TmuxNavigatePrevious";
+      action = "<cmd>TmuxNavigatePrevious<CR>";
     }
-    # Flash
-    {
-      key = "<C-s>";
-      options = {
-        silent = true;
-        desc = "Flash Treesitter Selection";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("flash").treesitter() end
-        '';
-    }
-    {
-      key = "<S-s>";
-      options = {
-        silent = true;
-        desc = "Flash Jump";
-      };
-      mode = ["n" "x"];
-      action.__raw =
-        #lua
-        ''
-          function() require("flash").jump() end
-        '';
-    }
+    # Flash (<C-s>/<S-s>) are in ../shared/keymaps.nix
     # Tabs
     # Bufferline tab navigation with Shift+H/L
     {
@@ -1131,70 +941,7 @@
       mode = ["n"];
       action = "<cmd>9tabnext<CR>";
     }
-    # Trouble
-    {
-      key = "<leader>xx";
-      options = {
-        silent = true;
-        desc = "Diagnostics (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble diagnostics toggle<CR>";
-    }
-    {
-      key = "<leader>xX";
-      options = {
-        silent = true;
-        desc = "Buffer Diagnostics (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble diagnostics toggle filter.buf=0<CR>";
-    }
-    {
-      key = "<leader>cs";
-      options = {
-        silent = true;
-        desc = "Symbols (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble symbols toggle focus=false<cr>";
-    }
-    {
-      key = "<leader>cl";
-      options = {
-        silent = true;
-        desc = "LSP Definitions / references / ... (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble lsp toggle focus=false win.position=right<cr>";
-    }
-    {
-      key = "<leader>cL";
-      options = {
-        silent = true;
-        desc = "Location List (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble loclist toggle<cr>";
-    }
-    {
-      key = "<leader>cQ";
-      options = {
-        silent = true;
-        desc = "Quickfix List (Trouble)";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble qflist toggle<cr>";
-    }
-    {
-      key = "<leader>X";
-      options = {
-        silent = true;
-        desc = "Trouble pick list";
-      };
-      mode = ["n"];
-      action = "<cmd>Trouble<cr>";
-    }
+    # Trouble (<leader>xx/xX/cs/cl/cL/cQ/X) are in ../shared/keymaps.nix
     # Copilot
     {
       key = "<leader>Ca";
@@ -1296,97 +1043,52 @@
       mode = ["n"];
       action = "<cmd>OverseerShell<CR>";
     }
-    # Search and replace
+    # Search and replace, persistence, and gitsigns hunks are in ../shared/keymaps.nix
+
+    # Neotest
     {
-      key = "<leader>rr";
-      options = {
-        silent = true;
-        desc = "Find and replace with <ast-grep>";
-      };
+      key = "<leader>Tr";
+      options = {silent = true; desc = "Run Nearest Test";};
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("grug-far").open({ engine = "astgrep" }) end
-        '';
+      action.__raw = ''function() require("neotest").run.run() end'';
     }
     {
-      key = "<leader>rR";
-      options = {
-        silent = true;
-        desc = "Find and replace <rg>";
-      };
+      key = "<leader>Tf";
+      options = {silent = true; desc = "Run Test File";};
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("grug-far").open({ engine = "ripgrep" }) end
-        '';
+      action.__raw = ''function() require("neotest").run.run(vim.fn.expand("%")) end'';
     }
     {
-      key = "<leader>rw";
-      options = {
-        silent = true;
-        desc = "Find and replace <word>";
-      };
+      key = "<leader>Ts";
+      options = {silent = true; desc = "Toggle Test Summary";};
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("grug-far").open({ prefills = { search = vim.fn.expand("<cword>") } }) end
-        '';
+      action.__raw = ''function() require("neotest").summary.toggle() end'';
     }
     {
-      key = "<leader>rf";
-      options = {
-        silent = true;
-        desc = "Find and replace in file with <ast-grep>";
-      };
+      key = "<leader>To";
+      options = {silent = true; desc = "Show Test Output";};
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("grug-far").open({ engine = "astgrep", prefills = { paths = vim.fn.expand("%") } }) end
-        '';
+      action.__raw = ''function() require("neotest").output.open({ enter = true }) end'';
     }
     {
-      key = "<leader>rF";
-      options = {
-        silent = true;
-        desc = "Find and replace in file with <rg>";
-      };
+      key = "]T";
+      options = {silent = true; desc = "Next Failed Test";};
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("grug-far").open({ engine = "ripgrep", prefills = { paths = vim.fn.expand("%") } }) end
-        '';
+      action.__raw = ''function() require("neotest").jump.next({ status = "failed" }) end'';
     }
     {
-      key = "<leader>rv";
-      options = {
-        silent = true;
-        desc = "Find and replace in visual selection";
-      };
+      key = "[T";
+      options = {silent = true; desc = "Prev Failed Test";};
       mode = ["n"];
-      action = "<cmd>GrugFarWithin<cr>";
+      action.__raw = ''function() require("neotest").jump.prev({ status = "failed" }) end'';
     }
+    # Gitsigns hunk navigation is in ../shared/keymaps.nix
   ];
+  # Shared which-key groups (c/cf/ct/g/gh/gl/r/x/q) are in ../shared/keymaps.nix
   plugins.which-key.settings.spec = [
     {
       __unkeyed-1 = "<leader>f";
       group = "find";
-      # icon = "";
-    }
-    {
-      __unkeyed-1 = "<leader>g";
-      group = "git";
-      # icon = "";
-    }
-    {
-      __unkeyed-1 = "<leader>gl";
-      group = "line";
-      # icon = "";
     }
     {
       __unkeyed-1 = "<leader>u";
@@ -1405,25 +1107,9 @@
       group = "search (Grep)";
     }
     {
-      __unkeyed-1 = "<leader>c";
-      group = "code";
-    }
-    {
       __unkeyed-1 = "<leader>C";
       group = "copilot";
       icon = "";
-    }
-    {
-      __unkeyed-1 = "<leader>ct";
-      group = "treesitter";
-    }
-    {
-      __unkeyed-1 = "<leader>cf";
-      group = "format";
-    }
-    {
-      __unkeyed-1 = "<leader>c";
-      group = "code";
     }
     {
       __unkeyed-1 = "<leader>t";
@@ -1436,23 +1122,19 @@
       icon = "󰞵";
     }
     {
-      __unkeyed-1 = "<leader>x";
-      group = "trouble";
-    }
-    {
       __unkeyed-1 = "<leader>o";
       group = "obsidian";
       icon = "󱞁";
     }
     {
-      __unkeyed-1 = "<leader>r";
-      group = "find and Replace";
-      icon = "";
-    }
-    {
       __unkeyed-1 = "<leader>O";
       group = "overseer";
       icon = "󰓧";
+    }
+    {
+      __unkeyed-1 = "<leader>T";
+      group = "test (neotest)";
+      icon = "󰙨";
     }
   ];
   lsp.keymaps = [

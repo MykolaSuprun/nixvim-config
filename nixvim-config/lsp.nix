@@ -8,7 +8,10 @@
       gopls.enable = true;
       metals.enable = true;
       cssls.enable = true;
-      diagnostics.enable = true;
+      # NOTE: 'diagnostics' is not a standard LSP server name. If you want
+      # diagnostic-languageserver (runs linters via LSP), use 'diagnosticls'.
+      # Currently disabled to avoid a silent no-op. nvim-lint already handles linting.
+      # diagnosticls.enable = true;
       dockerls.enable = true;
       docker_compose_language_service.enable = true;
       hyprls.enable = true;
@@ -22,7 +25,7 @@
       ruff.enable = true;
       sqls.enable = true;
       systemd_ls.enable = true;
-      teraformls.enable = true;
+      terraformls.enable = true;
       yamlls.enable = true;
     };
   };
