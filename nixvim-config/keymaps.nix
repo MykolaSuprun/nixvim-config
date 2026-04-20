@@ -131,6 +131,19 @@
           function() Snacks.picker.explorer() end
         '';
     }
+    {
+      key = "<leader>e";
+      options = {
+        silent = true;
+        desc = "File Explorer (oil)";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("oil").open() end
+        '';
+    }
     # Git
     {
       key = "<leader>gb";
