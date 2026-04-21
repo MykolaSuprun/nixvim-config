@@ -7,12 +7,19 @@
 #   otter, hardtime, nix-develop, image, ueberzug
 #
 # Inherited from ../shared/editing.nix (already active):
-#   lz-n, treesitter, treesitter-textobjects, nvim-autopairs, mini-align,
+#   lz-n, treesitter, treesitter-textobjects, mini-align,
 #   ts-comments, flash, nvim-surround, illuminate, todo-comments
+#   nvim-autopairs is DISABLED here — VSCode handles bracket auto-closing natively,
+#   and autopairs' insert-mode <Esc> mapping conflicts with vscode-neovim's escape handling.
 # Inherited from ../shared/plugins.nix (already active):
 #   gitsigns, treesitter-context, grug-far, persistence, web-devicons
-{...}: {
+{lib, ...}: {
   plugins = {
+    # VSCode handles bracket auto-closing natively. Autopairs alskkkkuo maps <Esc> in
+    # insert mode which races with vscode-neovim's escape interception, breaking
+    # Insert→Normal mode transition.
+    nvim-autopairs.enable = lib.mkForce false;
+
     which-key = {
       enable = true;
       settings = {
