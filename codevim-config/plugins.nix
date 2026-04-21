@@ -15,10 +15,6 @@
 #   gitsigns, treesitter-context, grug-far, persistence, web-devicons
 {lib, ...}: {
   plugins = {
-    # VSCode handles bracket auto-closing natively. Autopairs alskkkkuo maps <Esc> in
-    # insert mode which races with vscode-neovim's escape interception, breaking
-    # Insert→Normal mode transition.
-    nvim-autopairs.enable = lib.mkForce false;
 
     which-key = {
       enable = true;
