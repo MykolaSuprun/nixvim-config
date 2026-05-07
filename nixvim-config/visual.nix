@@ -187,12 +187,24 @@
   };
 
   extraConfigLuaPost = ''
-    local local_colorscheme = os.getenv('STYLIX_COLORSCHEME')
+    -- $COLORTERM is the accepted standard: terminals with 24-bit truecolor set
+    -- it to 'truecolor' or '24bit'. The Linux kernel TTY and serial consoles
+    -- leave it unset, which is the only case we need to guard against.
+    local has_truecolor = vim.env.COLORTERM == 'truecolor' or vim.env.COLORTERM == '24bit'
 
-    -- If the environment variable is set, construct and apply the colorscheme
-    if local_colorscheme then
-      -- local colorscheme = 'base16-' .. local_colorscheme
-      pcall(vim.cmd, 'colorscheme ' .. local_colorscheme)
+    if not has_truecolor then
+      -- Disable 24-bit color and apply a built-in colorscheme that renders
+      -- correctly on 8/16-color terminals (Linux TTY, serial console, etc.)
+      vim.opt.termguicolors = false
+      pcall(vim.cmd, 'colorscheme habamax')
+    else
+      local local_colorscheme = vim.env.STYLIX_COLORSCHEME
+
+      -- If the environment variable is set, override with the Stylix colorscheme
+      if local_colorscheme then
+        -- local colorscheme = 'base16-' .. local_colorscheme
+        pcall(vim.cmd, 'colorscheme ' .. local_colorscheme)
+      end
     end
 
     -- Macro recording indicator using autocommands
