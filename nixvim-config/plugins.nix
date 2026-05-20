@@ -274,14 +274,15 @@
       };
       settings = {
         auto_suggestions_provider = "copilot";
-        provider = "copilot";
+        provider = "openrouter";
         providers = {
           openrouter = {
             __inherited_from = "openai";
             endpoint = "https://openrouter.ai/api/v1";
             api_key_name = "OPENROUTER_API_KEY";
-            model = "z-ai/glm-5";
+            model = "moonshotai/kimi-k2.6";
           };
+          copilot = {};
         };
         web_search_engine = {
           provider = "kagi";
@@ -325,6 +326,57 @@
     };
 
     # persistence is in ../shared/plugins.nix
+
+    # Diagnostic list panel
+    trouble = {
+      enable = true;
+      settings = {
+        auto_close = false;
+        auto_preview = true;
+        focus = true;
+        modes = {
+          diagnostics = {
+            auto_open = false;
+          };
+        };
+      };
+    };
+
+    # Symbol outline panel (LSP + treesitter backends)
+    aerial = {
+      enable = true;
+      settings = {
+        backends = ["treesitter" "lsp" "markdown" "man"];
+        layout = {
+          max_width = [40 0.2];
+          width = null;
+          min_width = 20;
+          default_direction = "prefer_right";
+        };
+        attach_mode = "window";
+        show_guides = true;
+        filter_kind = false;
+      };
+    };
+
+    # File bookmarks with per-project numbered slots
+    harpoon = {
+      enable = true;
+      enableTelescope = false;
+    };
+
+    # Center the current window by adding equal padding buffers on each side
+    no-neck-pain = {
+      enable = true;
+      settings = {
+        width = 120;
+        autocmds = {
+          enableOnVimEnter = false;
+          enableOnTabEnter = false;
+          reloadOnColorSchemeChange = true;
+        };
+      };
+    };
 
     # Unified test runner — supersedes overseer python test templates
     neotest = {
