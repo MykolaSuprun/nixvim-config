@@ -1,4 +1,19 @@
-{pkgs, ...}: {
+{pkgs, ...}: let
+  # Hoisted to avoid Nix treesitter parser confusion when __raw sits inside
+  # a heterogeneous list alongside bare strings (breaks editor highlighting).
+  macroRecordingComponent = {
+    __raw = ''
+      function()
+        local recording_register = vim.fn.reg_recording()
+        if recording_register == "" then
+          return ""
+        else
+          return "Recording @" .. recording_register
+        end
+      end
+    '';
+  };
+in {
   colorschemes = {
     base16 = {
       enable = true;
@@ -22,7 +37,7 @@
           treesitter = true;
           treesitter_context = true;
           # harpoon = true;
-          # nvim-cmp = true;
+          harpoon = true;
           notifier = true;
           noice = true;
           notify = true;
@@ -31,7 +46,9 @@
             indent_scope_color = "lavender";
           };
           # dap = true;
+          dap = true;
           # dap-ui = true;
+          dap_ui = true;
           semantic_tokens = true;
           native_lsp = {
             enabled = true;
@@ -159,22 +176,11 @@
           lualine_b = ["branch" "diff" "diagnostics"];
           lualine_c = ["filename" "lsp_status"];
           lualine_x = [
-            {
-              __raw = ''
-                function()
-                  local recording_register = vim.fn.reg_recording()
-                  if recording_register == "" then
-                    return ""
-                  else
-                    return "Recording @" .. recording_register
-                  end
-                end
-              '';
-              # color = {
-              #   fg = "#ff9e64";
-              #   gui = "bold";
-              # };
-            }
+            macroRecordingComponent
+            # color = {
+            #   fg = "#ff9e64";
+            #   gui = "bold";
+            # };
             "encoding"
             "fileformat"
             "filetype"
