@@ -2,9 +2,7 @@
 -- Tasks are only registered when `dbt` is found on PATH at startup.
 local overseer = require("overseer")
 
-if vim.fn.executable("dbt") == 0 then
-	return
-end
+if vim.fn.executable("dbt") == 1 then
 
 -- dbt run: run all models.
 overseer.register_template({
@@ -136,3 +134,4 @@ overseer.register_template({
 		}
 	end,
 })
+end -- vim.fn.executable("dbt")
