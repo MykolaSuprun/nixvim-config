@@ -15,7 +15,6 @@
 #   gitsigns, treesitter-context, grug-far, persistence, web-devicons
 {lib, ...}: {
   plugins = {
-
     which-key = {
       enable = true;
       settings = {
