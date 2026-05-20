@@ -32,25 +32,23 @@
         };
 
         nixvimModule = {
-          inherit system; # or alternatively, set `pkgs`
-          module = import ./nixvim-config; # import the module directly
-          # You can use `extraSpecialArgs` to pass additional arguments to your module files
+          inherit pkgs; # pkgs has config.allowUnfree = true
+          module = import ./nixvim-config;
           extraSpecialArgs = {
             # inherit (inputs) foo;
           };
         };
 
         lazyvimModule = {
-          inherit system; # or alternatively, set `pkgs`
-          module = import ./lazyvim-config; # import the module directly
-          # You can use `extraSpecialArgs` to pass additional arguments to your module files
+          inherit pkgs; # pkgs has config.allowUnfree = true
+          module = import ./lazyvim-config;
           extraSpecialArgs = {
             # inherit (inputs) foo;
           };
         };
 
         codevimModule = {
-          inherit system;
+          inherit pkgs; # pkgs has config.allowUnfree = true
           module = import ./codevim-config;
           extraSpecialArgs = {
             # inherit (inputs) foo;
