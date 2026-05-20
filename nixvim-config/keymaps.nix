@@ -618,21 +618,15 @@
       action = "<cmd>:LazyGit<CR>";
     }
     # <leader>glt/gll/glb/glB and <leader>n are in ../shared/keymaps.nix
-    # Visual
+    # Visual — center active window with equal side padding (no UI hiding)
     {
       key = "<leader>m";
       options = {
         silent = true;
-        desc = "Zen mode";
+        desc = "Center / No-neck-pain toggle";
       };
       mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            Snacks.zen()
-          end
-        '';
+      action = "<cmd>NoNeckPain<CR>";
     }
     # Code — <leader>cff/cfF/cft/cfT/cti/ctt are in ../shared/keymaps.nix
     {
@@ -1096,6 +1090,181 @@
       action.__raw = ''function() require("neotest").jump.prev({ status = "failed" }) end'';
     }
     # Gitsigns hunk navigation is in ../shared/keymaps.nix
+
+    # ── DAP ────────────────────────────────────────────────────────────────
+    {
+      key = "<F5>";
+      options = {silent = true; desc = "Debug: Continue";  };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").continue() end'';
+    }
+    {
+      key = "<F10>";
+      options = {silent = true; desc = "Debug: Step Over"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").step_over() end'';
+    }
+    {
+      key = "<F11>";
+      options = {silent = true; desc = "Debug: Step Into"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").step_into() end'';
+    }
+    {
+      key = "<F12>";
+      options = {silent = true; desc = "Debug: Step Out";  };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").step_out() end'';
+    }
+    {
+      key = "<leader>db";
+      options = {silent = true; desc = "Toggle Breakpoint"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").toggle_breakpoint() end'';
+    }
+    {
+      key = "<leader>dB";
+      options = {silent = true; desc = "Conditional Breakpoint"; };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+        end
+      '';
+    }
+    {
+      key = "<leader>du";
+      options = {silent = true; desc = "Toggle DAP UI"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dapui").toggle() end'';
+    }
+    {
+      key = "<leader>de";
+      options = {silent = true; desc = "Evaluate Expression"; };
+      mode = ["n" "v"];
+      action.__raw = ''function() require("dapui").eval() end'';
+    }
+    {
+      key = "<leader>dc";
+      options = {silent = true; desc = "Run to Cursor"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").run_to_cursor() end'';
+    }
+    {
+      key = "<leader>dl";
+      options = {silent = true; desc = "Run Last Debug Config"; };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").run_last() end'';
+    }
+    {
+      key = "<leader>dL";
+      options = {silent = true; desc = "Launch OSV (Lua/Neovim DAP server)"; };
+      mode = ["n"];
+      action.__raw = ''function() require("osv").launch({ port = 8086 }) end'';
+    }
+
+    # ── Aerial (symbol outline) ─────────────────────────────────────────────
+    {
+      key = "<leader>cs";
+      options = {silent = true; desc = "Symbols Outline (Aerial)"; };
+      mode = ["n"];
+      action = "<cmd>AerialToggle<CR>";
+    }
+    {
+      key = "{";
+      options = {silent = true; desc = "Prev Symbol (Aerial)"; };
+      mode = ["n"];
+      action.__raw = ''function() require("aerial").prev() end'';
+    }
+    {
+      key = "}";
+      options = {silent = true; desc = "Next Symbol (Aerial)"; };
+      mode = ["n"];
+      action.__raw = ''function() require("aerial").next() end'';
+    }
+
+    # ── Harpoon ─────────────────────────────────────────────────────────────
+    {
+      key = "<leader>ha";
+      options = {silent = true; desc = "Harpoon: Add File"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():add() end'';
+    }
+    {
+      key = "<leader>hh";
+      options = {silent = true; desc = "Harpoon: Quick Menu"; };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          local harpoon = require("harpoon")
+          harpoon.ui:toggle_quick_menu(harpoon:list())
+        end
+      '';
+    }
+    {
+      key = "<leader>1";
+      options = {silent = true; desc = "Harpoon: File 1"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():select(1) end'';
+    }
+    {
+      key = "<leader>2";
+      options = {silent = true; desc = "Harpoon: File 2"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():select(2) end'';
+    }
+    {
+      key = "<leader>3";
+      options = {silent = true; desc = "Harpoon: File 3"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():select(3) end'';
+    }
+    {
+      key = "<leader>4";
+      options = {silent = true; desc = "Harpoon: File 4"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():select(4) end'';
+    }
+    {
+      key = "<leader>hp";
+      options = {silent = true; desc = "Harpoon: Prev File"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():prev() end'';
+    }
+    {
+      key = "<leader>hn";
+      options = {silent = true; desc = "Harpoon: Next File"; };
+      mode = ["n"];
+      action.__raw = ''function() require("harpoon"):list():next() end'';
+    }
+
+    # ── Terminal ─────────────────────────────────────────────────────────────
+    {
+      key = "<C-\\>";
+      options = {silent = true; desc = "Toggle Terminal"; };
+      mode = ["n" "t"];
+      action.__raw = ''function() Snacks.terminal.toggle() end'';
+    }
+    {
+      key = "<leader>tf";
+      options = {silent = true; desc = "Float Terminal"; };
+      mode = ["n"];
+      action.__raw = ''function() Snacks.terminal.toggle() end'';
+    }
+
+    # ── Overseer extras ──────────────────────────────────────────────────────
+    {
+      key = "<leader>OR";
+      options = {silent = true; desc = "Restart Last Task"; };
+      mode = ["n"];
+      action = "<cmd>OverseerRestartLast<CR>";
+    }
+    {
+      key = "<leader>Ow";
+      options = {silent = true; desc = "Watch (Restart on Save)"; };
+      mode = ["n"];
+      action = "<cmd>OverseerQuickAction restart on save<CR>";
+    }
   ];
   # Shared which-key groups (c/cf/ct/g/gh/gl/r/x/q) are in ../shared/keymaps.nix
   plugins.which-key.settings.spec = [
@@ -1123,6 +1292,16 @@
       __unkeyed-1 = "<leader>C";
       group = "copilot";
       icon = "";
+    }
+    {
+      __unkeyed-1 = "<leader>d";
+      group = "debug";
+      icon = "";
+    }
+    {
+      __unkeyed-1 = "<leader>h";
+      group = "harpoon";
+      icon = "󰛢";
     }
     {
       __unkeyed-1 = "<leader>t";

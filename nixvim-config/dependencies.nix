@@ -38,7 +38,10 @@
     bandit
     python313Packages.cssbeautifier
     python313Packages.flake8
+    python313Packages.debugpy
     go
+    delve
+    golangci-lint
     zsh
   ];
   extraLuaPackages = ps: [ps.magick];

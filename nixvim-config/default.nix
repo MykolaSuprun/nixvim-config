@@ -13,6 +13,7 @@
     ./lsp.nix
     ./plugins.nix
     ./keymaps.nix
+    ./dap.nix
     ./overseer
   ];
 }
