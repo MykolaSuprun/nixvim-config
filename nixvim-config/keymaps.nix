@@ -987,6 +987,33 @@
       action = "<cmd>Copilot version<cr>";
     }
     {
+      key = "<leader>Ct";
+      options = {
+        silent = true;
+        desc = "Toggle Copilot suggestions";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("copilot.suggestion").toggle_auto_trigger() end'';
+    }
+    {
+      key = "<leader>at";
+      options = {
+        silent = true;
+        desc = "Toggle Avante suggestions";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function()
+            local cfg = require("avante.config")
+            cfg.behaviour.auto_suggestions = not cfg.behaviour.auto_suggestions
+            local state = cfg.behaviour.auto_suggestions and "enabled" or "disabled"
+            Snacks.notifier.notify("Avante suggestions " .. state, { title = "Avante" })
+          end
+        '';
+    }
+    {
       key = "<leader>o";
       options = {
         silent = true;

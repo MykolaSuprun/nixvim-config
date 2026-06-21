@@ -79,6 +79,25 @@
       settings.no_mappings = 1;
     };
 
+    colorful-winsep = {
+      enable = true;
+      settings = {
+        border = "rounded";
+        highlight = "#7287fd";
+        excluded_ft = [
+          "NvimTree"
+          "lazy"
+          "mason"
+          "noice"
+          "OverseerList"
+          "snacks_terminal"
+          "snacks_picker_input"
+          "snacks_picker_list"
+        ];
+        animate.enabled = "shift";
+      };
+    };
+
     zellij-nav = {
       enable = false;
     };
@@ -162,11 +181,16 @@
 
     # LLM
     copilot-lua = {
-      enable = true;
+      enable = false;
+      settings = {
+        suggestion = {
+          enabled = false;
+          auto_trigger = false;
+        };
+      };
       lazyLoad = {
         settings = {
           event = ["VimEnter"];
-          sugesstion.enabled = false;
         };
       };
     };
@@ -273,7 +297,7 @@
         };
       };
       settings = {
-        auto_suggestions_provider = "copilot";
+        # auto_suggestions_provider = "copilot";
         provider = "openrouter";
         providers = {
           openrouter = {
