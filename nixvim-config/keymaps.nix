@@ -949,52 +949,6 @@
       action = "<cmd>9tabnext<CR>";
     }
     # Trouble (<leader>xx/xX/cs/cl/cL/cQ/X) are in ../shared/keymaps.nix
-    # Copilot
-    {
-      key = "<leader>Ca";
-      options = {
-        silent = true;
-        desc = "Copilot auth";
-      };
-      mode = ["n"];
-      action = "<cmd>Copilot auth<cr>";
-    }
-    {
-      key = "<leader>Cs";
-      options = {
-        silent = true;
-        desc = "Copilot status";
-      };
-      mode = ["n"];
-      action = "<cmd>Copilot status<cr>";
-    }
-    {
-      key = "<leader>Cp";
-      options = {
-        silent = true;
-        desc = "Copilot panel";
-      };
-      mode = ["n"];
-      action = "<cmd>Copilot panel<cr>";
-    }
-    {
-      key = "<leader>Cv";
-      options = {
-        silent = true;
-        desc = "Copilot version";
-      };
-      mode = ["n"];
-      action = "<cmd>Copilot version<cr>";
-    }
-    {
-      key = "<leader>Ct";
-      options = {
-        silent = true;
-        desc = "Toggle Copilot suggestions";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("copilot.suggestion").toggle_auto_trigger() end'';
-    }
     {
       key = "<leader>at";
       options = {
@@ -1410,11 +1364,6 @@
     {
       __unkeyed-1 = "<leader>s";
       group = "search (Grep)";
-    }
-    {
-      __unkeyed-1 = "<leader>C";
-      group = "copilot";
-      icon = "";
     }
     {
       __unkeyed-1 = "<leader>d";

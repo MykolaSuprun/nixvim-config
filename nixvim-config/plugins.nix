@@ -297,16 +297,29 @@
         };
       };
       settings = {
-        # auto_suggestions_provider = "copilot";
-        provider = "openrouter";
+        # Changed from "ollama" to "lmstudio"
+        provider = "lmstudio";
+        auto_suggestions_provider = "lmstudio";
+
         providers = {
+          # LM Studio local configuration
+          lmstudio = {
+            __inherited_from = "openai";
+            endpoint = "http://localhost:1234/v1";
+            model = "qwopus3.6-27b-coder-mtp";
+            api_key_name = "NVIM_LM_STUDIO_API_KEY";
+            # disable_tools = true; # Highly recommended for local models to prevent crashing/hallucinations
+          };
           openrouter = {
             __inherited_from = "openai";
             endpoint = "https://openrouter.ai/api/v1";
             api_key_name = "OPENROUTER_API_KEY";
             model = "moonshotai/kimi-k2.6";
           };
-          copilot = {};
+          # Hide Copilot from model selector to avoid auth errors
+          copilot = {
+            hide_in_model_selector = true;
+          };
         };
         web_search_engine = {
           provider = "kagi";
@@ -320,7 +333,6 @@
         input = {
           provider = "snacks";
           provider_opts = {
-            # Additional snacks.input options
             title = "Avante Input";
             icon = " ";
           };
