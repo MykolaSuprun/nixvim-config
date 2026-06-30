@@ -30,8 +30,12 @@
   clipboard = {
     register = "unnamedplus";
     providers = {
-      xclip.enable = true;
-      wl-copy.enable = true;
+      # Enable X11 and Wayland clipboards only on Linux
+      xclip.enable = pkgs.stdenv.isLinux;
+      wl-copy.enable = pkgs.stdenv.isLinux;
+
+      # Enable macOS clipboard only on Darwin
+      pbcopy.enable = pkgs.stdenv.isDarwin;
     };
   };
   performance = {
