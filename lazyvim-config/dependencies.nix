@@ -5,7 +5,7 @@
     sed.enable = true;
     tree-sitter.enable = true;
     imagemagick.enable = true;
-    ueberzug.enable = true;
+    ueberzug.enable = pkgs.stdenv.isLinux;
     wezterm.enable = true;
     git.enable = true;
     gh.enable = true;

@@ -28,12 +28,11 @@
     maplocalleader = "\\";
   };
   clipboard = {
-    register = "unnamedplus";
+    register = "";
     providers = {
       # Enable X11 and Wayland clipboards only on Linux
       xclip.enable = pkgs.stdenv.isLinux;
       wl-copy.enable = pkgs.stdenv.isLinux;
-
       # Enable macOS clipboard only on Darwin
       pbcopy.enable = pkgs.stdenv.isDarwin;
     };
