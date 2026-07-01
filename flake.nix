@@ -72,6 +72,31 @@
         codevim-wrapper = pkgs.writeShellScriptBin "codevim" ''
           exec ${code_vim}/bin/nvim "$@"
         '';
+
+        # Docker images — self-contained, loadable on any machine with Docker.
+        # Build: nix build .#docker-nixvim
+        # Load:  docker load < result
+        # Run:   docker run --rm -it nixvim:latest
+        docker-nixvim = pkgs.dockerTools.buildImage {
+          name = "nixvim";
+          tag = "latest";
+          copyToRoot = nix_vim;
+          config.Entrypoint = [ "/bin/nvim" ];
+        };
+
+        docker-lazyvim = pkgs.dockerTools.buildImage {
+          name = "lazyvim";
+          tag = "latest";
+          copyToRoot = lazy_vim;
+          config.Entrypoint = [ "/bin/nvim" ];
+        };
+
+        docker-codevim = pkgs.dockerTools.buildImage {
+          name = "codevim";
+          tag = "latest";
+          copyToRoot = code_vim;
+          config.Entrypoint = [ "/bin/nvim" ];
+        };
       in {
         checks = {
           # Run `nix flake check .` to verify that your config is not broken
@@ -92,6 +117,11 @@
           nvim = nvim-wrapper;
 
           default = nixvim-wrapper;
+
+          # Docker images
+          docker-nixvim = docker-nixvim;
+          docker-lazyvim = docker-lazyvim;
+          docker-codevim = docker-codevim;
         };
         apps = {
           NixVim = {
