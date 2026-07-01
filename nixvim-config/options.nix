@@ -1,6 +1,6 @@
 # nixvim-specific option overrides — settings that only apply to full Neovim
 # (not the VSCode embedded codevim build). Shared opts live in ../shared/options.nix.
-{pkgs, ...}: {
+{ ... }: {
   opts = {
     # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;
@@ -10,15 +10,30 @@
     snacks_indent_enabled = true;
   };
   clipboard = {
-    # Override shared clipboard register to empty — nixvim uses native providers
-    # instead of unnamedplus so that xclip/wl-copy handle the bridge explicitly.
-    register = "";
+    # Always use OSC 52 for clipboard. This works in Docker, SSH, tmux, and
+    # virtually all modern terminals without needing xclip, wl-copy, or pbcopy.
+    # Native providers are disabled to avoid silent failures in containerized
+    # or headless environments.
+    register = "unnamedplus";
     providers = {
-      # Enable X11 and Wayland clipboards only on Linux
-      xclip.enable = pkgs.stdenv.isLinux;
-      wl-copy.enable = pkgs.stdenv.isLinux;
-      # Enable macOS clipboard only on Darwin
-      pbcopy.enable = pkgs.stdenv.isDarwin;
+      xclip.enable = false;
+      wl-copy.enable = false;
+      pbcopy.enable = false;
     };
   };
+  extraConfigLua = ''
+    -- OSC 52 clipboard — works via terminal escape sequences.
+    -- Supported by iTerm2, WezTerm, Alacritty, GNOME Terminal, tmux, etc.
+    vim.g.clipboard = {
+      name = "OSC 52",
+      copy = {
+        ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+      },
+      paste = {
+        ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+      },
+    }
+  '';
 }
