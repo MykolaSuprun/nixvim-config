@@ -18,7 +18,9 @@ set -euo pipefail
 
 DEFAULT_PROFILE="nixvim"
 VALID_PROFILES=("nixvim" "lazyvim" "codevim")
-IMAGE_TAG="latest"
+LOCAL_TAG="latest"
+DOCKERHUB_USER="mykolasuprun"
+DOCKERHUB_REPO="nixvim"
 
 profile="${1:-$DEFAULT_PROFILE}"
 
@@ -33,7 +35,7 @@ if [[ "$valid" -eq 0 ]]; then
   exit 1
 fi
 
-IMAGE_NAME="$profile"
+LOCAL_IMAGE="${profile}:${LOCAL_TAG}"
 FLAKE_TARGET="docker-$profile"
 OUTPUT_FILE="${profile}-docker.tar.gz"
 
@@ -44,7 +46,7 @@ echo "[docker-export] Loading image into Docker..."
 docker load < "$RESULT_PATH"
 
 echo "[docker-export] Exporting to ${OUTPUT_FILE}..."
-docker save "${IMAGE_NAME}:${IMAGE_TAG}" | gzip > "$OUTPUT_FILE"
+docker save "$LOCAL_IMAGE" | gzip > "$OUTPUT_FILE"
 
 echo "[docker-export] Done."
 echo ""
@@ -54,5 +56,7 @@ echo ""
 echo "To transfer and load on another machine:"
 echo "  scp ${OUTPUT_FILE} target:/tmp"
 echo "  ssh target 'gunzip < /tmp/${OUTPUT_FILE} | docker load'"
-echo "  ssh target 'docker run --rm -it ${IMAGE_NAME}:${IMAGE_TAG}'"
+echo "  ssh target 'docker run --rm -it ${LOCAL_IMAGE}'"
+echo ""
+echo "Docker Hub tag (for reference): ${DOCKERHUB_USER}/${DOCKERHUB_REPO}:${profile}-latest"
 

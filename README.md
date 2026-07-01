@@ -77,36 +77,46 @@ Three images are available:
 
 ### Quick Start (recommended)
 
-Two helper scripts in `docker/` handle build, load, and run automatically:
+Three helper scripts in `docker/` handle build, load, and run.
 
 ```bash
-# Run with sensible defaults (auto-builds and loads the image)
+# Run from Docker Hub (no Nix required). Auto-detects colima or docker.
+./docker/docker-run-registry.sh [PROFILE] [--] [NVIM_ARGS...]
+
+# Run with local Nix build fallback (builds if Docker Hub is offline)
 ./docker/docker-run.sh [PROFILE] [--] [NVIM_ARGS...]
 
 # Export a portable tarball for offline transfer
 ./docker/docker-export.sh [PROFILE]
+
+# Build and push to Docker Hub (for maintainers)
+./docker/docker-push.sh [PROFILE]
 ```
 
-#### `docker-run.sh`
+#### `docker-run-registry.sh` — Docker Hub only, no Nix
+
+Use this on machines without Nix installed. It pulls directly from Docker Hub and auto-detects `colima` or `docker` as the runtime.
 
 ```bash
 # Open current directory in nixvim (default profile)
-./docker/docker-run.sh
+./docker/docker-run-registry.sh
 
 # Open a specific file
-./docker/docker-run.sh src/main.rs
+./docker/docker-run-registry.sh src/main.rs
 
 # Use a different profile
-./docker/docker-run.sh lazyvim -- .
-./docker/docker-run.sh codevim -- src/main.rs
+./docker/docker-run-registry.sh lazyvim -- .
+./docker/docker-run-registry.sh codevim -- src/main.rs
 
 # Pass nvim flags
-./docker/docker-run.sh -- +"Telescope find_files"
-./docker/docker-run.sh nixvim -- --headless -c "echo 'hello' | q"
+./docker/docker-run-registry.sh -- +"Telescope find_files"
+./docker/docker-run-registry.sh nixvim -- --headless -c "echo 'hello' | q"
 ```
 
 What the script does automatically:
-- Builds and loads the image via `nix build` if it is not already in Docker.
+- **Auto-detects container runtime** — prefers `colima` if installed, falls back to `docker`. Override with `DOCKER_CMD=podman`.
+- **Starts colima automatically** if it's installed but not running.
+- **Pulls from Docker Hub** — `mykolasuprun/nixvim:<profile>-latest`.
 - Mounts `$PWD` → `/workspace`.
 - Forwards `TERM`, `COLORTERM`, `BAT_THEME`, `STYLIX_COLORSCHEME`, `TMUX`, `TMUX_PANE`.
 - Mounts `~/.gitconfig` and `~/.ssh` (read-only) when they exist.
@@ -128,6 +138,40 @@ Transfer to another machine (no Nix needed on the target):
 scp nixvim-docker.tar.gz target:/tmp
 ssh target 'gunzip < /tmp/nixvim-docker.tar.gz | docker load'
 ssh target 'docker run --rm -it nixvim:latest'
+```
+
+#### `docker-push.sh` (for maintainers)
+
+```bash
+# Push nixvim (default) to Docker Hub
+./docker/docker-push.sh
+
+# Push a specific profile
+./docker/docker-push.sh lazyvim
+./docker/docker-push.sh codevim
+```
+
+Prerequisites: `docker login -u mykolasuprun`
+
+Pushes to: `mykolasuprun/nixvim:<profile>-latest`
+
+### Using Docker Hub directly
+
+If you prefer to use `docker` commands directly:
+
+```bash
+# Pull and run from Docker Hub
+docker pull mykolasuprun/nixvim:nixvim-latest
+docker run --rm -it mykolasuprun/nixvim:nixvim-latest
+
+# With a host directory mounted
+docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:nixvim-latest .
+
+# LazyVim
+docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:lazyvim-latest .
+
+# CodeVim
+docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:codevim-latest .
 ```
 
 ### Manual Build / Load / Run

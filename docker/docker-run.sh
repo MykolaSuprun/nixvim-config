@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # docker-run.sh — run nixvim Docker images with sensible defaults.
 #
+# Tries Docker Hub (mykolasuprun/nixvim) first, falls back to local Nix build.
+#
 # Usage:
 #   docker-run.sh [PROFILE] [--] [NVIM_ARGS...]
 #
 #   PROFILE is one of: nixvim, lazyvim, codevim  (default: nixvim)
 #   Everything after -- is passed directly to nvim inside the container.
-#   If no -- is given, PROFILE is detected heuristically; remaining args go to nvim.
 #
 # Examples:
 #   docker-run.sh                         # opens current directory in nixvim
@@ -18,7 +19,8 @@
 #   docker-run.sh nixvim -- --headless -c "echo 'hello' | q"
 #
 # Automatic behaviours:
-#   • Builds and loads the Docker image if not already present.
+#   • Pulls from Docker Hub (mykolasuprun/nixvim:<profile>-latest) if available.
+#   • Falls back to local Nix build if the image is not on Docker Hub.
 #   • Mounts $PWD → /workspace (default target).
 #   • Forwards TERM, COLORTERM, BAT_THEME, STYLIX_COLORSCHEME, TMUX, TMUX_PANE.
 #   • Mounts ~/.gitconfig and ~/.ssh (read-only) when they exist.
@@ -32,7 +34,9 @@ set -euo pipefail
 
 DEFAULT_PROFILE="nixvim"
 VALID_PROFILES=("nixvim" "lazyvim" "codevim")
-IMAGE_TAG="latest"
+LOCAL_TAG="latest"
+DOCKERHUB_USER="mykolasuprun"
+DOCKERHUB_REPO="nixvim"
 WORKSPACE="/workspace"
 
 # ---------------------------------------------------------------------------
@@ -80,24 +84,35 @@ if [[ ${#NVIM_ARGS[@]} -eq 0 ]]; then
   NVIM_ARGS=(".")
 fi
 
-IMAGE_NAME="$PROFILE"
-FLAKE_TARGET="docker-$PROFILE"
+LOCAL_IMAGE="${PROFILE}:${LOCAL_TAG}"
+REMOTE_IMAGE="${DOCKERHUB_USER}/${DOCKERHUB_REPO}:${PROFILE}-latest"
+FLAKE_TARGET="docker-${PROFILE}"
 
 # ---------------------------------------------------------------------------
-# Build / load image
+# Resolve image: Docker Hub → local Nix build
 # ---------------------------------------------------------------------------
 
-echo "[docker-run] Using profile: $PROFILE"
+echo "[docker-run] Profile: $PROFILE"
 
-if ! docker image inspect "${IMAGE_NAME}:${IMAGE_TAG}" &>/dev/null; then
-  echo "[docker-run] Image ${IMAGE_NAME}:${IMAGE_TAG} not found. Building..."
-  nix build ".#${FLAKE_TARGET}" --no-link --print-out-paths >/dev/null
-  RESULT_PATH=$(nix build ".#${FLAKE_TARGET}" --no-link --print-out-paths)
-  echo "[docker-run] Loading image into Docker..."
-  docker load < "$RESULT_PATH"
-  echo "[docker-run] Image loaded."
+# Try Docker Hub first (silent, don't fail on error)
+if docker pull "$REMOTE_IMAGE" &>/dev/null; then
+  echo "[docker-run] Using Docker Hub image: $REMOTE_IMAGE"
+  IMAGE_NAME="$REMOTE_IMAGE"
 else
-  echo "[docker-run] Image ${IMAGE_NAME}:${IMAGE_TAG} already present."
+  echo "[docker-run] Docker Hub unavailable. Falling back to local build..."
+
+  if ! docker image inspect "$LOCAL_IMAGE" &>/dev/null; then
+    echo "[docker-run] Local image $LOCAL_IMAGE not found. Building with Nix..."
+    nix build ".#${FLAKE_TARGET}" --no-link --print-out-paths >/dev/null
+    RESULT_PATH=$(nix build ".#${FLAKE_TARGET}" --no-link --print-out-paths)
+    echo "[docker-run] Loading image into Docker..."
+    docker load < "$RESULT_PATH"
+    echo "[docker-run] Image loaded."
+  else
+    echo "[docker-run] Local image $LOCAL_IMAGE already present."
+  fi
+
+  IMAGE_NAME="$LOCAL_IMAGE"
 fi
 
 # ---------------------------------------------------------------------------
@@ -144,5 +159,5 @@ fi
 # ---------------------------------------------------------------------------
 
 set -x
-docker run "${DOCKER_ARGS[@]}" "${IMAGE_NAME}:${IMAGE_TAG}" "${NVIM_ARGS[@]}"
+docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME" "${NVIM_ARGS[@]}"
 
