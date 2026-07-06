@@ -1,6 +1,6 @@
 # nixvim-specific option overrides — settings that only apply to full Neovim
 # (not the VSCode embedded codevim build). Shared opts live in ../shared/options.nix.
-{ ... }: {
+{...}: {
   opts = {
     # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;
@@ -14,7 +14,7 @@
     # virtually all modern terminals without needing xclip, wl-copy, or pbcopy.
     # Native providers are disabled to avoid silent failures in containerized
     # or headless environments.
-    register = "unnamedplus";
+    register = "";
     providers = {
       xclip.enable = false;
       wl-copy.enable = false;

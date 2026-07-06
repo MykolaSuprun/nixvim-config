@@ -314,7 +314,7 @@
             __inherited_from = "openai";
             endpoint = "https://openrouter.ai/api/v1";
             api_key_name = "OPENROUTER_API_KEY";
-            model = "moonshotai/kimi-k2.6";
+            model = "z-ai/glm-5.2";
           };
           # Hide Copilot from model selector to avoid auth errors
           copilot = {
