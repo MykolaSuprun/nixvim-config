@@ -25,10 +25,43 @@
       };
     };
 
-    nix-develop.enable = true;
+    nix-develop = {
+      # `nix develop` without restarting Neovim. Lazy-load only on .nix buffers.
+      enable = true;
+      lazyLoad.settings.event = [
+        {
+          event = "BufReadPost";
+          pattern = "*.nix";
+        }
+      ];
+    };
 
     wezterm = {
       enable = true;
+    };
+
+    # sidekick.nvim — AI CLI terminal (opencode / claude / codex / …).
+    # NES (Next Edit Suggestions) is intentionally disabled — it requires the
+    # Copilot language server, which we deliberately leave off. sidekick is used
+    # purely as a managed terminal for external AI coding CLIs with shared prompt
+    # context (file / selection / diagnostics). See keymaps.nix <leader>k.
+    sidekick = {
+      enable = true;
+      settings = {
+        nes.enabled = false;
+        cli = {
+          watch = true; # reload files in Neovim when an AI CLI edits them
+          win.layout = "right";
+          mux = {
+            # Persist CLI sessions across Neovim restarts via tmux/zellij.
+            # Kept off by default to avoid surprising side-effects; flip to true
+            # and ensure tmux (or zellij) is on PATH to enable.
+            backend = "tmux";
+            enabled = false;
+          };
+        };
+      };
+      lazyLoad.settings.event = ["VimEnter"];
     };
 
     # web-devicons is declared in ../shared/plugins.nix
@@ -172,7 +205,7 @@
       settings.enabled = true;
       lazyLoad = {
         settings = {
-          event = ["BufEnter"];
+          event = ["VimEnter"];
         };
       };
     };
@@ -275,7 +308,12 @@
 
     otter = {
       enable = true;
-      autoActivate = true;
+      # nixvim's `autoActivate = true` injects a *global* LspAttach hook that
+      # calls `require('otter').activate()` on every LSP attach. That conflicts
+      # with our # BufReadPost lazy-load (for .py etc. otter isn't loaded yet),
+      # so we disable it and add our own filetype-guarded, pcall-protected
+      # autocmd below in `extraConfigLua`.
+      autoActivate = false;
       settings = {
         handle_leading_whitespace = true;
         lsp.diagnostic_update_events = [
@@ -283,63 +321,38 @@
           "InsertLeave"
         ];
       };
-      # lazyLoad = {
-      #   settings = {
-      #     event = ["BufEnter"];
-      #   };
+      # Load only for files that actually contain embedded languages. Covers dbt
+      # SQL models (Jinja blocks), SQL-in-markdown, .sql.jinja, Quarto notebooks.
+      lazyLoad.settings.event = [
+        {
+          event = "BufReadPost";
+          pattern = [
+            "*.md"
+            "*.sql"
+            "*.jinja"
+            "*.jinja2"
+            "*.quarto"
+            "*.qmd"
+            "*.ipynb"
+          ];
+        }
+      ];
     };
 
-    avante = {
+    opencode = {
       enable = true;
+      settings = {
+        auto_reload = true;
+      };
       lazyLoad = {
         settings = {
-          event = ["BufEnter"];
-        };
-      };
-      settings = {
-        # Changed from "ollama" to "lmstudio"
-        provider = "lmstudio";
-        auto_suggestions_provider = "lmstudio";
-
-        providers = {
-          # LM Studio local configuration
-          lmstudio = {
-            __inherited_from = "openai";
-            endpoint = "http://localhost:1234/v1";
-            model = "qwopus3.6-27b-coder-mtp";
-            api_key_name = "NVIM_LM_STUDIO_API_KEY";
-            # disable_tools = true; # Highly recommended for local models to prevent crashing/hallucinations
-          };
-          openrouter = {
-            __inherited_from = "openai";
-            endpoint = "https://openrouter.ai/api/v1";
-            api_key_name = "OPENROUTER_API_KEY";
-            model = "z-ai/glm-5.2";
-          };
-          # Hide Copilot from model selector to avoid auth errors
-          copilot = {
-            hide_in_model_selector = true;
-          };
-        };
-        web_search_engine = {
-          provider = "kagi";
-        };
-        selector = {
-          provider = "snacks";
-          provider_opts = {
-            layout = "select";
-          };
-        };
-        input = {
-          provider = "snacks";
-          provider_opts = {
-            title = "Avante Input";
-            icon = " ";
-          };
+          event = ["VimEnter"];
         };
       };
     };
     # grug-far is in ../shared/plugins.nix
+    # NOTE: avante has been removed in favour of sidekick (AI CLI terminal) +
+    # opencode. See AGENTS.md "Things to avoid".
     obsidian = {
       enable = true;
       lazyLoad = {
@@ -425,6 +438,85 @@
         };
       };
     };
+
+    # ── Database clients (Snowflake via vim-dadbod's built-in adapter) ───────
+    # vim-dadbod ships a native `snowflake://` adapter that shells out to
+    # `snowsql` (added in dependencies.nix). No fork / external adapter needed.
+    # Connection URLs are stored per-project in a gitignored `.local/dbui.json`
+    # (or globally under ~/.local/share/nvim/dadbod-ui/). See keymaps.nix <leader>Q.
+    vim-dadbod = {
+      enable = true;
+      lazyLoad.settings.cmd = ["DB"];
+    };
+    vim-dadbod-ui = {
+      enable = true;
+      lazyLoad.settings.cmd = [
+        "DBUI"
+        "DBUIToggle"
+        "DBUIAddConnection"
+        "DBUIFindBuffer"
+      ];
+    };
+    # Native blink.cmp source for SQL table/column completion
+    # (module = "vim_dadbod_completion.blink" — see lsp.nix blink-cmp sources).
+    vim-dadbod-completion = {
+      enable = true;
+      lazyLoad = {
+        settings = {
+          ft = ["sql" "mysql" "plsql"];
+        };
+      };
+    };
+    # dbee — alternative ad-hoc browser UI. Good for exploration; dadbod-ui is
+    # better for saved queries. <leader>Qd toggles it.
+    dbee = {
+      enable = true;
+      lazyLoad.settings.cmd = ["DbeeToggle"];
+    };
+  };
+
+  # dadbod-ui globals — nerd-font icons + project-local connection storage so
+  # connection lists live in a gitignored `.local/dbui.json` per repo rather than
+  # a single global file. (The directory `.local/` is gitignored — see .gitignore.)
+  globals = {
+    db_ui_use_nerd_fonts = 1;
+    db_ui_save_location = ".local";
+    db_ui_auto_execute_table_helpers = 1;
+  };
+
+  # dbt / Snowflake helpers:
+  # 1. Jinja-brace highlighting inside .sql model files (filetype stays `sql`
+  #    so sqls LSP keeps working — only visual highlighting is added).
+  # 2. target/** compiled-SQL buffers are forced readonly to prevent accidental
+  #    edits to expanded Jinja output.
+  extraFiles = {
+"ftplugin/sql.lua".text =
+      #lua
+      ''
+        -- Jinja-brace highlighting for dbt models. Keeps `filetype=sql` (so the
+        -- `sqls` LSP and sqruff formatter keep working) and only adds distinct
+        -- highlighting for `{{ … }}` and `{% … %}` blocks on top of the SQL
+        -- syntax. No new treesitter parser or plugin is loaded.
+        vim.api.nvim_create_autocmd("FileType", {
+          pattern = "sql",
+          callback = function()
+            if vim.b.sql_jinja_highlighted then return end
+            vim.b.sql_jinja_highlighted = true
+            vim.cmd("syntax region sqlJinjaStatement matchgroup=sqlJinjaDelim start=/{%/ end=/%}/ contains=@SQL transparent keepend")
+            vim.cmd("syntax region sqlJinjaExpr      matchgroup=sqlJinjaDelim start=/{{/ end=/}}/ contains=@SQL transparent keepend")
+            vim.cmd("syntax match  sqlJinjaComment  /{#[^#]*#}/")
+            vim.cmd("highlight default link sqlJinjaDelim Special")
+            vim.cmd("highlight default link sqlJinjaComment Comment")
+          end,
+        })
+
+        -- Force compiled dbt output under target/ to be read-only to avoid
+        -- accidentally editing expanded Jinja instead of the source model.
+        vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+          pattern = "*/target/**/*.sql",
+          callback = function() vim.bo.readonly = true end,
+        })
+      '';
   };
 
   autoCmd = [
@@ -451,5 +543,27 @@
     #lua
     ''
       -- require("fyler").setup()
+
+      -- otter: activate embedded-language LSP only for buffers that (a) have an
+      -- embedded language we care about, and (b) actually loaded the otter plugin
+      -- via our BufReadPost lazy-load. Protected by pcall so a missing module on
+      -- a non-matching buffer (e.g. a .py file) never throws on LspAttach.
+      -- This replaces nixvim's `autoActivate = true` global hook, which is
+      -- incompatible with lazy-loading (it require()'s otter unconditionally).
+      local otter_filetypes = {
+        ["markdown"] = true,
+        ["quarto"] = true,
+        ["ipynb"] = true,
+        ["sql"] = true,
+        ["jinja"] = true,
+        ["jinja2"] = true,
+      }
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("otter_autoactivate", { clear = true }),
+        callback = function(args)
+          if not otter_filetypes[vim.bo[args.buf].filetype] then return end
+          pcall(function() require("otter").activate() end)
+        end,
+      })
     '';
 }

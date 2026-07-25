@@ -105,7 +105,9 @@ Scope: `nixvim-config` only.
 | `<M-l>` | n | Move to right window / tmux pane |
 | `<M-k>` | n | Move to upper window / tmux pane |
 | `<M-j>` | n | Move to lower window / tmux pane |
-| `<C-\>` | n, t | Toggle floating terminal |
+| `<C-\>` | n, t | Toggle floating terminal (snacks.terminal) |
+
+> The previous `<C-\>` → `TmuxNavigatePrevious` mapping was removed. Use `:TmuxNavigatePrevious` directly if ever needed.
 
 ---
 

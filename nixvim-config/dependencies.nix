@@ -43,6 +43,9 @@
     delve
     golangci-lint
     zsh
+    # dbt / Snowflake workflow
+    snowsql # vim-dadbod's snowflake adapter shells out to snowsql
+    tmux # sidekick.cli.mux backend (enabled=false by default, available if wanted)
   ];
   extraLuaPackages = ps: [ps.magick];
 }

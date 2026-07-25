@@ -346,7 +346,7 @@
       action = "<cmd>Trouble diagnostics toggle filter.buf=0<CR>";
     }
     {
-      key = "<leader>cs";
+      key = "<leader>xS";
       options = {
         silent = true;
         desc = "Symbols (Trouble)";
@@ -382,7 +382,7 @@
       action = "<cmd>Trouble qflist toggle<cr>";
     }
     {
-      key = "<leader>X";
+      key = "<leader>xp";
       options = {
         silent = true;
         desc = "Trouble Picker";

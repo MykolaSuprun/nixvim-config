@@ -8,7 +8,8 @@
         + builtins.readFile ./nix_tasks.lua
         + builtins.readFile ./go_tasks.lua
         + builtins.readFile ./lua_tasks.lua
-        + builtins.readFile ./dbt_tasks.lua;
+        + builtins.readFile ./dbt_tasks.lua
+        + builtins.readFile ./airflow_tasks.lua;
     };
   };
 }

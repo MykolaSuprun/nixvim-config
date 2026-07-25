@@ -755,15 +755,8 @@
       mode = ["n"];
       action = "<cmd>:TmuxNavigateDown<CR>";
     }
-    {
-      key = "<C-\\>";
-      options = {
-        silent = true;
-        desc = "Window - Move to previous";
-      };
-      mode = ["n"];
-      action = "<cmd>TmuxNavigatePrevious<CR>";
-    }
+    # NOTE: the previous <C-\> -> TmuxNavigatePrevious mapping was removed;
+    # <C-\> is now solely snacks.terminal.toggle (see Terminal section below).
     # Flash (<C-s>/<S-s>) are in ../shared/keymaps.nix
     # Tabs
     # Bufferline tab navigation with Shift+H/L
@@ -948,27 +941,54 @@
       mode = ["n"];
       action = "<cmd>9tabnext<CR>";
     }
-    # Trouble (<leader>xx/xX/cs/cl/cL/cQ/X) are in ../shared/keymaps.nix
+    # Trouble (<leader>xx/xX/xS/cl/cL/cQ/xp) are in ../shared/keymaps.nix
+    # NOTE: avante keymap removed — avante disabled; AI surface is now
+    # sidekick (<leader>k) + opencode (<leader>a). See AGENTS.md.
+
+    # ── opencode (<leader>a) ───────────────────────────────────────────────
+    # opencode.nvim — opens an embedded terminal running the opencode AI CLI.
+    # `auto_reload` is on (plugins.nix), so buffers re-read after opencode edits.
     {
-      key = "<leader>at";
+      key = "<leader>aa";
       options = {
         silent = true;
-        desc = "Toggle Avante suggestions";
+        desc = "OpenCode: toggle";
+      };
+      mode = ["n"];
+      action = "<cmd>OpenCode<CR>";
+    }
+    {
+      key = "<leader>af";
+      options = {
+        silent = true;
+        desc = "OpenCode: focus";
+      };
+      mode = ["n"];
+      action = "<cmd>OpenCodeFocus<CR>";
+    }
+    {
+      key = "<leader>ar";
+      options = {
+        silent = true;
+        desc = "OpenCode: reload current buffer";
       };
       mode = ["n"];
       action.__raw =
         #lua
         ''
           function()
-            local cfg = require("avante.config")
-            cfg.behaviour.auto_suggestions = not cfg.behaviour.auto_suggestions
-            local state = cfg.behaviour.auto_suggestions and "enabled" or "disabled"
-            Snacks.notifier.notify("Avante suggestions " .. state, { title = "Avante" })
+            vim.cmd("edit")
+            Snacks.notifier.notify("Buffer reloaded", { title = "OpenCode" })
           end
         '';
     }
+
+    # ── obsidian (<leader>O — capital) ─────────────────────────────────────
+    # Shares the <leader>O prefix with the overseer group: pressing <leader>O
+    # alone opens Obsidian; pressing <leader>O + <sub> runs an overseer command
+    # (Neovim waits `timeoutlen` before firing the direct action).
     {
-      key = "<leader>o";
+      key = "<leader>O";
       options = {
         silent = true;
         desc = "Obsidian";
@@ -1342,6 +1362,300 @@
       mode = ["n"];
       action = "<cmd>OverseerQuickAction restart on save<CR>";
     }
+
+    # ── sidekick (AI CLI terminal) — <leader>k ─────────────────────────────
+    # NES is disabled; sidekick is used purely as a managed terminal for the
+    # opencode / claude / codex / gemini CLIs with shared prompt context.
+    {
+      key = "<leader>kt";
+      options = {
+        silent = true;
+        desc = "Sidekick: toggle CLI";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").toggle() end'';
+    }
+    {
+      key = "<leader>kf";
+      options = {
+        silent = true;
+        desc = "Sidekick: focus CLI";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").focus() end'';
+    }
+    {
+      key = "<leader>ks";
+      options = {
+        silent = true;
+        desc = "Sidekick: select CLI tool";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() require("sidekick.cli").select({ filter = { installed = true } }) end
+        '';
+    }
+    {
+      key = "<leader>kp";
+      options = {
+        silent = true;
+        desc = "Sidekick: pick prompt";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("sidekick.cli").prompt() end'';
+    }
+    {
+      key = "<leader>kd";
+      options = {
+        silent = true;
+        desc = "Sidekick: detach CLI";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").close() end'';
+    }
+    {
+      key = "<leader>kx";
+      options = {
+        silent = true;
+        desc = "Sidekick: send this (cursor/selection)";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("sidekick.cli").send({ msg = "{this}" }) end'';
+    }
+    {
+      key = "<leader>ke";
+      options = {
+        silent = true;
+        desc = "Sidekick: send current file";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").send({ msg = "{file}" }) end'';
+    }
+
+    # ── betterTerm (persistent send-to-terminal) — <leader>X ───────────────
+    # Tabbed persistent terminals for interactive dbt / Snowflake / airflow
+    # shells. Toggle the primary terminal with <leader>Xt; send the current
+    # line / visual selection / whole file to terminal 1 with Xs/Xv/Xf.
+    # (snacks.terminal keeps the quick throwaway toggle on <C-\>.)
+    {
+      key = "<leader>Xt";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle primary terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open() end'';
+    }
+    {
+      key = "<leader>Xx";
+      options = {
+        silent = true;
+        desc = "BetterTerm: select terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").select() end'';
+    }
+    {
+      key = "<leader>Xr";
+      options = {
+        silent = true;
+        desc = "BetterTerm: rename current terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").rename() end'';
+    }
+    {
+      key = "<leader>Xk";
+      options = {
+        silent = true;
+        desc = "BetterTerm: kill current terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").close() end'';
+    }
+    {
+      key = "<leader>X1";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle terminal 1";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open(1) end'';
+    }
+    {
+      key = "<leader>X2";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle terminal 2";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open(2) end'';
+    }
+    {
+      key = "<leader>X3";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle terminal 3";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open(3) end'';
+    }
+    {
+      key = "<leader>X4";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle terminal 4";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open(4) end'';
+    }
+    {
+      key = "<leader>X5";
+      options = {
+        silent = true;
+        desc = "BetterTerm: toggle terminal 5";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("betterTerm").open(5) end'';
+    }
+    {
+      key = "<leader>Xs";
+      options = {
+        silent = true;
+        desc = "BetterTerm: send current line";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function()
+            local line = vim.api.nvim_get_current_line()
+            require("betterTerm").send(line, 1)
+          end
+        '';
+    }
+    {
+      key = "<leader>Xv";
+      options = {
+        silent = true;
+        desc = "BetterTerm: send visual selection";
+      };
+      mode = ["x"];
+      action.__raw =
+        #lua
+        ''
+          function()
+            local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
+            local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
+            local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
+            if #lines == 0 then return end
+            lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
+            if #lines == 1 then
+              lines[1] = string.sub(lines[1], sc + 1)
+            else
+              lines[1] = string.sub(lines[1], sc + 1)
+            end
+            require("betterTerm").send(table.concat(lines, "\n"), 1)
+          end
+        '';
+    }
+    {
+      key = "<leader>Xf";
+      options = {
+        silent = true;
+        desc = "BetterTerm: send whole file";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function()
+            local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+            require("betterTerm").send(table.concat(lines, "\n"), 1)
+          end
+        '';
+    }
+
+    # ── database (dadbod-ui + dbee) — <leader>Q ───────────────────────────
+    # vim-dadbod's built-in snowflake adapter (snowflake://…) shells out to
+    # `snowsql`. Connections are stored per-project in gitignored .local/dbui.json.
+    {
+      key = "<leader>Qo";
+      options = {
+        silent = true;
+        desc = "DBUI: open drawer";
+      };
+      mode = ["n"];
+      action = "<cmd>DBUI<CR>";
+    }
+    {
+      key = "<leader>QT";
+      options = {
+        silent = true;
+        desc = "DBUI: toggle drawer";
+      };
+      mode = ["n"];
+      action = "<cmd>DBUIToggle<CR>";
+    }
+    {
+      key = "<leader>Qe";
+      options = {
+        silent = true;
+        desc = "DBUI: edit connections";
+      };
+      mode = ["n"];
+      action = "<cmd>DBUIEditConnections<CR>";
+    }
+    {
+      key = "<leader>Qf";
+      options = {
+        silent = true;
+        desc = "DBUI: find buffer";
+      };
+      mode = ["n"];
+      action = "<cmd>DBUIFindBuffer<CR>";
+    }
+    {
+      key = "<leader>Qa";
+      options = {
+        silent = true;
+        desc = "DBUI: add connection";
+      };
+      mode = ["n"];
+      action = "<cmd>DBUIAddConnection<CR>";
+    }
+    {
+      key = "<leader>Qd";
+      options = {
+        silent = true;
+        desc = "Dbee: toggle UI";
+      };
+      mode = ["n"];
+      action = "<cmd>DbeeToggle<CR>";
+    }
+    {
+      key = "<leader>Qq";
+      options = {
+        silent = true;
+        desc = "DB: run query on current buffer/range";
+      };
+      mode = ["n"];
+      action = "<cmd>DB<CR>";
+    }
+
+    # ── nix-develop — <leader>N ───────────────────────────────────────────
+    # Run `nix develop` without restarting Neovim. Lazy-loads on .nix buffers.
+    {
+      key = "<leader>Nd";
+      options = {
+        silent = true;
+        desc = "nix-develop: run nix develop";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("nix-develop").develop() end'';
+    }
   ];
   # Shared which-key groups (c/cf/ct/g/gh/gl/r/x/q) are in ../shared/keymaps.nix
   plugins.which-key.settings.spec = [
@@ -1382,18 +1696,35 @@
     }
     {
       __unkeyed-1 = "<leader>a";
-      group = "avante";
-      icon = "󰞵";
+      group = "opencode";
+      icon = "󰚩";
     }
-    {
-      __unkeyed-1 = "<leader>o";
-      group = "obsidian";
-      icon = "󱞁";
-    }
+    # NOTE: <leader>O (capital) is shared — direct action opens Obsidian, the
+    # group label is overseer (sub-keys Ot/Or/Oa/Oo/Oc/Os/Ow). See AGENTS.md.
     {
       __unkeyed-1 = "<leader>O";
       group = "overseer";
       icon = "󰓧";
+    }
+    {
+      __unkeyed-1 = "<leader>k";
+      group = "sidekick (AI CLI)";
+      icon = "󰚩";
+    }
+    {
+      __unkeyed-1 = "<leader>N";
+      group = "nix-develop";
+      icon = "󱄅";
+    }
+    {
+      __unkeyed-1 = "<leader>Q";
+      group = "database";
+      icon = "󰆼";
+    }
+    {
+      __unkeyed-1 = "<leader>X";
+      group = "betterTerm (send to terminal)";
+      icon = "󰆄";
     }
     {
       __unkeyed-1 = "<leader>T";

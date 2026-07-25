@@ -73,50 +73,8 @@
         ];
       };
     };
-    none-ls = {
-      enable = false;
-      lazyLoad = {
-        settings = {
-          event = ["BufEnter"];
-        };
-      };
-      settings = {
-        code_actions = {
-          gitrebase.enable = true;
-          gitsigns.enable = true;
-          proselint.enable = true;
-          refactoring.enable = true;
-          statix.enable = true;
-        };
-        completion = {
-          luasnip.enable = true;
-          nvim_snippets.enable = true;
-          spell.enable = true;
-          tags.enable = true;
-        };
-        diagnostics = {
-          codespell.enable = true;
-          deadnix.enable = true;
-          dotenv_linter.enable = true;
-          golangci_lint.enable = true;
-          hadolint.enable = true;
-          markdownlint_cli2.enable = true;
-          pydoclint.enable = true;
-          pylint.enable = true;
-          selene.enable = true;
-          sqruff.enable = true;
-          statix.enable = true;
-          tidy.enable = true;
-          todo_comments = true;
-          yamllint.enable = true;
-          zsh.enable = true;
-        };
-        hover = {
-          dictionary.enable = true;
-          printenv.enable = true;
-        };
-      };
-    };
+    # NOTE: none-ls is intentionally removed in favour of nvim-lint + conform-nvim.
+    # See AGENTS.md "Things to avoid".
     blink-cmp = {
       enable = true;
       setupLspCapabilities = true;
@@ -151,6 +109,25 @@
           # use_typo_resistance = true;
         };
         signature.enabled = true;
+        # Sources — lsp/path/snippets/buffer are the plugin defaults; we add the
+        # native `vim_dadbod_completion.blink` provider for SQL completion
+        # (table/column names) inside dadbod-ui query buffers and dbt .sql files.
+        # No blink-compat shim needed — vim-dadbod-completion ships a native
+        # blink module. See plugins.nix (vim-dadbod-completion.enable = true).
+        sources = {
+          per_filetype = {
+            sql = ["lsp" "snippets" "dadbod" "buffer"];
+            mysql = ["lsp" "snippets" "dadbod" "buffer"];
+            plsql = ["lsp" "snippets" "dadbod" "buffer"];
+          };
+          providers = {
+            dadbod = {
+              name = "Dadbod";
+              module = "vim_dadbod_completion.blink";
+              opts = {};
+            };
+          };
+        };
         keymap = {
           "<C-h>" = [
             "hide"
@@ -207,25 +184,4 @@
       };
     };
   };
-  # cmp = {
-  #   enable = true;
-  #   autoEnableSources = true;
-  #   settings = {
-  #     sources = [
-  #       { name = "nvim_lsp"; }
-  #       { name = "path"; }
-  #       { name = "buffer"; }
-  #     ];
-  #     mapping = {
-  #       "<C-j>" = "cmp.mapping(cmp.mapping.select_next_item())";
-  #       "<C-k>" = "cmp.mapping(cmp.mapping.select_prev_item())";
-  #       "<C-n>" = "cmp.mapping.scroll_docs(4)";
-  #       "<C-p>" = "cmp.mapping.scroll_docs(-4)";
-  #       "<C-h>" = "cmp.mapping.abort()";
-  #       "<C-l>" = "cmp.mapping.confirm({ select = true })";
-  #       "<CR>" = "cmp.mapping.confirm({ select = true })";
-  #       "<C-Space>" = "cmp.mapping.complete()";
-  #     };
-  #   };
-  # };
 }

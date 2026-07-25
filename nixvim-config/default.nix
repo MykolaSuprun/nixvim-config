@@ -12,6 +12,7 @@
     ./visual.nix
     ./lsp.nix
     ./plugins.nix
+    ./extra-plugins.nix
     ./keymaps.nix
     ./dap.nix
     ./overseer
