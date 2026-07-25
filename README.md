@@ -20,20 +20,21 @@ shared/           # Modules imported by all configs
   keymaps.nix     # Shared keymaps (diagnostics, git, format, trouble, …)
 
 nixvim-config/    # Full Neovim profile
-  lsp.nix         # LSP servers, blink-cmp (+ dadbod completion source), nvim-lint, trouble
-  plugins.nix     # nixvim-only plugins (snacks, noice, oil, sidekick, dadbod, dbee, …)
+  lsp.nix         # LSP servers, blink-cmp, nvim-lint, trouble
+  plugins.nix     # nixvim-only plugins (snacks, noice, oil, sidekick, dbee, …)
   extra-plugins.nix  # plugins built from source (betterTerm.nvim)
   keymaps.nix     # nixvim-only keymaps + which-key groups (pickers, tabs, dbt, opencode, …)
   visual.nix      # Colorscheme and visual options
   dap.nix         # DAP (nvim-dap, dap-ui, dap-python, dap-go, OSV)
   overseer/       # Overseer task runner config + per-language templates
-    dbt_tasks.lua     # dbt run/build/test/compile(+preview)/show/parse/ls/debug + selectors
-    airflow_tasks.lua # Astro CLI + vanilla Airflow fallback
-    python_tasks.lua  # pytest, mypy, ruff format, python run
+    dbt_tasks.lua       # dbt run/build/test/compile(+preview)/show/parse/ls/debug + selectors
+    snowflake_tasks.lua # `snow` CLI: describe/list/connection test + confirm-gated run
+    airflow_tasks.lua   # Astro CLI + vanilla Airflow fallback
+    python_tasks.lua    # pytest, mypy, ruff format, python run
     go_tasks.lua / lua_tasks.lua / nix_tasks.lua / ruff_check.lua
 
 See [AGENTS.md](AGENTS.md) for a full directory map, build/validate commands, the
-`<leader>` group reference, dbt + Snowflake workflow docs, and guidelines for
+`<leader>` group reference, the dbt + Snowflake workflow docs, and guidelines for
 adding new plugins.
 
 codevim-config/   # VSCode-embedded profile

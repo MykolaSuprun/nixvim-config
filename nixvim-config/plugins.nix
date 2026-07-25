@@ -439,49 +439,17 @@
       };
     };
 
-    # ── Database clients (Snowflake via vim-dadbod's built-in adapter) ───────
-    # vim-dadbod ships a native `snowflake://` adapter that shells out to
-    # `snowsql` (added in dependencies.nix). No fork / external adapter needed.
-    # Connection URLs are stored per-project in a gitignored `.local/dbui.json`
-    # (or globally under ~/.local/share/nvim/dadbod-ui/). See keymaps.nix <leader>Q.
-    vim-dadbod = {
-      enable = true;
-      lazyLoad.settings.cmd = ["DB"];
-    };
-    vim-dadbod-ui = {
-      enable = true;
-      lazyLoad.settings.cmd = [
-        "DBUI"
-        "DBUIToggle"
-        "DBUIAddConnection"
-        "DBUIFindBuffer"
-      ];
-    };
-    # Native blink.cmp source for SQL table/column completion
-    # (module = "vim_dadbod_completion.blink" — see lsp.nix blink-cmp sources).
-    vim-dadbod-completion = {
-      enable = true;
-      lazyLoad = {
-        settings = {
-          ft = ["sql" "mysql" "plsql"];
-        };
-      };
-    };
-    # dbee — alternative ad-hoc browser UI. Good for exploration; dadbod-ui is
-    # better for saved queries. <leader>Qd toggles it.
+    # ── Database client (dbee) ────────────────────────────────────────────
+    # dbee is a native Go-driver SQL browser/runner — no Snowflake driver
+    # exists upstream (tracked but unmerged: kndndrj/nvim-dbee#23, PRs #109 /
+    # #186), so it's only useful here for non-Snowflake connections (e.g. a
+    # local Postgres/DuckDB). Snowflake itself is queried via the `snow` CLI,
+    # driven by overseer templates (overseer/snowflake_tasks.lua) and
+    # betterTerm — see keymaps.nix <leader>Q and AGENTS.md.
     dbee = {
       enable = true;
       lazyLoad.settings.cmd = ["DbeeToggle"];
     };
-  };
-
-  # dadbod-ui globals — nerd-font icons + project-local connection storage so
-  # connection lists live in a gitignored `.local/dbui.json` per repo rather than
-  # a single global file. (The directory `.local/` is gitignored — see .gitignore.)
-  globals = {
-    db_ui_use_nerd_fonts = 1;
-    db_ui_save_location = ".local";
-    db_ui_auto_execute_table_helpers = 1;
   };
 
   # dbt / Snowflake helpers:
@@ -490,7 +458,35 @@
   # 2. target/** compiled-SQL buffers are forced readonly to prevent accidental
   #    edits to expanded Jinja output.
   extraFiles = {
-"ftplugin/sql.lua".text =
+    # `on_complete_callback` is not a real overseer.nvim component (verified:
+    # overseer ships on_complete_dispose/notify/restart only — an ad-hoc
+    # component name silently resolve()s but throws "Unknown component" the
+    # moment a task using it is actually constructed). overseer.nvim has no
+    # public API to register a component from Lua at runtime — components
+    # are only loadable from `lua/overseer/component/<name>.lua` on the
+    # runtime path — so this file supplies that missing component for real.
+    # Used by overseer/dbt_tasks.lua's "dbt compile (current model) — open
+    # compiled SQL" template to auto-open the compiled file after a
+    # successful compile.
+    "lua/overseer/component/on_complete_callback.lua".text =
+      #lua
+      ''
+        ---@type overseer.ComponentFileDefinition
+        return {
+          desc = "Calls a user-supplied function with (task, status) when the task completes",
+          params = {
+            callback = { type = "opaque" },
+          },
+          constructor = function(params)
+            return {
+              on_complete = function(_self, task, status)
+                params.callback(task, status)
+              end,
+            }
+          end,
+        }
+      '';
+    "ftplugin/sql.lua".text =
       #lua
       ''
         -- Jinja-brace highlighting for dbt models. Keeps `filetype=sql` (so the

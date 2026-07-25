@@ -8,7 +8,7 @@ A personal Neovim configuration built with [nixvim](https://github.com/nix-commu
 
 | Profile | Flake output | Purpose |
 |---------|--------------|---------|
-| **NixVim** | `.#NixVim` | Full-featured standalone Neovim — LSP, pickers, git, DAP, AI, dbt/Snowflake workflow |
+| **NixVim** | `.#NixVim` | Full-featured standalone Neovim — LSP, pickers, git, DAP, AI, dbt + Snowflake CLI workflow |
 | **CodeVim** | `.#CodeVim` | Lean config for [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) — editing primitives only, LSP/nav delegated to VSCode |
 | **LazyVim** | `.#LazyVim` | LazyVim-based stub |
 
@@ -24,23 +24,24 @@ shared/                # Modules imported by every profile
   keymaps.nix           # Shared keymaps (diagnostics, git, format, trouble, …)
 nixvim-config/         # Full Neovim profile
   default.nix          # Imports list for the profile
-  dependencies.nix     # extraPackages + nixvim `dependencies` (lazygit, ripgrep, snowsql, …)
+  dependencies.nix     # extraPackages + nixvim `dependencies` (lazygit, ripgrep, snowflakeCli, …)
   options.nix          # nixvim-only opts (tabline, OSC 52 clipboard, snacks indent toggle)
   visual.nix           # Colorscheme (catppuccin/base16), bufferline, lualine, which-key base
   lsp.nix              # LSP servers, blink-cmp, nvim-lint, trouble
-  plugins.nix          # nixvim-only plugins (snacks, oil, noice, sidekick, dadbod, …)
+  plugins.nix          # nixvim-only plugins (snacks, oil, noice, sidekick, dbee, …)
   keymaps.nix          # nixvim-only keymaps + which-key group specs
   dap.nix              # nvim-dap, dap-ui, dap-python, dap-go, OSV
   ftplugin/sql.nix     # SQL ftplugin — Jinja-brace highlighting for dbt models
   overseer/            # Overseer task runner config + per-language templates
-    overseer.nix       # Registers every *.lua template via readFile
-    dbt_tasks.lua      # dbt run/test/compile/build/show/parse/ls/debug + selector variants
-    airflow_tasks.lua  # Astro CLI + vanilla Airflow fallback
-    python_tasks.lua   # pytest, mypy, ruff format, python run
-    ruff_check.lua     # Ruff lint + BufWritePost auto-run
-    go_tasks.lua       # go build/test/vet/golangci-lint
+    overseer.nix         # Registers every *.lua template via readFile
+    dbt_tasks.lua        # dbt run/test/compile/build/show/parse/ls/debug + selector variants
+    snowflake_tasks.lua  # `snow` CLI: describe/list/connection test + confirm-gated run
+    airflow_tasks.lua    # Astro CLI + vanilla Airflow fallback
+    python_tasks.lua     # pytest, mypy, ruff format, python run
+    ruff_check.lua       # Ruff lint + BufWritePost auto-run
+    go_tasks.lua         # go build/test/vet/golangci-lint
     lua_tasks.lua
-    nix_tasks.lua      # alejandra, statix, deadnix, nix flake check, nix build
+    nix_tasks.lua        # alejandra, statix, deadnix, nix flake check, nix build
 codevim-config/        # VSCode-embedded profile
   default.nix lsp.nix plugins.nix keymaps.nix dependencies.nix
 lazyvim-config/        # LazyVim stub (work in progress)
@@ -106,7 +107,7 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>a` | opencode | keymaps.nix |
 | `<leader>k` | sidekick (AI CLI terminal) | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
-| `<leader>Q` | database (dadbod-ui + dbee) | keymaps.nix |
+| `<leader>Q` | database (dbee + Snowflake CLI overseer templates) | keymaps.nix |
 | `<leader>X` | betterTerm send-to-terminal | keymaps.nix |
 | `<leader>d` | debug (DAP) | keymaps.nix |
 | `<leader>h` | harpoon | keymaps.nix |
@@ -130,18 +131,23 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 - Heavy/optional plugins gate on a command: `lazyLoad.settings.cmd = "..."`.
 - LLM/AI plugins gate on `["VimEnter"]` so they don't block initial UI.
 - `otter` gates on `BufReadPost` for `md,sql,jinja,quarto,ipynb` (embedded languages). The nixvim module's `autoActivate` is **disabled** (its global LspAttach hook would `require('otter')` on every LSP attach and throw on non-matching buffers that haven't lazy-loaded). A guarded, `pcall`-protected `LspAttach` autocmd (in `plugins.nix` `extraConfigLua`) replaces it.
-- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666). `vim-dadbod` ships its own `snowflake://` adapter (no `vim-dadbod-snowflake` fork needed).
+- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666).
 - `nix-develop` gates on `BufReadPost *.nix`.
 
 ### When adding a new plugin
 1. Verify it exists as a nixvim by-name module: `plugins/by-name/<name>/default.nix` at the pinned nixvim rev (see `flake.lock` → `nodes.nixvim.locked.rev`).
 2. If present: configure via `plugins.<name>.enable = true;` + `settings = {...};` + `lazyLoad` if heavy.
-3. If absent (e.g. `betterTerm.nvim`, `vim-dadbod-snowflake`): build from source in `nixvim-config/extra-plugins.nix` using `pkgs.vimUtils.buildVimPlugin { pname = "..."; src = pkgs.fetchFromGitHub {...}; }`.
+3. If absent (e.g. `betterTerm.nvim`): build from source in `nixvim-config/extra-plugins.nix` using `pkgs.vimUtils.buildVimPlugin { pname = "..."; src = pkgs.fetchFromGitHub {...}; }`.
 4. Register any user commands → keymaps in `keymaps.nix`, and the which-key group in the same file.
 5. Update this `<leader>` group map table and `KEYBINDS.md` if the bind isn't visible in which-key.
 6. Run `nix flake check` and `nix build .#NixVim`.
 
 ## dbt + Snowflake workflow
+
+### Why the Snowflake tooling looks the way it does
+`vim-dadbod`'s built-in `snowflake://` adapter shells out to `snowsql`, which nixpkgs only packages for `x86_64-linux` — it fails to evaluate on `aarch64-linux` (e.g. this repo's OrbStack/NixOS target on Apple Silicon). `nvim-dbee` was evaluated as a dadbod replacement but has **no Snowflake driver** (tracked upstream: kndndrj/nvim-dbee#23, unmerged PRs #109/#186) and no CLI-shelling adapter mechanism to bolt one on. So both dadbod and dbee are out for Snowflake specifically. The replacement is the official **Snowflake CLI (`snow`)**, packaged as `snowflake-cli` in nixpkgs, driven through **overseer task templates** and **betterTerm**.
+
+`snowflake-cli` itself has a build wrinkle: at `nixpkgs-unstable`/`nixos-unstable`, its `snowflake-connector-python` dependency fails its test suite on `aarch64-linux` (`test_log_debug_config_file_parent_dir_permissions` assumes the process isn't root; Nix's build sandbox always runs as root, so the test's `chmod`-based permission check never fires and the assertion fails). It builds cleanly — as a cached binary, no compile — on the `nixos-25.05` release channel. `flake.nix` therefore pins a second nixpkgs input, `nixpkgs-snowflake` (`github:nixos/nixpkgs/nixos-25.05`), used **only** to source `snowflake-cli`; everything else in the flake still comes from the main `nixpkgs-unstable` input. See the comment above `nixpkgs-snowflake.url` in `flake.nix`. Revisit/drop this pin once the upstream test is fixed.
 
 ### Run / compile / preview dbt models
 All dbt operations are surfaced as **overseer templates** (`nixvim-config/overseer/dbt_tasks.lua`). Templates only register when `dbt` is on `PATH`. Run via `<leader>Or` (OverseerRun) and pick from the list:
@@ -149,7 +155,7 @@ All dbt operations are surfaced as **overseer templates** (`nixvim-config/overse
 - `dbt run` / `dbt run (current model)` — build, output in bottom split
 - `dbt build` / `dbt build (current model)` — run + test + seed in one
 - `dbt test` / `dbt test (current model)`
-- `dbt compile (with preview)` — compiles, opens `target/compiled/…/<model>.sql` in a vertical split, read-only. **This is the killer template** — review the expanded Jinja, copy/paste to run in dadbod-ui.
+- `dbt compile (current model) — open compiled SQL` — compiles, opens `target/compiled/…/<model>.sql` in a vertical split, read-only. **This is the killer template** — review the expanded Jinja, then run it against Snowflake with `snowflake: run compiled SQL for current dbt model` (below).
 - `dbt show` — inline preview without materialising
 - `dbt parse` / `dbt ls` — fast pre-flight checks (no DB connection, ~1s)
 - `dbt debug` — connection troubleshooting
@@ -157,6 +163,21 @@ All dbt operations are surfaced as **overseer templates** (`nixvim-config/overse
 - `dbt seed` / `dbt snapshot` / `dbt deps` / `dbt docs generate`
 
 Output goes to a split via the `open_output` component (overseer's own rendering — does **not** use snacks.terminal or betterTerm).
+
+### Querying Snowflake — `snow` CLI via overseer (`overseer/snowflake_tasks.lua`)
+Templates only register when `snow` is on `PATH`. Connections come from `~/.snowflake/config.toml` (or `$SNOWFLAKE_HOME`) connection profiles — **never** put a password in a template or a keymap; `snow` itself refuses to read a `config.toml` with permissions wider than `0600`.
+
+Reachable via `<leader>Or`/`<leader>Qo` (OverseerRun picker), or directly:
+
+- `<leader>Qr` — run current line (prompts **Run/Cancel** with a preview of the SQL before sending anything)
+- `<leader>Qv` (visual mode) — run visual selection (same confirm prompt)
+- `<leader>Qt` — connection test
+- `snowflake: run compiled SQL for current dbt model` — runs `target/compiled/…/<model>.sql` (the *compiled* file, never the dbt source, since the source still has unexpanded Jinja that `snow sql` can't execute) — also confirm-gated
+- `snowflake: describe current table/view (cursor word)`, `list warehouses`, `list databases`, `list tables (prompt database.schema)`, `connection list` — read-only, run unprompted
+
+**Safety model:** every template that executes arbitrary/buffer SQL shows a truncated preview and asks to confirm before running (a dbt `.sql` buffer can contain `DROP`/`DELETE`/`TRUNCATE`/`MERGE`, and overseer has no undo). Read-only templates (`describe`/`list`/`connection test`) skip the prompt. No template runs a whole *project* of SQL files unattended — unlike `dbt run`/`dbt build`, there's no dbt-style DAG/state layer to bound the blast radius of running raw SQL, so batch execution is intentionally not offered.
+
+For a persistent interactive session (not a one-shot query), use **betterTerm** + `snow sql -i`/`snow sql --interactive` rather than an overseer template — overseer's output panes are one-shot, not built for back-and-forth.
 
 ### Airflow
 `overseer/airflow_tasks.lua` provides Astro CLI templates when `astro` is on PATH:
@@ -167,7 +188,7 @@ Output goes to a split via the `open_output` component (overseer's own rendering
 Plus fallback `airflow dags test` / `airflow tasks test` templates that only register when `astro` is absent but `airflow` is present.
 
 ### Send to a persistent terminal
-For interactive dbt/Snowflake shells (`snowsql`, a venv REPL, an `astro dev` shell), use **betterTerm**:
+For interactive dbt/`snow sql`/airflow shells, use **betterTerm**:
 - `<C-\\>` — toggle/open a new betterTerm tab
 - `<leader>X1..5` — focus terminal 1–5
 - `<leader>Xs` — send current line to the current terminal
@@ -176,13 +197,8 @@ For interactive dbt/Snowflake shells (`snowsql`, a venv REPL, an `astro dev` she
 - `<leader>Xr` — rename the current terminal
 - `<leader>Xk` — kill the current terminal
 
-### Querying Snowflake directly
-Two complementary clients are wired up; both lazy-load on `cmd`:
-
-1. **vim-dadbod + vim-dadbod-ui + vim-dadbod-snowflake** — `<leader>Qo` opens the `:DBUI` drawer. Connections are stored per-project in a gitignored `.local/dbui.json` (or `~/.local/share/nvim/dadbod-ui/` for global). Edit the connection list with `<leader>Qe`. Open a SQL scratch buffer, `:DBUIEditConnections`, then `:w` on a query buffer to execute. Results render in a dadbod results buffer.
-2. **dbee** — `<leader>Qd` toggles dbee's own UI browser; better for ad-hoc exploration.
-
-`snowsql` is in `extraPackages`; `snowflake-connector-python` is added when it builds cleanly on the pinned nixpkgs.
+### dbee (non-Snowflake connections)
+`dbee` (`<leader>Qd` toggles its UI) is still wired up for ad-hoc exploration of databases it *does* support natively (postgres, mysql, sqlite, duckdb, clickhouse, bigquery, redshift, databricks, oracle, sqlserver, mongo, redis) — just not Snowflake.
 
 ### Aerial / sqls inside dbt models
 - `filetype` stays `sql` on dbt `.sql` models (so `sqls` LSP works), with a small `ftplugin/sql.nix` adding Jinja-brace highlighting only (see below).
@@ -198,7 +214,7 @@ connections:
     dataSourceName: "user:password@account/database/schema?warehouse=WH&role=ROLE"
 ```
 
-Then restart Neovim. No flake changes required — purely an opt-in per-user config. The blink-cmp `dadbod` source also provides completion inside dadbod-ui query buffers.
+Then restart Neovim. No flake changes required — purely an opt-in per-user config.
 
 ## Docker
 
@@ -217,7 +233,9 @@ See README.md for full details.
 
 - Do **not** enable `copilot-lsp` — sidekick NES is intentionally disabled (CLI-terminal mode only).
 - Do **not** wire `copilot-lua` completion — Avante and sidekick own the AI surface; copilot-lua is disabled.
-- Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + dadbod + snacks picker cover the workflow and bit-rot less.
+- Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + snacks picker cover the workflow and bit-rot less.
+- Do **not** re-add `vim-dadbod`/`vim-dadbod-ui`/`snowsql` for Snowflake — `snowsql` is unsupported on `aarch64-linux` (see "Why the Snowflake tooling looks the way it does" above). `nvim-dbee` is not a substitute either — it has no Snowflake driver.
+- Do **not** add a `--password`/credential flag to any Snowflake overseer template or keymap — connections must come from `~/.snowflake/config.toml` connection profiles.
 - Do **not** enable `none-ls` — the block is intentionally removed in favour of `nvim-lint` + `conform-nvim`.
 - Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single 1400-line file by choice.
 
@@ -226,8 +244,9 @@ See README.md for full details.
 From `flake.lock`:
 - `nixvim` rev: `f316e949e0ed9df0e1e0bf645c6dce721d4e230e`
 - `nixpkgs`: `nixpkgs-unstable` (rev `7525d999cd850b9a488817abc89c75dc733acf17`)
+- `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from `nixpkgs` above.
 
-Available as nixvim by-name modules at this rev: `sidekick`, `opencode`, `otter`, `nix-develop`, `vim-dadbod`, `vim-dadbod-ui`, `dbee`, `copilot-lsp`, `blink-compat`.
+Available as nixvim by-name modules at this rev: `sidekick`, `opencode`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
 
 **Not** as nixvim modules (built from source in `extra-plugins.nix`): `betterTerm.nvim` (CRAG666).
-`snowsql` is in `extraPackages` and `vim-dadbod`'s built-in `snowflake://` adapter shells out to it (no `vim-dadbod-snowflake` fork needed).
+`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) is passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`.

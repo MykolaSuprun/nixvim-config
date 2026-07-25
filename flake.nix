@@ -3,12 +3,24 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    # Pinned separately from the main nixpkgs input: at nixpkgs-unstable (and
+    # current nixos-unstable), `snowflake-cli` fails to build on aarch64-linux
+    # because its `snowflake-connector-python` dependency has a unit test
+    # (test_log_debug_config_file_parent_dir_permissions) that assumes it is
+    # not running as root — Nix's build sandbox always runs as root, so the
+    # chmod-based permission check never triggers and the test fails. This
+    # pin only feeds `snowflake-cli` (see dependencies.nix); everything else
+    # still comes from the main `nixpkgs` input above. Bump/drop this once
+    # the fix lands upstream: https://github.com/NixOS/nixpkgs/issues (check
+    # snowflake-connector-python test suite for the root-permission test).
+    nixpkgs-snowflake.url = "github:nixos/nixpkgs/nixos-25.05";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
   outputs = {
     nixpkgs,
+    nixpkgs-snowflake,
     nixvim,
     flake-parts,
     ...
@@ -31,11 +43,16 @@
           overlays = [];
         };
 
+        # snowflake-cli specifically, from the nixos-25.05-pinned nixpkgs (see
+        # comment on the `nixpkgs-snowflake` flake input above) — passed to
+        # nixvim-config/dependencies.nix via extraSpecialArgs.
+        snowflakeCli = (import nixpkgs-snowflake {inherit system;}).snowflake-cli;
+
         nixvimModule = {
           inherit pkgs; # pkgs has config.allowUnfree = true
           module = import ./nixvim-config;
           extraSpecialArgs = {
-            # inherit (inputs) foo;
+            inherit snowflakeCli;
           };
         };
 

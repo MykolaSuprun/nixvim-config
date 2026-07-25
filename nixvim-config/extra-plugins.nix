@@ -10,7 +10,7 @@
     # Repo:  CRAG666/betterTerm.nvim
     # Rev:   8111818c82a5ed01a24317f32892ad67765375b2 (2026-05-31)
     # API:   require("betterTerm").open/send/select/rename/cycle/toggle_termwindow
-    # Used for: interactive dbt / Snowflake / airflow shells (send current line,
+    # Used for: interactive dbt / `snow sql` / airflow shells (send current line,
     #          selection or file to a persistent, numbered terminal).
     (pkgs.vimUtils.buildVimPlugin {
       pname = "betterTerm";

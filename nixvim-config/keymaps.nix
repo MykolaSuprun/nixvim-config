@@ -1578,54 +1578,12 @@
         '';
     }
 
-    # ── database (dadbod-ui + dbee) — <leader>Q ───────────────────────────
-    # vim-dadbod's built-in snowflake adapter (snowflake://…) shells out to
-    # `snowsql`. Connections are stored per-project in gitignored .local/dbui.json.
-    {
-      key = "<leader>Qo";
-      options = {
-        silent = true;
-        desc = "DBUI: open drawer";
-      };
-      mode = ["n"];
-      action = "<cmd>DBUI<CR>";
-    }
-    {
-      key = "<leader>QT";
-      options = {
-        silent = true;
-        desc = "DBUI: toggle drawer";
-      };
-      mode = ["n"];
-      action = "<cmd>DBUIToggle<CR>";
-    }
-    {
-      key = "<leader>Qe";
-      options = {
-        silent = true;
-        desc = "DBUI: edit connections";
-      };
-      mode = ["n"];
-      action = "<cmd>DBUIEditConnections<CR>";
-    }
-    {
-      key = "<leader>Qf";
-      options = {
-        silent = true;
-        desc = "DBUI: find buffer";
-      };
-      mode = ["n"];
-      action = "<cmd>DBUIFindBuffer<CR>";
-    }
-    {
-      key = "<leader>Qa";
-      options = {
-        silent = true;
-        desc = "DBUI: add connection";
-      };
-      mode = ["n"];
-      action = "<cmd>DBUIAddConnection<CR>";
-    }
+    # ── database (dbee + Snowflake CLI overseer templates) — <leader>Q ────
+    # dbee has no Snowflake driver (see plugins.nix); Snowflake is queried via
+    # the `snow` CLI, wired up as overseer templates in
+    # overseer/snowflake_tasks.lua. Qr/Qv are direct shortcuts to the two most
+    # common ones (each asks for confirmation before sending SQL); everything
+    # else (describe/list/connection test/…) is reachable via <leader>Or or Qo.
     {
       key = "<leader>Qd";
       options = {
@@ -1633,16 +1591,55 @@
         desc = "Dbee: toggle UI";
       };
       mode = ["n"];
-      action = "<cmd>DbeeToggle<CR>";
+      action.__raw = ''function() vim.cmd("DbeeToggle") end'';
     }
     {
-      key = "<leader>Qq";
+      key = "<leader>Qo";
       options = {
         silent = true;
-        desc = "DB: run query on current buffer/range";
+        desc = "Snowflake: browse all templates (OverseerRun)";
       };
       mode = ["n"];
-      action = "<cmd>DB<CR>";
+      action = "<cmd>OverseerRun<CR>";
+    }
+    {
+      key = "<leader>Qr";
+      options = {
+        silent = true;
+        desc = "Snowflake: run current line (confirm)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("overseer").run_template({ name = "snowflake: run current line" })
+        end
+      '';
+    }
+    {
+      key = "<leader>Qv";
+      options = {
+        silent = true;
+        desc = "Snowflake: run visual selection (confirm)";
+      };
+      mode = ["x"];
+      action.__raw = ''
+        function()
+          require("overseer").run_template({ name = "snowflake: run visual selection" })
+        end
+      '';
+    }
+    {
+      key = "<leader>Qt";
+      options = {
+        silent = true;
+        desc = "Snowflake: connection test";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("overseer").run_template({ name = "snowflake: connection test" })
+        end
+      '';
     }
 
     # ── nix-develop — <leader>N ───────────────────────────────────────────

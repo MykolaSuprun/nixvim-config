@@ -109,25 +109,6 @@
           # use_typo_resistance = true;
         };
         signature.enabled = true;
-        # Sources — lsp/path/snippets/buffer are the plugin defaults; we add the
-        # native `vim_dadbod_completion.blink` provider for SQL completion
-        # (table/column names) inside dadbod-ui query buffers and dbt .sql files.
-        # No blink-compat shim needed — vim-dadbod-completion ships a native
-        # blink module. See plugins.nix (vim-dadbod-completion.enable = true).
-        sources = {
-          per_filetype = {
-            sql = ["lsp" "snippets" "dadbod" "buffer"];
-            mysql = ["lsp" "snippets" "dadbod" "buffer"];
-            plsql = ["lsp" "snippets" "dadbod" "buffer"];
-          };
-          providers = {
-            dadbod = {
-              name = "Dadbod";
-              module = "vim_dadbod_completion.blink";
-              opts = {};
-            };
-          };
-        };
         keymap = {
           "<C-h>" = [
             "hide"

@@ -41,38 +41,62 @@ overseer.register_template({
 	end,
 })
 
+-- `astro dev run <airflow-command>` forwards everything after `run` as an
+-- Airflow CLI subcommand + its own args (see e.g. `astro dev run users
+-- create --role Admin ...` in Astronomer's docs) — it does NOT take
+-- `<dag> <task> <date>` as bare positional args the way `airflow tasks test`
+-- does. An earlier version of this template passed dag/task/date straight
+-- after `run`, which astro would have tried to interpret as an Airflow
+-- subcommand name and failed (or, worse, silently done nothing useful) —
+-- the fix is to spell out the real Airflow subcommand (`tasks test` /
+-- `dags test`) so `astro dev run` has something valid to forward.
 overseer.register_template({
-	name = "astro dev test (prompt dag/test/date)",
+	name = "astro dev run: tasks test (prompt dag/task/date)",
 	builder = function(params)
-		local args = { "dev", "run" }
-		if params and params.dag and params.dag ~= "" then
-			table.insert(args, params.dag)
-			if params.task and params.task ~= "" then
-				table.insert(args, params.task)
-			end
-			if params.date and params.date ~= "" then
-				table.insert(args, params.date)
-			end
-		end
-		local name = "astro dev run"
-		if params and params.dag and params.dag ~= "" then
-			name = name .. ": " .. params.dag
-			if params.task and params.task ~= "" then
-				name = name .. " " .. params.task
-			end
+		local dag = params and params.dag or ""
+		local task = params and params.task or ""
+		local date = params and params.date or ""
+		local args = { "dev", "run", "tasks", "test", dag, task }
+		if date ~= "" then
+			table.insert(args, date)
 		end
 		return {
 			cmd = { "astro" },
 			args = args,
-			name = name,
+			name = "astro dev run tasks test: " .. dag .. "/" .. task,
+			cwd = vim.fn.getcwd(),
+			components = bottom_output(600),
+		}
+	end,
+	-- params must be keyed by name (`{ dag = {...} }`), not `{ key = "dag" }`
+	-- — see dbt_tasks.lua "dbt run (tag prompt)" for why.
+	params = {
+		dag = { desc = "DAG id", optional = false },
+		task = { desc = "Task id", optional = false },
+		date = { desc = "Logical date, e.g. 2025-01-01", optional = true },
+	},
+})
+
+overseer.register_template({
+	name = "astro dev run: dags test (prompt dag/date)",
+	builder = function(params)
+		local dag = params and params.dag or ""
+		local date = params and params.date or ""
+		local args = { "dev", "run", "dags", "test", dag }
+		if date ~= "" then
+			table.insert(args, date)
+		end
+		return {
+			cmd = { "astro" },
+			args = args,
+			name = "astro dev run dags test: " .. dag,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(600),
 		}
 	end,
 	params = {
-		{ key = "dag", desc = "DAG id", optional = false },
-		{ key = "task", desc = "Task id (optional)", optional = true },
-		{ key = "date", desc = "Logical date, e.g. 2025-01-01", optional = true },
+		dag = { desc = "DAG id", optional = false },
+		date = { desc = "Logical date, e.g. 2025-01-01", optional = true },
 	},
 })
 
@@ -105,8 +129,8 @@ overseer.register_template({
 		}
 	end,
 	params = {
-		{ key = "dag", desc = "DAG id", optional = false },
-		{ key = "date", desc = "Logical date, e.g. 2025-01-01", optional = true },
+		dag = { desc = "DAG id", optional = false },
+		date = { desc = "Logical date, e.g. 2025-01-01", optional = true },
 	},
 })
 
@@ -124,9 +148,9 @@ overseer.register_template({
 		}
 	end,
 	params = {
-		{ key = "dag", desc = "DAG id", optional = false },
-		{ key = "task", desc = "Task id", optional = false },
-		{ key = "date", desc = "Logical date, e.g. 2025-01-01", optional = true },
+		dag = { desc = "DAG id", optional = false },
+		task = { desc = "Task id", optional = false },
+		date = { desc = "Logical date, e.g. 2025-01-01", optional = true },
 	},
 })
 
