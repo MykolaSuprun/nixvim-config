@@ -723,10 +723,25 @@
     # (<leader>w) and standard <C-w> motions. Harpoon lives under <leader>h.
     # Flash (<C-s>/<S-s>) are in ../shared/keymaps.nix
 
-    # ── Window pick (<leader>w) ────────────────────────────────────────────
-    # <leader>w → nvim-window-picker (jump to a window by big floating letter).
+    # ── Window pick (<leader>w / <S-Space>) ──────────────────────────────────
+    # <leader>w or <S-Space> → nvim-window-picker (jump to a window by big
+    # floating letter). <S-Space> is a faster single-key alternative.
     {
       key = "<leader>w";
+      options = {
+        silent = true;
+        desc = "Pick Window (window-picker)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          local winid = require("window-picker").pick_window()
+          if winid then vim.api.nvim_set_current_win(winid) end
+        end
+      '';
+    }
+    {
+      key = "<S-Space>";
       options = {
         silent = true;
         desc = "Pick Window (window-picker)";
@@ -926,15 +941,15 @@
     }
     # Trouble (<leader>xx/xX/xS/cl/cL/cQ/xp) are in ../shared/keymaps.nix
     # NOTE: avante keymap removed — avante disabled; AI surface is now
-    # sidekick (<leader>k) + opencode (<leader>a). See AGENTS.md.
+    # sidekick (<leader>k) + opencode (<leader>o). See AGENTS.md.
 
-    # ── opencode (<leader>a) ───────────────────────────────────────────────
+    # ── opencode (<leader>o) ───────────────────────────────────────────────
     # opencode.nvim — uses the real Lua API (ask/select/operator/command/
     # statusline). The old :OpenCode / :OpenCodeFocus user-commands don't
     # exist in opencode.nvim. `server.start` is snacks.terminal-backed and is
     # injected in plugins.nix extraConfigLua (functions can't go via vim.g).
     {
-      key = "<leader>aa";
+      key = "<leader>oa";
       options = {
         silent = true;
         desc = "OpenCode: ask (@this: )";
@@ -943,7 +958,7 @@
       action.__raw = ''function() require("opencode").ask("@this: ") end'';
     }
     {
-      key = "<leader>as";
+      key = "<leader>os";
       options = {
         silent = true;
         desc = "OpenCode: select (prompts/commands)";
@@ -952,7 +967,7 @@
       action.__raw = ''function() require("opencode").select() end'';
     }
     {
-      key = "<leader>ao";
+      key = "<leader>oo";
       options = {
         silent = true;
         desc = "OpenCode: operator (append range)";
@@ -962,7 +977,7 @@
       action.__raw = ''function() return require("opencode").operator("@this ") end'';
     }
     {
-      key = "<leader>aL";
+      key = "<leader>oL";
       options = {
         silent = true;
         desc = "OpenCode: append line";
@@ -972,7 +987,7 @@
       action.__raw = ''function() return require("opencode").operator("@this ") .. "_" end'';
     }
     {
-      key = "<leader>au";
+      key = "<leader>ou";
       options = {
         silent = true;
         desc = "OpenCode: scroll up half page";
@@ -981,7 +996,7 @@
       action.__raw = ''function() require("opencode").command("session.half.page.up") end'';
     }
     {
-      key = "<leader>ad";
+      key = "<leader>od";
       options = {
         silent = true;
         desc = "OpenCode: scroll down half page";
@@ -990,7 +1005,7 @@
       action.__raw = ''function() require("opencode").command("session.half.page.down") end'';
     }
     {
-      key = "<leader>ar";
+      key = "<leader>or";
       options = {
         silent = true;
         desc = "OpenCode: reload current buffer";
@@ -1008,7 +1023,7 @@
     # Toggle the opencode terminal (snacks.terminal, same cmd as server.start).
     # Useful to view/interact with the agent after submitting a prompt.
     {
-      key = "<leader>at";
+      key = "<leader>ot";
       options = {
         silent = true;
         desc = "OpenCode: toggle terminal";
@@ -1026,7 +1041,7 @@
     }
     # Interrupt the current opencode session — stops a runaway agent.
     {
-      key = "<leader>ai";
+      key = "<leader>oi";
       options = {
         silent = true;
         desc = "OpenCode: interrupt session";
@@ -1715,7 +1730,7 @@
       icon = "󰓩";
     }
     {
-      __unkeyed-1 = "<leader>a";
+      __unkeyed-1 = "<leader>o";
       group = "opencode";
       icon = "󰚩";
     }

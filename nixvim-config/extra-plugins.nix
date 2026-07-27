@@ -29,7 +29,10 @@
     # herd.nvim — drives herdr coding agents from Neovim (nvim is the host,
     # herdr is the backend daemon). Built from source (not in nixpkgs).
     # Repo:  MomePP/herd.nvim
-    # Rev:   c0fbae4dd04ce6dfa4f10735c039c926549a0cd4
+    # Rev:   b4ad1e097800 (pre-herdr-0.7.5-migration); installed herdr is 0.7.4
+    #        which doesn't support the `--kind` flag added in the 0.7.5 migration.
+    #        Keeping this pinned to the pre-migration rev until herdr ≥ 0.7.5
+    #        lands in nixpkgs.
     # API:   require("herd").{toggle,select,send,dashboard,diagnostics,jump,spawn}
     # Used for: the "herd" agent backend under <leader><tab> (toggled via the
     #          <leader>ca dashboard — see lua/agent_backend.lua). Default keys
@@ -38,12 +41,12 @@
     #          runtime.
     (pkgs.vimUtils.buildVimPlugin {
       pname = "herd";
-      version = "unstable-2026-07-26";
+      version = "unstable-2026-07-21";
       src = pkgs.fetchFromGitHub {
         owner = "MomePP";
         repo = "herd.nvim";
-        rev = "c0fbae4dd04ce6dfa4f10735c039c926549a0cd4";
-        hash = "sha256-vpwvmqqwhjZdYKnWB6h968ApoznH/+wO0Ckt+cRulNg=";
+        rev = "b4ad1e0978000a22526ad75b949bc61e0a4e5f7f";
+        hash = "sha256-9o/3uKFf6JSexSFHKM10skCPQ6/Tq4qctRZKIQnsS1U=";
       };
       meta.homepage = "https://github.com/MomePP/herd.nvim";
       meta.license = lib.licenses.mit;
@@ -85,8 +88,11 @@
           autoselect_one = true,
           include_current_win = false,
           bo = {
-            filetype = { "NvimTree", "neo-tree", "notify", "snacks_notif", "snacks_terminal" },
-            buftype = { "terminal" },
+            filetype = { "NvimTree", "neo-tree", "notify", "snacks_notif" },
+            -- Explicitly clear buftype filter (default includes "terminal").
+            -- Without this, the default's buftype filter persists through
+            -- tbl_deep_extend since it's not in our override.
+            buftype = {},
           },
         },
       })

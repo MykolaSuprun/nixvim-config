@@ -110,7 +110,8 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>t` | tabs | keymaps.nix |
 | `<leader>T` | test (neotest) | keymaps.nix |
 | `<leader><tab>` | agents (sidekick / herd) | keymaps.nix |
-| `<leader>a` | opencode | keymaps.nix |
+| `<leader>o` | opencode | keymaps.nix |
+| `<S-Space>` | window picker | keymaps.nix |
 | `<leader>O` | obsidian | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
 | `<leader>Q` | database (dbee + Snowflake CLI overseer templates) | keymaps.nix |
@@ -240,7 +241,7 @@ See README.md for full details.
 
 - Do **not** enable `copilot-lsp` — sidekick NES is intentionally disabled (CLI-terminal mode only).
 - Do **not** wire `copilot-lua` completion — Avante and sidekick own the AI surface; `copilot-lua` is disabled.
-- Do **not** enable `herd.nvim` default keys — they are disabled in `extra-plugins.nix` because they would shadow the `<leader>s` search group and `<leader>a` opencode group; keep them off and use the `<leader><tab>` bindings installed by `lua/agent_backend.lua` instead.
+- Do **not** enable `herd.nvim` default keys — they are disabled in `extra-plugins.nix` because they would shadow the `<leader>s` search group and `<leader>o` opencode group; keep them off and use the `<leader><tab>` bindings installed by `lua/agent_backend.lua` instead.
 - Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + snacks picker cover the workflow and bit-rot less.
 - Do **not** re-add `vim-dadbod`/`vim-dadbod-ui`/`snowsql` for Snowflake — `snowsql` is unsupported on `aarch64-linux` (see "Why the Snowflake tooling looks the way it does" above). `nvim-dbee` is not a substitute either — it has no Snowflake driver.
 - Do **not** add a `--password`/credential flag to any Snowflake overseer template or keymap — connections must come from `~/.snowflake/config.toml` connection profiles.
