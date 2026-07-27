@@ -12,6 +12,11 @@ A personal Neovim configuration built with [nixvim](https://github.com/nix-commu
 | **CodeVim** | `.#CodeVim` | Lean config for [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) — editing primitives only, LSP/nav delegated to VSCode |
 | **LazyVim** | `.#LazyVim` | LazyVim-based stub |
 
+## Documentation sources
+
+- Official nixvim documentation with configuration and plugin options is available at https://nix-community.github.io/nixvim/index.html
+- Some neovim plugins might be not officialy supported by nixvim options but still available on nixpkgs under vimPlugins prefix
+
 ## Repository layout
 
 ```
@@ -28,7 +33,7 @@ nixvim-config/         # Full Neovim profile
   options.nix          # nixvim-only opts (tabline, OSC 52 clipboard, snacks indent toggle)
   visual.nix           # Colorscheme (catppuccin/base16), bufferline, lualine, which-key base
   lsp.nix              # LSP servers, blink-cmp, nvim-lint, trouble
-  plugins.nix          # nixvim-only plugins (snacks, oil, noice, sidekick, dbee, …)
+  plugins.nix          # nixvim-only plugins (snacks, oil, noice, opencode, sidekick, dbee, …)
   keymaps.nix          # nixvim-only keymaps + which-key group specs
   dap.nix              # nvim-dap, dap-ui, dap-python, dap-go, OSV
   ftplugin/sql.nix     # SQL ftplugin — Jinja-brace highlighting for dbt models
@@ -95,6 +100,7 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>c` | code | shared/keymaps.nix |
 | `<leader>cf` | format | shared/keymaps.nix |
 | `<leader>ct` | treesitter | shared/keymaps.nix |
+| `<leader>C` | config dashboard (agents backend) | keymaps.nix |
 | `<leader>r` | find and replace | shared/keymaps.nix |
 | `<leader>x` | trouble | shared/keymaps.nix |
 | `<leader>q` | session | shared/keymaps.nix |
@@ -103,14 +109,15 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>ut` | treesitter | keymaps.nix |
 | `<leader>t` | tabs | keymaps.nix |
 | `<leader>T` | test (neotest) | keymaps.nix |
-| `<leader>O` | obsidian | keymaps.nix |
+| `<leader><tab>` | agents (sidekick / herd) | keymaps.nix |
 | `<leader>a` | opencode | keymaps.nix |
-| `<leader>k` | sidekick (AI CLI terminal) | keymaps.nix |
+| `<leader>O` | obsidian | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
 | `<leader>Q` | database (dbee + Snowflake CLI overseer templates) | keymaps.nix |
 | `<leader>X` | betterTerm send-to-terminal | keymaps.nix |
 | `<leader>d` | debug (DAP) | keymaps.nix |
 | `<leader>h` | harpoon | keymaps.nix |
+| `<leader>w` | window (picker) | keymaps.nix |
 | `<leader>n` | notifications history (single-key) | shared/keymaps.nix |
 | `<leader>O` | obsidian (single-key opens Obsidian) | keymaps.nix |
 
@@ -121,9 +128,9 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 - `[T/]T` — neotest failed-test navigation
 - `{/}` — Aerial symbol navigation
 - `<S-h>/<S-l>` — bufferline tab cycling
-- `<M-h/j/k/l>` — tmux pane navigation
-- `<C-\>` — snacks.terminal toggle (normal + terminal mode)
-- `<C-\\>` — betterTerm toggle / new tab
+- `<leader>w` — window-picker (jump to window by big floating letter)
+- `<C-w>h/j/k/l` — standard Neovim window navigation (no leader mapping)
+- `<C-\>` — snacks.terminal toggle (normal mode only; use `<S-Esc>` in terminal mode to exit)
 - `<F5>/<F10>/<F11>/<F12>` — DAP continue/over/into/out
 
 ### Lazy loading
@@ -131,7 +138,7 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 - Heavy/optional plugins gate on a command: `lazyLoad.settings.cmd = "..."`.
 - LLM/AI plugins gate on `["VimEnter"]` so they don't block initial UI.
 - `otter` gates on `BufReadPost` for `md,sql,jinja,quarto,ipynb` (embedded languages). The nixvim module's `autoActivate` is **disabled** (its global LspAttach hook would `require('otter')` on every LSP attach and throw on non-matching buffers that haven't lazy-loaded). A guarded, `pcall`-protected `LspAttach` autocmd (in `plugins.nix` `extraConfigLua`) replaces it.
-- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666).
+- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666) and `herd.nvim` (MomePP).
 - `nix-develop` gates on `BufReadPost *.nix`.
 
 ### When adding a new plugin
@@ -232,7 +239,8 @@ See README.md for full details.
 ## Things to avoid
 
 - Do **not** enable `copilot-lsp` — sidekick NES is intentionally disabled (CLI-terminal mode only).
-- Do **not** wire `copilot-lua` completion — Avante and sidekick own the AI surface; copilot-lua is disabled.
+- Do **not** wire `copilot-lua` completion — Avante and sidekick own the AI surface; `copilot-lua` is disabled.
+- Do **not** enable `herd.nvim` default keys — they are disabled in `extra-plugins.nix` because they would shadow the `<leader>s` search group and `<leader>a` opencode group; keep them off and use the `<leader><tab>` bindings installed by `lua/agent_backend.lua` instead.
 - Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + snacks picker cover the workflow and bit-rot less.
 - Do **not** re-add `vim-dadbod`/`vim-dadbod-ui`/`snowsql` for Snowflake — `snowsql` is unsupported on `aarch64-linux` (see "Why the Snowflake tooling looks the way it does" above). `nvim-dbee` is not a substitute either — it has no Snowflake driver.
 - Do **not** add a `--password`/credential flag to any Snowflake overseer template or keymap — connections must come from `~/.snowflake/config.toml` connection profiles.

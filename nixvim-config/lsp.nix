@@ -80,6 +80,13 @@
       setupLspCapabilities = true;
       settings = {
         cmdline.enabled = false;
+        # opencode.nvim's Ask input uses an in-process LSP on the
+        # `opencode_ask` filetype. Show lsp + buffer completions there so
+        # context/subagent completion works (see opencode.nvim README).
+        sources = {
+          per_filetype.opencode_ask = ["lsp" "buffer"];
+          providers.lsp.fallbacks = [];
+        };
         completion = {
           accept = {
             create_undo_point = true;

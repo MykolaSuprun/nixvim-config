@@ -107,10 +107,9 @@
       enable = true;
     };
 
-    tmux-navigator = {
-      enable = true;
-      settings.no_mappings = 1;
-    };
+    # NOTE: tmux-navigator was removed — <M-h/j/k/l> pane navigation has been
+    # dropped in favour of in-editor window navigation (<leader>h/j/k/l) and
+    # the herd/sidekick agent backends. See AGENTS.md "Things to avoid".
 
     colorful-winsep = {
       enable = true;
@@ -179,24 +178,36 @@
             #lua
             "{ layout = { backdrop = false } }";
 
-          # win = {
-          #   input = {
-          #     keys = {
-          #       __raw =
-          #         #lua
-          #         ''
-          #         '';
-          #     };
-          #   };
-          #   list = {
-          #     keys = {
-          #       __raw =
-          #         #lua
-          #         ''
-          #         '';
-          #     };
-          #   };
-          # };
+          # Custom picker actions: send selected items to an AI agent.
+          #   <a-o> → opencode.nvim (require("opencode").format/prompt)
+          #   <a-a> → sidekick.nvim (require("sidekick.cli.picker.snacks").send)
+          # `actions` and `win.input.keys` are deep-merged with snacks defaults,
+          # so `__raw` here only adds our two actions/keys on top of the built-ins.
+          actions.__raw =
+            #lua
+            ''
+              {
+                opencode_send = function(picker)
+                  local items = vim.tbl_map(function(item)
+                    return item.file
+                        and require("opencode").format({ path = item.file, from = item.pos, to = item.end_pos })
+                        or item.text
+                  end, picker:selected({ fallback = true }))
+                  require("opencode").prompt(table.concat(items, ", ") .. " ")
+                end,
+                sidekick_send = function(picker)
+                  require("sidekick.cli.picker.snacks").send(picker)
+                end,
+              }
+            '';
+          win.input.keys.__raw =
+            #lua
+            ''
+              {
+                ["<a-o>"] = { "opencode_send", mode = { "n", "i" } },
+                ["<a-a>"] = { "sidekick_send", mode = { "n", "i" } },
+              }
+            '';
         };
       };
     };
@@ -339,11 +350,15 @@
       ];
     };
 
+    # opencode.nvim — integrates the OpenCode AI CLI. The nixvim module only
+    # sets `vim.g.opencode_opts = cfg.settings` (it does NOT call setup()).
+    # `auto_reload` is not a real option — opencode.nvim auto-sets `vim.o.autoread`
+    # and reloads edited buffers via its `events.reload` default, so we rely on
+    # the defaults. The `server.start` function (snacks.terminal-backed) cannot
+    # round-trip through `vim.g` (Neovim can't store functions in `vim.g`), so
+    # it is injected in `extraConfigLua` below via `require("opencode.config").opts`.
     opencode = {
       enable = true;
-      settings = {
-        auto_reload = true;
-      };
       lazyLoad = {
         settings = {
           event = ["VimEnter"];
@@ -486,6 +501,138 @@
           end,
         }
       '';
+    # ── Agent backend runtime keymap swapper ─────────────────────────────
+    # Both sidekick and herd bind their keys under `<leader><tab>*`. Which
+    # backend is active is stored in `vim.g.agents_backend` and toggled via
+    # the `<leader>S` dashboard (lua/config_dashboard.lua). This module
+    # unmaps the previous backend's `<leader><tab>*` keys and maps the new
+    # one's at runtime. Setup is invoked from extra-plugins.nix on VimEnter
+    # (after sidekick/herd have lazy-loaded).
+    "lua/agent_backend.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        M.backends = {
+          sidekick = {
+            map = function()
+              local cli = require("sidekick.cli")
+              local opts = function(desc) return { desc = desc, silent = true } end
+              vim.keymap.set("n", "<leader><tab>t", function() cli.toggle() end, opts("Sidekick: toggle"))
+              vim.keymap.set("n", "<leader><tab>s", function() cli.select({ filter = { installed = true } }) end, opts("Sidekick: select"))
+              vim.keymap.set("n", "<leader><tab>f", function() cli.focus() end, opts("Sidekick: focus"))
+              vim.keymap.set({ "n", "x" }, "<leader><tab>p", function() cli.prompt() end, opts("Sidekick: pick prompt"))
+              vim.keymap.set({ "n", "x" }, "<leader><tab>x", function() cli.send({ msg = "{this}" }) end, opts("Sidekick: send this"))
+              vim.keymap.set("n", "<leader><tab>e", function() cli.send({ msg = "{file}" }) end, opts("Sidekick: send file"))
+              vim.keymap.set("n", "<leader><tab>d", function() cli.close() end, opts("Sidekick: detach"))
+            end,
+            unmap = function()
+              for _, k in ipairs({ "t", "s", "f", "p", "x", "e", "d" }) do
+                pcall(vim.keymap.del, "n", "<leader><tab>" .. k)
+                pcall(vim.keymap.del, "x", "<leader><tab>" .. k)
+              end
+            end,
+          },
+          herd = {
+            map = function()
+              local herd = require("herd")
+              local opts = function(desc) return { desc = desc, silent = true } end
+              vim.keymap.set("n", "<leader><tab>t", function() herd.toggle() end, opts("Herd: toggle"))
+              vim.keymap.set("n", "<leader><tab>s", function() herd.select() end, opts("Herd: select"))
+              vim.keymap.set("n", "<leader><tab>S", function() herd.dashboard() end, opts("Herd: dashboard"))
+              vim.keymap.set("x", "<leader><tab>", function() herd.send() end, opts("Herd: send selection"))
+              -- herd-only extras (no default keymaps in herd.nvim): push the
+              -- current buffer's LSP diagnostics to the active agent, and jump
+              -- to path:line references the agent emitted in its recent output.
+              vim.keymap.set("n", "<leader><tab>D", function() herd.diagnostics() end, opts("Herd: send diagnostics"))
+              vim.keymap.set("n", "<leader><tab>j", function() herd.jump() end, opts("Herd: jump to references"))
+            end,
+            unmap = function()
+              for _, k in ipairs({ "t", "s", "S", "D", "j" }) do
+                pcall(vim.keymap.del, "n", "<leader><tab>" .. k)
+              end
+              pcall(vim.keymap.del, "x", "<leader><tab>")
+            end,
+          },
+        }
+
+        function M.get()
+          return vim.g.agents_backend
+        end
+
+        function M.set(name)
+          if not M.backends[name] then return end
+          local prev = M.get()
+          if prev and M.backends[prev] then M.backends[prev].unmap() end
+          vim.g.agents_backend = name
+          M.backends[name].map()
+        end
+
+        function M.setup()
+          -- Auto-detect the default backend:
+          --   * When Neovim runs INSIDE a herdr session, herdr owns the pane
+          --     lifecycle — herd.nvim's float mode would fight it, so default
+          --     to sidekick (which uses its own terminal, independent of herdr).
+          --   * Otherwise (standalone nvim), default to herd so the user gets
+          --     the herdr-backed dashboard/status hooks.
+          -- Detection: herdr sets HERDR_TAB_ID / HERDR_WORKSPACE_ID on any pane
+          -- it spawns (documented in MomePP/herd.nvim "Native mode"). Either
+          -- being set means we're inside herdr.
+          local inside_herdr = vim.env.HERDR_TAB_ID ~= nil or vim.env.HERDR_WORKSPACE_ID ~= nil
+          local default = inside_herdr and "sidekick" or "herd"
+          M.set(vim.g.agents_backend or default)
+        end
+
+        return M
+      '';
+
+    # ── Agent backend toggle dashboard (<leader>C) ────────────────────────
+    # A small nui.menu TUI. Currently exposes one group — `agents-backend` —
+    # with a sidekick/herd submenu. Selecting a backend calls
+    # `require("agent_backend").set(...)` which swaps the `<leader><tab>*`
+    # keymaps at runtime.
+    "lua/config_dashboard.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        local function open_submenu()
+          local Menu = require("nui.menu")
+          local agent_backend = require("agent_backend")
+          local current = agent_backend.get()
+          local lines = {
+            Menu.item("sidekick" .. (current == "sidekick" and "  (active)" or ""), { name = "sidekick" }),
+            Menu.item("herd" .. (current == "herd" and "  (active)" or ""), { name = "herd" }),
+          }
+          local menu = Menu({
+            position = "50%",
+            size = { width = 40 },
+            border = { style = "rounded", text = { top = " agents backend " } },
+          }, {
+            lines = lines,
+            on_submit = function(item) agent_backend.set(item.name) end,
+          })
+          menu:mount()
+        end
+
+        function M.open()
+          local Menu = require("nui.menu")
+          local menu = Menu({
+            position = "50%",
+            size = { width = 40 },
+            border = { style = "rounded", text = { top = " config " } },
+          }, {
+            lines = { Menu.item("agents-backend", { name = "agents-backend" }) },
+            on_submit = function(item)
+              if item.name == "agents-backend" then open_submenu() end
+            end,
+          })
+          menu:mount()
+        end
+
+        return M
+      '';
+
     "ftplugin/sql.lua".text =
       #lua
       ''
@@ -539,6 +686,24 @@
     #lua
     ''
       -- require("fyler").setup()
+
+      -- opencode.nvim: inject a snacks.terminal-backed `server.start`.
+      -- The nixvim module only sets `vim.g.opencode_opts` (no setup() call),
+      -- and Lua functions cannot round-trip through `vim.g` (Neovim can't
+      -- store functions in `vim.g`), so we set it directly on the resolved
+      -- opts table. opencode.nvim discovers running `opencode --port` servers
+      -- by process; `--port` (no value) exposes the server on a random port.
+      do
+        local ok, cfg = pcall(require, "opencode.config")
+        if ok and cfg.opts and cfg.opts.server then
+          local opencode_cmd = "opencode --port"
+          cfg.opts.server.start = function()
+            require("snacks.terminal").open(opencode_cmd, {
+              win = { position = "right", enter = false },
+            })
+          end
+        end
+      end
 
       -- otter: activate embedded-language LSP only for buffers that (a) have an
       -- embedded language we care about, and (b) actually loaded the otter plugin

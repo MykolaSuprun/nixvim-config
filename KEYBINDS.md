@@ -101,13 +101,12 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<M-h>` | n | Move to left window / tmux pane |
-| `<M-l>` | n | Move to right window / tmux pane |
-| `<M-k>` | n | Move to upper window / tmux pane |
-| `<M-j>` | n | Move to lower window / tmux pane |
-| `<C-\>` | n, t | Toggle floating terminal (snacks.terminal) |
+| `<leader>w` | n | Pick window (nvim-window-picker, big floating letter) |
+| `<C-w>h/j/k/l` | n | Standard Neovim window navigation |
+| `<C-\>` | n | Toggle snacks.terminal |
+| `<S-Esc>` | t | Send `<C-\><C-n>` to exit terminal mode |
 
-> The previous `<C-\>` → `TmuxNavigatePrevious` mapping was removed. Use `:TmuxNavigatePrevious` directly if ever needed.
+> The previous `<M-h/j/k/l>` tmux pane-navigation mappings and the `<leader>h/j/k/l` in-editor window navigation were removed. Use `<leader>w` to pick a window by its big floating-letter hint, or `<C-w>` motions for direct navigation.
 
 ---
 
@@ -117,6 +116,7 @@ Scope: `nixvim-config` only.
 |-----|------|--------|
 | `<S-h>` | n | Previous tab |
 | `<S-l>` | n | Next tab |
+| `<leader><S-tab>` | n | Pick tab |
 
 ---
 
@@ -135,10 +135,33 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<leader>1` | n | Jump to harpoon file 1 |
-| `<leader>2` | n | Jump to harpoon file 2 |
-| `<leader>3` | n | Jump to harpoon file 3 |
-| `<leader>4` | n | Jump to harpoon file 4 |
+| `<leader>ha` | n | Add current file to harpoon |
+| `<leader>hh` | n | Open harpoon quick menu |
+| `<leader>h1` | n | Jump to harpoon file 1 |
+| `<leader>h2` | n | Jump to harpoon file 2 |
+| `<leader>h3` | n | Jump to harpoon file 3 |
+| `<leader>h4` | n | Jump to harpoon file 4 |
+| `<leader>hp` | n | Previous harpoon file |
+| `<leader>hn` | n | Next harpoon file |
+
+---
+
+## Persistent Terminal (betterTerm)
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<leader>Xt` | n | Toggle / new betterTerm tab |
+| `<leader>X1` | n | Focus terminal 1 |
+| `<leader>X2` | n | Focus terminal 2 |
+| `<leader>X3` | n | Focus terminal 3 |
+| `<leader>X4` | n | Focus terminal 4 |
+| `<leader>X5` | n | Focus terminal 5 |
+| `<leader>Xx` | n | Select terminal |
+| `<leader>Xr` | n | Rename current terminal |
+| `<leader>Xk` | n | Kill current terminal |
+| `<leader>Xs` | n | Send current line to terminal |
+| `<leader>Xv` | x | Send visual selection to terminal |
+| `<leader>Xf` | n | Send whole file to terminal |
 
 ---
 

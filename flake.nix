@@ -98,21 +98,21 @@
           name = "nixvim";
           tag = "latest";
           copyToRoot = nix_vim;
-          config.Entrypoint = [ "/bin/nvim" ];
+          config.Entrypoint = ["/bin/nvim"];
         };
 
         docker-lazyvim = pkgs.dockerTools.buildImage {
           name = "lazyvim";
           tag = "latest";
           copyToRoot = lazy_vim;
-          config.Entrypoint = [ "/bin/nvim" ];
+          config.Entrypoint = ["/bin/nvim"];
         };
 
         docker-codevim = pkgs.dockerTools.buildImage {
           name = "codevim";
           tag = "latest";
           copyToRoot = code_vim;
-          config.Entrypoint = [ "/bin/nvim" ];
+          config.Entrypoint = ["/bin/nvim"];
         };
       in {
         checks = {

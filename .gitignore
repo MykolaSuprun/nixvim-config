@@ -1,3 +1,4 @@
 result
 # Per-project dadbod-ui connection storage (g:db_ui_save_location = ".local")
 .local/
+.opencode/

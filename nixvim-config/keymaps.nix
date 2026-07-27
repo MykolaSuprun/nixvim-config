@@ -718,46 +718,27 @@
       action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
-    # Tmux pane navigation
-    {
-      key = "<M-h>";
-      options = {
-        silent = true;
-        desc = "Window - Move Left";
-      };
-      mode = ["n"];
-      action = "<cmd>:TmuxNavigateLeft<CR>";
-    }
-    {
-      key = "<M-l>";
-      options = {
-        silent = true;
-        desc = "Window - Move Right";
-      };
-      mode = ["n"];
-      action = "<cmd>:TmuxNavigateRight<CR>";
-    }
-    {
-      key = "<M-k>";
-      options = {
-        silent = true;
-        desc = "Window - Move Up";
-      };
-      mode = ["n"];
-      action = "<cmd>:TmuxNavigateUp<CR>";
-    }
-    {
-      key = "<M-j>";
-      options = {
-        silent = true;
-        desc = "Window - Move Down";
-      };
-      mode = ["n"];
-      action = "<cmd>:TmuxNavigateDown<CR>";
-    }
-    # NOTE: the previous <C-\> -> TmuxNavigatePrevious mapping was removed;
-    # <C-\> is now solely snacks.terminal.toggle (see Terminal section below).
+    # NOTE: tmux-navigator and the <M-h/j/k/l> pane-navigation keymaps were
+    # removed. In-editor window navigation is now handled by window-picker
+    # (<leader>w) and standard <C-w> motions. Harpoon lives under <leader>h.
     # Flash (<C-s>/<S-s>) are in ../shared/keymaps.nix
+
+    # ── Window pick (<leader>w) ────────────────────────────────────────────
+    # <leader>w → nvim-window-picker (jump to a window by big floating letter).
+    {
+      key = "<leader>w";
+      options = {
+        silent = true;
+        desc = "Pick Window (window-picker)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          local winid = require("window-picker").pick_window()
+          if winid then vim.api.nvim_set_current_win(winid) end
+        end
+      '';
+    }
     # Tabs
     # Bufferline tab navigation with Shift+H/L
     {
@@ -778,9 +759,11 @@
       mode = ["n"];
       action = "<cmd>BufferLineCycleNext<CR>";
     }
-    # Pick tab with leader+tab
+    # Pick tab — <leader><S-tab>. Moved off <leader><tab> (now the agents
+    # group). <S-tab> is a distinct keycode from <Tab>/<C-i>, so jumplist
+    # forward-jump is unaffected.
     {
-      key = "<leader><tab>";
+      key = "<leader><S-tab>";
       options = {
         silent = true;
         desc = "Pick Tab";
@@ -946,25 +929,65 @@
     # sidekick (<leader>k) + opencode (<leader>a). See AGENTS.md.
 
     # ── opencode (<leader>a) ───────────────────────────────────────────────
-    # opencode.nvim — opens an embedded terminal running the opencode AI CLI.
-    # `auto_reload` is on (plugins.nix), so buffers re-read after opencode edits.
+    # opencode.nvim — uses the real Lua API (ask/select/operator/command/
+    # statusline). The old :OpenCode / :OpenCodeFocus user-commands don't
+    # exist in opencode.nvim. `server.start` is snacks.terminal-backed and is
+    # injected in plugins.nix extraConfigLua (functions can't go via vim.g).
     {
       key = "<leader>aa";
       options = {
         silent = true;
-        desc = "OpenCode: toggle";
+        desc = "OpenCode: ask (@this: )";
       };
-      mode = ["n"];
-      action = "<cmd>OpenCode<CR>";
+      mode = ["n" "x"];
+      action.__raw = ''function() require("opencode").ask("@this: ") end'';
     }
     {
-      key = "<leader>af";
+      key = "<leader>as";
       options = {
         silent = true;
-        desc = "OpenCode: focus";
+        desc = "OpenCode: select (prompts/commands)";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("opencode").select() end'';
+    }
+    {
+      key = "<leader>ao";
+      options = {
+        silent = true;
+        desc = "OpenCode: operator (append range)";
+        expr = true;
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() return require("opencode").operator("@this ") end'';
+    }
+    {
+      key = "<leader>aL";
+      options = {
+        silent = true;
+        desc = "OpenCode: append line";
+        expr = true;
       };
       mode = ["n"];
-      action = "<cmd>OpenCodeFocus<CR>";
+      action.__raw = ''function() return require("opencode").operator("@this ") .. "_" end'';
+    }
+    {
+      key = "<leader>au";
+      options = {
+        silent = true;
+        desc = "OpenCode: scroll up half page";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode").command("session.half.page.up") end'';
+    }
+    {
+      key = "<leader>ad";
+      options = {
+        silent = true;
+        desc = "OpenCode: scroll down half page";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode").command("session.half.page.down") end'';
     }
     {
       key = "<leader>ar";
@@ -981,6 +1004,35 @@
             Snacks.notifier.notify("Buffer reloaded", { title = "OpenCode" })
           end
         '';
+    }
+    # Toggle the opencode terminal (snacks.terminal, same cmd as server.start).
+    # Useful to view/interact with the agent after submitting a prompt.
+    {
+      key = "<leader>at";
+      options = {
+        silent = true;
+        desc = "OpenCode: toggle terminal";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function()
+            require("snacks.terminal").toggle("opencode --port", {
+              win = { position = "right", enter = false },
+            })
+          end
+        '';
+    }
+    # Interrupt the current opencode session — stops a runaway agent.
+    {
+      key = "<leader>ai";
+      options = {
+        silent = true;
+        desc = "OpenCode: interrupt session";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode").command("session.interrupt") end'';
     }
 
     # ── obsidian (<leader>O — capital) ─────────────────────────────────────
@@ -1244,7 +1296,8 @@
       action.__raw = ''function() require("aerial").next() end'';
     }
 
-    # ── Harpoon ─────────────────────────────────────────────────────────────
+    # ── Harpoon (<leader>h) ─────────────────────────────────────────────────
+    # Moved from <leader>w (now window-picker) to <leader>h.
     {
       key = "<leader>ha";
       options = {
@@ -1269,7 +1322,7 @@
       '';
     }
     {
-      key = "<leader>1";
+      key = "<leader>h1";
       options = {
         silent = true;
         desc = "Harpoon: File 1";
@@ -1278,7 +1331,7 @@
       action.__raw = ''function() require("harpoon"):list():select(1) end'';
     }
     {
-      key = "<leader>2";
+      key = "<leader>h2";
       options = {
         silent = true;
         desc = "Harpoon: File 2";
@@ -1287,7 +1340,7 @@
       action.__raw = ''function() require("harpoon"):list():select(2) end'';
     }
     {
-      key = "<leader>3";
+      key = "<leader>h3";
       options = {
         silent = true;
         desc = "Harpoon: File 3";
@@ -1296,7 +1349,7 @@
       action.__raw = ''function() require("harpoon"):list():select(3) end'';
     }
     {
-      key = "<leader>4";
+      key = "<leader>h4";
       options = {
         silent = true;
         desc = "Harpoon: File 4";
@@ -1324,14 +1377,27 @@
     }
 
     # ── Terminal ─────────────────────────────────────────────────────────────
+    # <C-\> is bound in normal mode ONLY. Binding it in terminal mode shadowed
+    # the built-in <C-\><C-n> escape sequence, which is why exiting terminal
+    # mode felt broken. Use <S-Esc> in terminal mode to send <C-\><C-n> and
+    # return to normal mode.
     {
       key = "<C-\\>";
       options = {
         silent = true;
         desc = "Toggle Terminal";
       };
-      mode = ["n" "t"];
+      mode = ["n"];
       action.__raw = ''function() Snacks.terminal.toggle() end'';
+    }
+    {
+      key = "<S-Esc>";
+      options = {
+        silent = true;
+        desc = "Terminal: exit to normal mode";
+      };
+      mode = ["t"];
+      action = "<C-\\><C-n>";
     }
     {
       key = "<leader>tf";
@@ -1363,75 +1429,21 @@
       action = "<cmd>OverseerQuickAction restart on save<CR>";
     }
 
-    # ── sidekick (AI CLI terminal) — <leader>k ─────────────────────────────
-    # NES is disabled; sidekick is used purely as a managed terminal for the
-    # opencode / claude / codex / gemini CLIs with shared prompt context.
+    # ── sidekick / herd (AI CLI agents) — <leader><tab> ─────────────────────
+    # Both sidekick and herd bind their keys under <leader><tab>*. Which is
+    # active is stored in vim.g.agents_backend and toggled via the <leader>C
+    # config dashboard (lua/config_dashboard.lua). The actual <leader><tab>*
+    # keymaps are installed at runtime by lua/agent_backend.lua (on VimEnter),
+    # so they are NOT defined statically here — only the which-key group
+    # (below) and the dashboard entry point.
     {
-      key = "<leader>kt";
+      key = "<leader>C";
       options = {
         silent = true;
-        desc = "Sidekick: toggle CLI";
+        desc = "Config dashboard (agents backend)";
       };
       mode = ["n"];
-      action.__raw = ''function() require("sidekick.cli").toggle() end'';
-    }
-    {
-      key = "<leader>kf";
-      options = {
-        silent = true;
-        desc = "Sidekick: focus CLI";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("sidekick.cli").focus() end'';
-    }
-    {
-      key = "<leader>ks";
-      options = {
-        silent = true;
-        desc = "Sidekick: select CLI tool";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function() require("sidekick.cli").select({ filter = { installed = true } }) end
-        '';
-    }
-    {
-      key = "<leader>kp";
-      options = {
-        silent = true;
-        desc = "Sidekick: pick prompt";
-      };
-      mode = ["n" "x"];
-      action.__raw = ''function() require("sidekick.cli").prompt() end'';
-    }
-    {
-      key = "<leader>kd";
-      options = {
-        silent = true;
-        desc = "Sidekick: detach CLI";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("sidekick.cli").close() end'';
-    }
-    {
-      key = "<leader>kx";
-      options = {
-        silent = true;
-        desc = "Sidekick: send this (cursor/selection)";
-      };
-      mode = ["n" "x"];
-      action.__raw = ''function() require("sidekick.cli").send({ msg = "{this}" }) end'';
-    }
-    {
-      key = "<leader>ke";
-      options = {
-        silent = true;
-        desc = "Sidekick: send current file";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("sidekick.cli").send({ msg = "{file}" }) end'';
+      action.__raw = ''function() require("config_dashboard").open() end'';
     }
 
     # ── betterTerm (persistent send-to-terminal) — <leader>X ───────────────
@@ -1681,10 +1693,21 @@
       group = "debug";
       icon = "";
     }
+    # <leader>h is now harpoon; <leader>w is window-picker.
     {
       __unkeyed-1 = "<leader>h";
       group = "harpoon";
       icon = "󰛢";
+    }
+    {
+      __unkeyed-1 = "<leader>w";
+      group = "window";
+      icon = "󰖲";
+    }
+    {
+      __unkeyed-1 = "<leader><tab>";
+      group = "agents";
+      icon = "󰚩";
     }
     {
       __unkeyed-1 = "<leader>t";
@@ -1702,11 +1725,6 @@
       __unkeyed-1 = "<leader>O";
       group = "overseer";
       icon = "󰓧";
-    }
-    {
-      __unkeyed-1 = "<leader>k";
-      group = "sidekick (AI CLI)";
-      icon = "󰚩";
     }
     {
       __unkeyed-1 = "<leader>N";
