@@ -14,19 +14,6 @@
     '';
   };
 
-  # opencode.nvim statusline — shows the connected server + its status.
-  # Guarded by pcall so lualine renders fine before opencode has loaded.
-  opencodeStatusComponent = {
-    __raw = ''
-      function()
-        local ok, opencode = pcall(require, "opencode")
-        if not ok or not opencode.statusline then return "" end
-        local ok2, out = pcall(opencode.statusline)
-        return (ok2 and out) and out or ""
-      end
-    '';
-  };
-
   # sidekick.nvim CLI status — shows the active CLI tool name(s).
   # Uses sidekick.status.cli() (the copilot LSP status requires copilot,
   # which is intentionally disabled). Guarded by pcall.
@@ -209,7 +196,6 @@ in {
           lualine_c = ["filename" "lsp_status"];
           lualine_x = [
             macroRecordingComponent
-            opencodeStatusComponent
             sidekickStatusComponent
             "encoding"
             "fileformat"

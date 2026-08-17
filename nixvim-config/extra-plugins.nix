@@ -52,6 +52,30 @@
       meta.license = lib.licenses.mit;
     })
 
+    # opencode.nvim — integrates the OpenCode AI CLI. Pinned from source: the
+    # nixpkgs vimPlugins snapshot tracks nickjvandyke/opencode.nvim (the fork
+    # that keeps the legacy vim.g.opencode_opts /
+    # require("opencode").{ask,select,operator,statusline} API) — that API was
+    # NOT removed upstream. We deliberately pin sudo-tee's main instead for the
+    # unified `:Opencode` command API (require("opencode.api").<action>) and its
+    # richer features (quick chat, diff view, snapshots, MCP picker, skills).
+    # Repo: sudo-tee/opencode.nvim, rev cdf00c5f4ac8 (2026-07-27).
+    # Bump deliberately: the <leader>o keymaps in keymaps.nix call
+    # require("opencode.api").<action>. Loaded via plugins.lz-n.plugins
+    # (plugins.nix) on VimEnter; the plugin auto-spawns `opencode serve`.
+    (pkgs.vimUtils.buildVimPlugin {
+      pname = "opencode-nvim";
+      version = "unstable-2026-07-27";
+      src = pkgs.fetchFromGitHub {
+        owner = "sudo-tee";
+        repo = "opencode.nvim";
+        rev = "cdf00c5f4ac8161d3ec66bfcb8af140b30b42c6a";
+        hash = "sha256-2RWyh9ep+VGqjIAax+TvnF57JhzDqHgzNRBXLxkoi6M=";
+      };
+      meta.homepage = "https://github.com/sudo-tee/opencode.nvim";
+      meta.license = lib.licenses.mit;
+    })
+
     # vim-windowswap — effortless window swapping. Disable its default
     # <C-w><C-w> trigger prefix and bind <leader>W instead (keymaps.nix).
     pkgs.vimPlugins.vim-windowswap

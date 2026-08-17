@@ -179,7 +179,7 @@
             "{ layout = { backdrop = false } }";
 
           # Custom picker actions: send selected items to an AI agent.
-          #   <a-o> → opencode.nvim (require("opencode").format/prompt)
+          #   <a-o> → opencode.nvim (require("opencode.api").quick_chat)
           #   <a-a> → sidekick.nvim (require("sidekick.cli.picker.snacks").send)
           # `actions` and `win.input.keys` are deep-merged with snacks defaults,
           # so `__raw` here only adds our two actions/keys on top of the built-ins.
@@ -189,11 +189,9 @@
               {
                 opencode_send = function(picker)
                   local items = vim.tbl_map(function(item)
-                    return item.file
-                        and require("opencode").format({ path = item.file, from = item.pos, to = item.end_pos })
-                        or item.text
+                    return item.file or item.text
                   end, picker:selected({ fallback = true }))
-                  require("opencode").prompt(table.concat(items, ", ") .. " ")
+                  require("opencode.api").quick_chat(table.concat(items, " ") .. " ")
                 end,
                 sidekick_send = function(picker)
                   require("sidekick.cli.picker.snacks").send(picker)
@@ -274,7 +272,7 @@
             "shellharden"
             "shfmt"
           ];
-          css = ["`css_beautify`"];
+          css = ["css_beautify"];
           json = ["jq"];
           yaml = ["yamlfmt"];
           sql = ["sqruff"];
@@ -350,20 +348,28 @@
       ];
     };
 
-    # opencode.nvim — integrates the OpenCode AI CLI. The nixvim module only
-    # sets `vim.g.opencode_opts = cfg.settings` (it does NOT call setup()).
-    # `auto_reload` is not a real option — opencode.nvim auto-sets `vim.o.autoread`
-    # and reloads edited buffers via its `events.reload` default, so we rely on
-    # the defaults. The `server.start` function (snacks.terminal-backed) cannot
-    # round-trip through `vim.g` (Neovim can't store functions in `vim.g`), so
-    # it is injected in `extraConfigLua` below via `require("opencode.config").opts`.
-    opencode = {
-      enable = true;
-      lazyLoad = {
-        settings = {
+    # opencode.nvim — integrates the OpenCode AI CLI (new unified `:Opencode`
+    # command API). Pinned from source (see `opencodeNvim` in extra-plugins.nix)
+    # — nixpkgs' vimPlugins.opencode-nvim tracks nickjvandyke's fork (legacy
+    # vim.g.opencode_opts API), which we deliberately don't use.
+    # Registered via plugins.lz-n.plugins (the plugin manager at this nixvim
+    # rev) so lz.n packadds it and runs `require("opencode").setup(opts)` on
+    # VimEnter. The plugin auto-spawns its own `opencode serve` server — no
+    # snacks.terminal server.start hack needed. Editor keymaps live in
+    # keymaps.nix (<leader>o group); the plugin's default_global_keymaps are
+    # disabled to avoid clashing with them.
+    lz-n = {
+      plugins = [
+        {
+          __unkeyed-1 = "opencode-nvim";
           event = ["VimEnter"];
-        };
-      };
+          after = ''
+            function()
+              require("opencode").setup({ default_global_keymaps = false })
+            end
+          '';
+        }
+      ];
     };
     # grug-far is in ../shared/plugins.nix
     # NOTE: avante has been removed in favour of sidekick (AI CLI terminal) +
@@ -686,24 +692,6 @@
     #lua
     ''
       -- require("fyler").setup()
-
-      -- opencode.nvim: inject a snacks.terminal-backed `server.start`.
-      -- The nixvim module only sets `vim.g.opencode_opts` (no setup() call),
-      -- and Lua functions cannot round-trip through `vim.g` (Neovim can't
-      -- store functions in `vim.g`), so we set it directly on the resolved
-      -- opts table. opencode.nvim discovers running `opencode --port` servers
-      -- by process; `--port` (no value) exposes the server on a random port.
-      do
-        local ok, cfg = pcall(require, "opencode.config")
-        if ok and cfg.opts and cfg.opts.server then
-          local opencode_cmd = "opencode --port"
-          cfg.opts.server.start = function()
-            require("snacks.terminal").open(opencode_cmd, {
-              win = { position = "right", enter = false },
-            })
-          end
-        end
-      end
 
       -- otter: activate embedded-language LSP only for buffers that (a) have an
       -- embedded language we care about, and (b) actually loaded the otter plugin

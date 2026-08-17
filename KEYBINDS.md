@@ -104,6 +104,7 @@ Scope: `nixvim-config` only.
 | `<leader>w` | n | Pick window (nvim-window-picker, big floating letter) |
 | `<C-w>h/j/k/l` | n | Standard Neovim window navigation |
 | `<C-\>` | n | Toggle snacks.terminal |
+| `<C-/>` | n | Toggle snacks.terminal float (moved off `<leader>tf`, which collided with "First Tab") |
 | `<S-Esc>` | t | Send `<C-\><C-n>` to exit terminal mode |
 
 > The previous `<M-h/j/k/l>` tmux pane-navigation mappings and the `<leader>h/j/k/l` in-editor window navigation were removed. Use `<leader>w` to pick a window by its big floating-letter hint, or `<C-w>` motions for direct navigation.

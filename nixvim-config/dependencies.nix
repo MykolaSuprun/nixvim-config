@@ -40,7 +40,10 @@
     yamlfmt
     ruff
     bandit
-    python313Packages.cssbeautifier
+    # conform's css_beautify formatter shells out to the node `css-beautify`
+    # binary (js-beautify), NOT the python cssbeautifier.
+    js-beautify
+    hadolint # dockerfile linter (lsp.nix lintersByFt)
     python313Packages.flake8
     python313Packages.debugpy
     go
@@ -53,6 +56,10 @@
     # snowflake-connector-python's test suite on aarch64-linux.
     snowflakeCli
     tmux # sidekick.cli.mux backend (enabled=false by default, available if wanted)
+    # opencode CLI — the opencode.nvim plugin spawns `opencode serve` itself.
+    # (Previously provided by the nixvim `plugins.opencode` module's
+    # `dependencies = ["opencode"]`, which we no longer use — see plugins.nix.)
+    opencode
   ];
   extraLuaPackages = ps: [ps.magick];
 }

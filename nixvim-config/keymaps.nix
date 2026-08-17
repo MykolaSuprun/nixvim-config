@@ -944,65 +944,110 @@
     # sidekick (<leader>k) + opencode (<leader>o). See AGENTS.md.
 
     # ── opencode (<leader>o) ───────────────────────────────────────────────
-    # opencode.nvim — uses the real Lua API (ask/select/operator/command/
-    # statusline). The old :OpenCode / :OpenCodeFocus user-commands don't
-    # exist in opencode.nvim. `server.start` is snacks.terminal-backed and is
-    # injected in plugins.nix extraConfigLua (functions can't go via vim.g).
+    # opencode.nvim (pinned from source, new `:Opencode` command API — see
+    # plugins.nix). The plugin auto-spawns its own `opencode serve` server and
+    # manages its own window; these binds drive the new API via
+    # require("opencode.api"). The plugin's default_global_keymaps are disabled.
+    # Quick-chat context tags: #cursor #errors #warnings #info #file #selection
+    # #agents #buffer #git_diff (see opencode.nvim util.parse_quick_context_args).
     {
       key = "<leader>oa";
       options = {
         silent = true;
-        desc = "OpenCode: ask (@this: )";
+        desc = "OpenCode: ask (quick chat)";
       };
       mode = ["n" "x"];
-      action.__raw = ''function() require("opencode").ask("@this: ") end'';
-    }
-    {
-      key = "<leader>os";
-      options = {
-        silent = true;
-        desc = "OpenCode: select (prompts/commands)";
-      };
-      mode = ["n" "x"];
-      action.__raw = ''function() require("opencode").select() end'';
-    }
-    {
-      key = "<leader>oo";
-      options = {
-        silent = true;
-        desc = "OpenCode: operator (append range)";
-        expr = true;
-      };
-      mode = ["n" "x"];
-      action.__raw = ''function() return require("opencode").operator("@this ") end'';
-    }
-    {
-      key = "<leader>oL";
-      options = {
-        silent = true;
-        desc = "OpenCode: append line";
-        expr = true;
-      };
-      mode = ["n"];
-      action.__raw = ''function() return require("opencode").operator("@this ") .. "_" end'';
-    }
-    {
-      key = "<leader>ou";
-      options = {
-        silent = true;
-        desc = "OpenCode: scroll up half page";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode").command("session.half.page.up") end'';
+      action.__raw = ''function() require("opencode.api").quick_chat() end'';
     }
     {
       key = "<leader>od";
       options = {
         silent = true;
-        desc = "OpenCode: scroll down half page";
+        desc = "OpenCode: explain diagnostics (#errors)";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("opencode.api").quick_chat({ "#errors " }) end'';
+    }
+    {
+      key = "<leader>os";
+      options = {
+        silent = true;
+        desc = "OpenCode: commands";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("opencode.api").commands_list() end'';
+    }
+    {
+      key = "<leader>oo";
+      options = {
+        silent = true;
+        desc = "OpenCode: quick chat selection";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() require("opencode.api").quick_chat({ "#selection " }) end'';
+    }
+    {
+      key = "<leader>og";
+      options = {
+        silent = true;
+        desc = "OpenCode: toggle window";
       };
       mode = ["n"];
-      action.__raw = ''function() require("opencode").command("session.half.page.down") end'';
+      action.__raw = ''function() require("opencode.api").toggle() end'';
+    }
+    {
+      key = "<leader>oI";
+      options = {
+        silent = true;
+        desc = "OpenCode: new session input";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").open_input_new_session() end'';
+    }
+    {
+      key = "<leader>oq";
+      options = {
+        silent = true;
+        desc = "OpenCode: close window";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").close() end'';
+    }
+    {
+      key = "<leader>oh";
+      options = {
+        silent = true;
+        desc = "OpenCode: history";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").select_history() end'';
+    }
+    {
+      key = "<leader>op";
+      options = {
+        silent = true;
+        desc = "OpenCode: configure provider";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").configure_provider() end'';
+    }
+    {
+      key = "<leader>oV";
+      options = {
+        silent = true;
+        desc = "OpenCode: configure model variant";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").configure_variant() end'';
+    }
+    {
+      key = "<leader>oT";
+      options = {
+        silent = true;
+        desc = "OpenCode: session timeline";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").timeline() end'';
     }
     {
       key = "<leader>or";
@@ -1020,13 +1065,13 @@
           end
         '';
     }
-    # Toggle the opencode terminal (snacks.terminal, same cmd as server.start).
-    # Useful to view/interact with the agent after submitting a prompt.
+    # Toggle the opencode CLI terminal (snacks.terminal). The plugin spawns its
+    # own server, so this is just a raw interactive CLI for ad-hoc use.
     {
       key = "<leader>ot";
       options = {
         silent = true;
-        desc = "OpenCode: toggle terminal";
+        desc = "OpenCode: toggle CLI terminal";
       };
       mode = ["n"];
       action.__raw =
@@ -1039,15 +1084,15 @@
           end
         '';
     }
-    # Interrupt the current opencode session — stops a runaway agent.
+    # Cancel the running opencode request — stops a runaway agent.
     {
       key = "<leader>oi";
       options = {
         silent = true;
-        desc = "OpenCode: interrupt session";
+        desc = "OpenCode: cancel request";
       };
       mode = ["n"];
-      action.__raw = ''function() require("opencode").command("session.interrupt") end'';
+      action.__raw = ''function() require("opencode.api").cancel() end'';
     }
 
     # ── obsidian (<leader>O — capital) ─────────────────────────────────────
@@ -1414,11 +1459,14 @@
       mode = ["t"];
       action = "<C-\\><C-n>";
     }
+    # <C-/> — float terminal toggle. Moved off <leader>tf, which collided with
+    # "First Tab" in the <leader>t tabs group (later mapping won, so First Tab
+    # was unreachable). <C-\> stays the quick throwaway toggle.
     {
-      key = "<leader>tf";
+      key = "<C-/>";
       options = {
         silent = true;
-        desc = "Float Terminal";
+        desc = "Toggle Float Terminal";
       };
       mode = ["n"];
       action.__raw = ''function() Snacks.terminal.toggle() end'';
