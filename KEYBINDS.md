@@ -1,6 +1,6 @@
 # Keybinds Reference
 
-Keybinds that are **not** visible in which-key (insert-mode, non-leader, plugin-internal, function-keys) and are not plain Neovim defaults.
+Keybinds that are **not** visible in which-key (insert-mode, non-leader, plugin-internal, function-keys) and are not plain Neovim defaults — plus a few easy-to-forget groups (harpoon, betterTerm, the AI agents).
 Scope: `nixvim-config` only.
 
 ---
@@ -181,3 +181,80 @@ Scope: `nixvim-config` only.
 |-----|------|--------|
 | `[T` | n | Previous failed test |
 | `]T` | n | Next failed test |
+
+---
+
+## AI Agents — sidekick / herd (`<leader><tab>`)
+
+> The same keys have **different actions depending on the active backend**
+> (switch via `<leader>C` → agents-backend). Default: `herd` standalone,
+> `sidekick` when nvim runs inside a herdr pane.
+
+| Key | Mode | herd backend | sidekick backend |
+|-----|------|--------------|------------------|
+| `<leader><tab>t` | n | Toggle agent float | Toggle CLI terminal |
+| `<leader><tab>s` | n | Select agent | Select CLI |
+| `<leader><tab>S` | n | Dashboard | — |
+| `<leader><tab>f` | n | — | Focus terminal |
+| `<leader><tab>p` | n, x | — | Pick prompt |
+| `<leader><tab>x` | n, x | — | Send `{this}` to CLI |
+| `<leader><tab>e` | n | — | Send `{file}` to CLI |
+| `<leader><tab>D` | n | Send LSP diagnostics to agent | — |
+| `<leader><tab>j` | n | Jump to `path:line` refs from output (quickfix) | — |
+| `<leader><tab>` | x | Send selection to agent | — |
+| `<leader><tab>d` | n | — | Detach CLI |
+
+---
+
+## agentic — ACP Chat (`<leader>a`)
+
+> Provider is `opencode-acp`; sessions are interchangeable with the opencode
+> terminal TUI.
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<leader>at` | n, v, i | Toggle chat window |
+| `<leader>aa` | n, v | Add selection / file to context |
+| `<leader>an` | n, v, i | New session |
+| `<leader>ar` | n, v, i | Restore session |
+| `<leader>ad` | n | Add current-line diagnostics to context |
+| `<leader>aD` | n | Add buffer diagnostics to context |
+
+---
+
+## opencode.nvim — Window-Internal Keys
+
+> Active **inside** opencode's input/output windows only (the plugin's global
+> keymaps are disabled; our `<leader>o*` binds replace them).
+
+### Input window
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<CR>` / `<S-CR>` | n / n, i | Submit prompt |
+| `~` | i | Mention file in context |
+| `@` | i | Open mention picker |
+| `/` | i | Slash commands picker |
+| `#` | i | Context items picker |
+| `<M-v>` | i | Paste image from clipboard |
+| `<M-m>` | n, i | Switch agent mode (build/plan) |
+| `<M-r>` | n, i | Cycle model variants |
+| `<M-i>` | n, i | Toggle input window |
+| `<up>` / `<down>` | n, i | Prompt history |
+| `<esc>` / `<C-c>` | — | Close windows / cancel request |
+
+### Output window
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `]]` / `[[` | n | Next / previous message |
+| `]u` / `[u` | n | Next / previous *user* message |
+| `<tab>` | n | Toggle input/output panes |
+| `i` | n | Focus input |
+| `gr` | n | Browse code references |
+| `gf` / `<CR>` | n | Jump to file / target at cursor |
+
+### Quick-chat context tags
+
+> Prefixes for `<leader>oa` prompts (e.g. `<leader>oa` then `#errors fix these`):
+> `#cursor` `#errors` `#warnings` `#info` `#file` `#selection` `#agents` `#buffer` `#git_diff`

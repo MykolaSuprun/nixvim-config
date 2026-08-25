@@ -198,6 +198,16 @@
           function() Snacks.picker.git_log_file() end
         '';
     }
+    # Diffview (plugin is command-gated — this bind triggers the lazy load)
+    {
+      key = "<leader>gv";
+      options = {
+        silent = true;
+        desc = "Git Diffview (working tree)";
+      };
+      mode = ["n"];
+      action = "<cmd>DiffviewOpen<CR>";
+    }
     {
       key = "<leader>fd";
       options = {
@@ -667,6 +677,16 @@
       mode = ["n"];
       action = "<cmd>:RenderMarkdown buf_toggle<CR>";
     }
+    # NoNeckPain (plugin is command-gated — this bind triggers the lazy load)
+    {
+      key = "<leader>uN";
+      options = {
+        silent = true;
+        desc = "Toggle window centering (no-neck-pain)";
+      };
+      mode = ["n"];
+      action = "<cmd>NoNeckPain<CR>";
+    }
     {
       key = "<leader>ui";
       options = {
@@ -941,7 +961,8 @@
     }
     # Trouble (<leader>xx/xX/xS/cl/cL/cQ/xp) are in ../shared/keymaps.nix
     # NOTE: avante keymap removed — avante disabled; AI surface is now
-    # sidekick (<leader>k) + opencode (<leader>o). See AGENTS.md.
+    # sidekick/herd (<leader><tab>) + opencode (<leader>o) + agentic (<leader>a).
+    # See AGENTS.md.
 
     # ── opencode (<leader>o) ───────────────────────────────────────────────
     # opencode.nvim (pinned from source, new `:Opencode` command API — see
@@ -1093,6 +1114,67 @@
       };
       mode = ["n"];
       action.__raw = ''function() require("opencode.api").cancel() end'';
+    }
+
+    # ── agentic (<leader>a) ────────────────────────────────────────────────
+    # agentic.nvim (pinned from source — see extra-plugins.nix) — ACP chat
+    # interface. Provider is `opencode-acp` (spawns `opencode acp`), so sessions
+    # are interchangeable between Neovim and the opencode terminal TUI.
+    # <C-\> (agentic's suggested toggle) is taken by snacks.terminal, so the
+    # whole group lives under <leader>a (previously unused).
+    {
+      key = "<leader>at";
+      options = {
+        silent = true;
+        desc = "Agentic: toggle chat";
+      };
+      mode = ["n" "v" "i"];
+      action.__raw = ''function() require("agentic").toggle() end'';
+    }
+    {
+      key = "<leader>aa";
+      options = {
+        silent = true;
+        desc = "Agentic: add selection/file to context";
+      };
+      mode = ["n" "v"];
+      action.__raw = ''function() require("agentic").add_selection_or_file_to_context() end'';
+    }
+    {
+      key = "<leader>an";
+      options = {
+        silent = true;
+        desc = "Agentic: new session";
+      };
+      mode = ["n" "v" "i"];
+      action.__raw = ''function() require("agentic").new_session() end'';
+    }
+    {
+      key = "<leader>ar";
+      options = {
+        silent = true;
+        desc = "Agentic: restore session";
+      };
+      mode = ["n" "v" "i"];
+      action.__raw = ''function() require("agentic").restore_session() end'';
+    }
+    {
+      key = "<leader>ad";
+      options = {
+        silent = true;
+        desc = "Agentic: add current line diagnostics";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("agentic").add_current_line_diagnostics() end'';
+    }
+    {
+      key = "<leader>aD";
+      options = {
+        silent = true;
+        desc = "Agentic: add buffer diagnostics";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("agentic").add_buffer_diagnostics() end'';
     }
 
     # ── obsidian (<leader>O — capital) ─────────────────────────────────────
@@ -1756,16 +1838,12 @@
       group = "debug";
       icon = "";
     }
-    # <leader>h is now harpoon; <leader>w is window-picker.
+    # <leader>h is now harpoon; <leader>w is window-picker (direct map, no
+    # sub-keys — so no which-key group spec for it).
     {
       __unkeyed-1 = "<leader>h";
       group = "harpoon";
       icon = "󰛢";
-    }
-    {
-      __unkeyed-1 = "<leader>w";
-      group = "window";
-      icon = "󰖲";
     }
     {
       __unkeyed-1 = "<leader><tab>";
@@ -1781,6 +1859,11 @@
       __unkeyed-1 = "<leader>o";
       group = "opencode";
       icon = "󰚩";
+    }
+    {
+      __unkeyed-1 = "<leader>a";
+      group = "agentic";
+      icon = "";
     }
     # NOTE: <leader>O (capital) is shared — direct action opens Obsidian, the
     # group label is overseer (sub-keys Ot/Or/Oa/Oo/Oc/Os/Ow). See AGENTS.md.

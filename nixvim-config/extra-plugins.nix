@@ -29,10 +29,9 @@
     # herd.nvim — drives herdr coding agents from Neovim (nvim is the host,
     # herdr is the backend daemon). Built from source (not in nixpkgs).
     # Repo:  MomePP/herd.nvim
-    # Rev:   b4ad1e097800 (pre-herdr-0.7.5-migration); installed herdr is 0.7.4
-    #        which doesn't support the `--kind` flag added in the 0.7.5 migration.
-    #        Keeping this pinned to the pre-migration rev until herdr ≥ 0.7.5
-    #        lands in nixpkgs.
+    # Rev:   aabb981b6198bafa4603d2db3e26b206352f6379 (2026-08-17, post-herdr-
+    #        0.7.5-migration). Requires herdr ≥ 0.7.5 on PATH — main
+    #        nixpkgs-unstable ships 0.8.2 (see dependencies.nix).
     # API:   require("herd").{toggle,select,send,dashboard,diagnostics,jump,spawn}
     # Used for: the "herd" agent backend under <leader><tab> (toggled via the
     #          <leader>ca dashboard — see lua/agent_backend.lua). Default keys
@@ -41,12 +40,12 @@
     #          runtime.
     (pkgs.vimUtils.buildVimPlugin {
       pname = "herd";
-      version = "unstable-2026-07-21";
+      version = "unstable-2026-08-17";
       src = pkgs.fetchFromGitHub {
         owner = "MomePP";
         repo = "herd.nvim";
-        rev = "b4ad1e0978000a22526ad75b949bc61e0a4e5f7f";
-        hash = "sha256-9o/3uKFf6JSexSFHKM10skCPQ6/Tq4qctRZKIQnsS1U=";
+        rev = "aabb981b6198bafa4603d2db3e26b206352f6379";
+        hash = "sha256-mDr2HvjMWaRj52oh1L+xmV+O3YOk9+gU0ZMV55sTxbc=";
       };
       meta.homepage = "https://github.com/MomePP/herd.nvim";
       meta.license = lib.licenses.mit;
@@ -73,6 +72,31 @@
         hash = "sha256-2RWyh9ep+VGqjIAax+TvnF57JhzDqHgzNRBXLxkoi6M=";
       };
       meta.homepage = "https://github.com/sudo-tee/opencode.nvim";
+      meta.license = lib.licenses.mit;
+    })
+
+    # agentic.nvim — ACP (Agent Client Protocol) chat interface. Works with any
+    # ACP provider; we use the built-in `opencode-acp` provider, which spawns
+    # `opencode acp` — the opencode CLI (already in extraPackages) speaks ACP
+    # natively, so no extra npm/pnpm packages are needed. Sessions are
+    # interchangeable between Neovim and the terminal.
+    # Repo:  carlos-algms/agentic.nvim
+    # Rev:   9945381350664ab3057d480e5cee02a328ef21d5 (2026-08-09)
+    # API:   require("agentic").{setup,toggle,new_session,restore_session,
+    #         add_selection_or_file_to_context,add_current_line_diagnostics,
+    #         add_buffer_diagnostics,switch_provider,switch_model,...}
+    # Loaded via plugins.lz-n.plugins (plugins.nix) on VimEnter; keymaps live in
+    # keymaps.nix under the <leader>a group.
+    (pkgs.vimUtils.buildVimPlugin {
+      pname = "agentic-nvim";
+      version = "unstable-2026-08-09";
+      src = pkgs.fetchFromGitHub {
+        owner = "carlos-algms";
+        repo = "agentic.nvim";
+        rev = "9945381350664ab3057d480e5cee02a328ef21d5";
+        hash = "sha256-Sjon3QVcasCW4kYHGgwFeRN1eFhKBBURMm/hNqculuI=";
+      };
+      meta.homepage = "https://github.com/carlos-algms/agentic.nvim";
       meta.license = lib.licenses.mit;
     })
 

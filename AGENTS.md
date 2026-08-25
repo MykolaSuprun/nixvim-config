@@ -112,16 +112,18 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>T` | test (neotest) | keymaps.nix |
 | `<leader><tab>` | agents (sidekick / herd) | keymaps.nix |
 | `<leader>o` | opencode | keymaps.nix |
+| `<leader>a` | agentic (ACP chat) | keymaps.nix |
 | `<S-Space>` | window picker | keymaps.nix |
-| `<leader>O` | obsidian | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
 | `<leader>Q` | database (dbee + Snowflake CLI overseer templates) | keymaps.nix |
 | `<leader>X` | betterTerm send-to-terminal | keymaps.nix |
 | `<leader>d` | debug (DAP) | keymaps.nix |
 | `<leader>h` | harpoon | keymaps.nix |
-| `<leader>w` | window (picker) | keymaps.nix |
+| `<leader>w` | window-picker (single-key, no sub-keys) | keymaps.nix |
 | `<leader>n` | notifications history (single-key) | shared/keymaps.nix |
-| `<leader>O` | obsidian (single-key opens Obsidian) | keymaps.nix |
+
+`<leader>O` is shared: pressing it alone opens Obsidian; `O<sub>` runs overseer
+commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 
 ### Non-`<leader>` keys (documented in KEYBINDS.md)
 - `gd/gD/gr/gI/gy` — LSP navigation via Snacks picker
@@ -130,7 +132,6 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 - `[T/]T` — neotest failed-test navigation
 - `{/}` — Aerial symbol navigation
 - `<S-h>/<S-l>` — bufferline tab cycling
-- `<leader>w` — window-picker (jump to window by big floating letter)
 - `<C-w>h/j/k/l` — standard Neovim window navigation (no leader mapping)
 - `<C-\>` — snacks.terminal toggle (normal mode only; use `<S-Esc>` in terminal mode to exit)
 - `<C-/>` — snacks.terminal float toggle (moved off `<leader>tf`, which collided with "First Tab")
@@ -255,9 +256,9 @@ See README.md for full details.
 From `flake.lock`:
 - `nixvim` rev: `f316e949e0ed9df0e1e0bf645c6dce721d4e230e`
 - `nixpkgs`: `nixpkgs-unstable` (rev `7525d999cd850b9a488817abc89c75dc733acf17`)
-- `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from `nixpkgs` above.
+- `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from the main `nixpkgs` above.
 
 Available as nixvim by-name modules at this rev: `sidekick`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
 
-**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`), `herd.nvim` (MomePP, `extra-plugins.nix`), and **`opencode.nvim`** (sudo-tee, pinned in `extra-plugins.nix`, loaded via `plugins.lz-n.plugins` in `plugins.nix`). Note: nixpkgs' `vimPlugins.opencode-nvim` tracks **nickjvandyke/opencode.nvim** — the fork that keeps the legacy `vim.g.opencode_opts` / `require("opencode").{ask,select,operator,statusline}` API — so that API was *not* removed upstream. We deliberately pin sudo-tee's main instead for the new unified `:Opencode` command API (`require("opencode.api").<action>`) and its richer features (quick chat, diff view, snapshots, MCP picker, skills browser). Bump deliberately — the `<leader>o` keymaps in `keymaps.nix` call that API.
-`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) is passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`.
+**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`), `herd.nvim` (MomePP, `extra-plugins.nix`), **`opencode.nvim`** (sudo-tee, pinned in `extra-plugins.nix`, loaded via `plugins.lz-n.plugins` in `plugins.nix`), and **`agentic.nvim`** (carlos-algms, `extra-plugins.nix`, same lz-n route). Note: nixpkgs' `vimPlugins.opencode-nvim` tracks **nickjvandyke/opencode.nvim** — the fork that keeps the legacy `vim.g.opencode_opts` / `require("opencode").{ask,select,operator,statusline}` API — so that API was *not* removed upstream. We deliberately pin sudo-tee's main instead for the new unified `:Opencode` command API (`require("opencode.api").<action>`) and its richer features (quick chat, diff view, snapshots, MCP picker, skills browser). Bump deliberately — the `<leader>o` keymaps in `keymaps.nix` call that API. `agentic.nvim` uses the built-in `opencode-acp` provider (`opencode acp` — the opencode CLI speaks ACP natively, no extra npm packages); its keymaps live under `<leader>a` in `keymaps.nix`.
+`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) is passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (unstable ships ≥ 0.8.2, satisfying herd.nvim's 0.7.5 requirement — no separate pin needed).

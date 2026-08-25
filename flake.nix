@@ -45,8 +45,14 @@
 
         # snowflake-cli specifically, from the nixos-25.05-pinned nixpkgs (see
         # comment on the `nixpkgs-snowflake` flake input above) — passed to
-        # nixvim-config/dependencies.nix via extraSpecialArgs.
-        snowflakeCli = (import nixpkgs-snowflake {inherit system;}).snowflake-cli;
+        # nixvim-config/dependencies.nix via extraSpecialArgs. allowUnfree set
+        # for parity with the main pkgs import above.
+        snowflakeCli =
+          (import nixpkgs-snowflake {
+            inherit system;
+            config.allowUnfree = true;
+          })
+          .snowflake-cli;
 
         nixvimModule = {
           inherit pkgs; # pkgs has config.allowUnfree = true

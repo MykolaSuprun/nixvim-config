@@ -10,7 +10,6 @@
     tree-sitter.enable = true;
     imagemagick.enable = true;
     ueberzug.enable = pkgs.stdenv.isLinux;
-    wezterm.enable = true;
     git.enable = true;
     gh.enable = true;
     direnv.enable = true;
@@ -60,6 +59,9 @@
     # (Previously provided by the nixvim `plugins.opencode` module's
     # `dependencies = ["opencode"]`, which we no longer use — see plugins.nix.)
     opencode
+    # herdr — herd.nvim's backend daemon. Requires ≥ 0.7.5 (the `--kind`
+    # migration); main nixpkgs-unstable ships 0.8.2, no separate pin needed.
+    herdr
   ];
   extraLuaPackages = ps: [ps.magick];
 }

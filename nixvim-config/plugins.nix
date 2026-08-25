@@ -15,6 +15,11 @@
         use_icons = true;
         watch_index = true;
       };
+      # Command-gated: <leader>gv runs :DiffviewOpen (keymaps.nix)
+      lazyLoad.settings.cmd = [
+        "DiffviewOpen"
+        "DiffviewFileHistory"
+      ];
     };
 
     lazygit = {
@@ -23,6 +28,8 @@
         floating_window_scaling_factor = 1;
         floating_window_use_plenary = 1;
       };
+      # Command-gated: <leader>gg runs :LazyGit (keymaps.nix)
+      lazyLoad.settings.cmd = "LazyGit";
     };
 
     nix-develop = {
@@ -36,15 +43,11 @@
       ];
     };
 
-    wezterm = {
-      enable = true;
-    };
-
     # sidekick.nvim — AI CLI terminal (opencode / claude / codex / …).
     # NES (Next Edit Suggestions) is intentionally disabled — it requires the
     # Copilot language server, which we deliberately leave off. sidekick is used
     # purely as a managed terminal for external AI coding CLIs with shared prompt
-    # context (file / selection / diagnostics). See keymaps.nix <leader>k.
+    # context (file / selection / diagnostics). See keymaps.nix <leader><tab>.
     sidekick = {
       enable = true;
       settings = {
@@ -365,7 +368,32 @@
           event = ["VimEnter"];
           after = ''
             function()
-              require("opencode").setup({ default_global_keymaps = false })
+              -- Only non-default options are set here; everything else uses
+              -- opencode.nvim's own defaults (mode "build", context
+              -- file/selection/diagnostics all enabled).
+              require("opencode").setup({
+                -- default_global_keymaps=false: our <leader>o* binds replace them
+                default_global_keymaps = false,
+                preferred_picker = "snacks",
+                hooks = {
+                  on_done_thinking = function()
+                    vim.schedule(function()
+                      vim.notify("opencode: done", vim.log.levels.INFO, { title = "opencode" })
+                    end)
+                  end,
+                },
+              })
+            end
+          '';
+        }
+        {
+          __unkeyed-1 = "agentic-nvim";
+          event = ["VimEnter"];
+          after = ''
+            function()
+              require("agentic").setup({
+                provider = "opencode-acp",
+              })
             end
           '';
         }
@@ -438,6 +466,8 @@
     # Center the current window by adding equal padding buffers on each side
     no-neck-pain = {
       enable = true;
+      # Command-gated: <leader>uN runs :NoNeckPain (keymaps.nix)
+      lazyLoad.settings.cmd = "NoNeckPain";
       settings = {
         width = 120;
         autocmds = {
@@ -510,7 +540,7 @@
     # ── Agent backend runtime keymap swapper ─────────────────────────────
     # Both sidekick and herd bind their keys under `<leader><tab>*`. Which
     # backend is active is stored in `vim.g.agents_backend` and toggled via
-    # the `<leader>S` dashboard (lua/config_dashboard.lua). This module
+    # the `<leader>C` dashboard (lua/config_dashboard.lua). This module
     # unmaps the previous backend's `<leader><tab>*` keys and maps the new
     # one's at runtime. Setup is invoked from extra-plugins.nix on VimEnter
     # (after sidekick/herd have lazy-loaded).
