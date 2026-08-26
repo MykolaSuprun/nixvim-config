@@ -3,6 +3,26 @@
     inlayHints.enable = true;
     servers = {
       bashls.enable = true;
+      # clangd runs clang-tidy internally (--clang-tidy) reading .clang-tidy
+      # and compile_commands.json — no separate per-save linter needed.
+      # Needs a compilation database: CMake export, `bear -- <build cmd>`,
+      # or a hand-written compile_flags.txt in the project root.
+      clangd = {
+        enable = true;
+        # New-style nixvim LSP module: server settings live under `config`
+        # (passed to vim.lsp.config).
+        config = {
+          cmd = [
+            "clangd"
+            "--background-index"
+            "--clang-tidy"
+            "--header-insertion=iwyu"
+            "--completion-style=detailed"
+            "--function-arg-placeholders"
+            "--fallback-style=llvm"
+          ];
+        };
+      };
       html.enable = true;
       htmx.enable = true;
       gopls.enable = true;

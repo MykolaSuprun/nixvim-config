@@ -47,6 +47,8 @@ nixvim-config/         # Full Neovim profile
     ruff_check.lua       # Ruff lint + BufWritePost auto-run
     go_tasks.lua         # go build/test/vet/golangci-lint
     lua_tasks.lua
+    cc_tasks.lua         # cmake configure/build, ctest, make, bear,
+                         # clang-tidy (file), cppcheck (project)
     nix_tasks.lua        # alejandra, statix, deadnix, nix flake check, nix build
 codevim-config/        # VSCode-embedded profile
   default.nix lsp.nix plugins.nix keymaps.nix dependencies.nix
@@ -197,6 +199,15 @@ For a persistent interactive session (not a one-shot query), use **betterTerm** 
 - `astro dev run <dag> <task> <date>` — run a task instance
 
 Plus fallback `airflow dags test` / `airflow tasks test` templates that only register when `astro` is absent but `airflow` is present.
+
+### C/C++ (clang ecosystem)
+- **LSP**: `clangd` (from `clang-tools`) with `--clang-tidy --header-insertion=iwyu --completion-style=detailed`. clang-tidy runs *inside* clangd (reads `.clang-tidy`), so there is deliberately **no c/cpp entry in `lint.lintersByFt`** — a per-save linter pass would duplicate it. `clangd-extensions` adds `:ClangdAST`, memory usage, symbol info; `<leader>ch` switches source/header.
+- **compile_commands.json is mandatory** for clangd: CMake projects get it via the `cmake configure` overseer template (`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`); Make/other projects use `bear make (regenerate compile_commands.json)`. clangd searches `build/` automatically.
+- **Formatting**: `clang-format` via conform (`c`/`cpp`), style from the project's `.clang-format` or llvm fallback.
+- **Debugging**: codelldb adapter (`dap.nix`; binary extracted from `vscode-extensions.vadimcn.vscode-lldb`, stdio transport). Launch/attach configs shared by `c`/`cpp`/`rust`. cmake-tools' DAP config also targets codelldb.
+- **Build**: `cmake-tools.nixvim` module — executor set to **overseer**, so builds land in the same pane as every other task. Command-gated on `CMake*`.
+- **Tests**: neotest + `neotest-gtest` (per-test run/debug from `<leader>T`). ⚠️ Declared as a raw-Lua adapter entry, **not** nixvim's `adapters.gtest.settings` submodule: nixvim wraps submodule settings in a direct call (`require("neotest-gtest")({...})`), but that plugin only exposes `.setup()` — the direct call would crash neotest at lazy-load. The package is therefore added via top-level `extraPlugins` (nixvim can't see dependencies inside `__raw` strings).
+- **Offset encoding**: `clangd-extensions.enableOffsetEncodingWorkaround = true` — clangd defaults to utf-16 while blink-cmp negotiates utf-8.
 
 ### Send to a persistent terminal
 For interactive dbt/`snow sql`/airflow shells, use **betterTerm**:

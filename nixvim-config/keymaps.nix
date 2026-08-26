@@ -208,6 +208,17 @@
       mode = ["n"];
       action = "<cmd>DiffviewOpen<CR>";
     }
+    # clangd: switch between C/C++ source and header (clangd_extensions,
+    # loaded on BufEnter). No-op error message outside C-family buffers.
+    {
+      key = "<leader>ch";
+      options = {
+        silent = true;
+        desc = "Switch C/C++ source/header";
+      };
+      mode = ["n"];
+      action = "<cmd>ClangdSwitchSourceHeader<CR>";
+    }
     {
       key = "<leader>fd";
       options = {

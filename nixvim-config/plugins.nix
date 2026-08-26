@@ -268,6 +268,10 @@
         formatters_by_ft = {
           lua = ["stylua"];
           go = ["gofmt"];
+          # clang-format binary comes from clang-tools (dependencies.nix);
+          # style comes from .clang-format in the project or --fallback-style=llvm.
+          c = ["clang-format"];
+          cpp = ["clang-format"];
           python = ["ruff_format" "ruff_organize_imports"];
           nix = ["alejandra"];
           bash = [
@@ -482,10 +486,71 @@
     neotest = {
       enable = true;
       lazyLoad.settings.event = ["BufEnter"];
+      # NOTE: the gtest adapter is declared as raw Lua below instead of the
+      # `adapters.gtest` submodule — nixvim wraps submodule `settings` in a
+      # direct call (`require("neotest-gtest")({...})`), but neotest-gtest
+      # only exposes `.setup()` (not callable), which would crash neotest on
+      # lazy-load. Its package is added via top-level extraPlugins because
+      # nixvim cannot see the dependency inside a __raw string.
+      # debug_adapter matches the codelldb adapter defined in dap.nix.
+      settings = {
+        adapters = [
+          {
+            __raw = "require('neotest-gtest').setup({ debug_adapter = 'codelldb' })";
+          }
+        ];
+      };
       adapters.python = {
         enable = true;
         settings = {
           runner = "pytest";
+        };
+      };
+    };
+
+    # ── clangd extensions (AST, memory usage, symbol info) ───────────────
+    # Off-spec clangd features: :ClangdAST, :ClangdMemoryUsage,
+    # :ClangdSymbolInfo, :ClangdTypeHierarchy. Source/header switching is
+    # bound to <leader>ch in keymaps.nix.
+    clangd-extensions = {
+      enable = true;
+      # clangd defaults to utf-16 offset encoding while blink-cmp negotiates
+      # utf-8 — without this workaround completion positions drift in C/C++.
+      enableOffsetEncodingWorkaround = true;
+      lazyLoad.settings.event = ["BufEnter"];
+    };
+
+    # ── CMake workflow ────────────────────────────────────────────────────
+    # cmake-tools drives configure/build/run/ctest; tasks execute through
+    # overseer (same pane as every other build in this config). It also sets
+    # compile_commands.json location for clangd automatically.
+    cmake-tools = {
+      enable = true;
+      lazyLoad.settings.cmd = [
+        "CMakeBuild"
+        "CMakeRun"
+        "CMakeSelectBuildDir"
+        "CMakeSelectBuildPreset"
+      ];
+      settings = {
+        cmake_executor = {
+          name = "overseer";
+          opts.new_task_opts.strategy = {
+            # Lua table { "toggleterm", direction = ..., ... } — positional
+            # entries need nixvim's __unkeyed-N convention.
+            __unkeyed-1 = "toggleterm";
+            direction = "horizontal";
+            auto_scroll = true;
+            quit_on_exit = "success";
+          };
+        };
+        cmake_notifications.enabled = false;
+        cmake_dap_configuration = {
+          name = "cpp";
+          type = "codelldb";
+          request = "launch";
+          stopOnEntry = false;
+          runInTerminal = true;
         };
       };
     };
@@ -716,6 +781,9 @@
   extraPlugins = with pkgs.vimPlugins; [
     # fyler-nvim
     render-markdown-nvim
+    # neotest-gtest: not a nixvim adapter submodule (see the neotest block)
+    # — packaged explicitly so the raw-Lua adapter can require it.
+    neotest-gtest
   ];
 
   extraConfigLua =

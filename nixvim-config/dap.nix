@@ -1,6 +1,7 @@
 # DAP (Debug Adapter Protocol) configuration for nixvim.
 # Provides: nvim-dap, nvim-dap-ui, nvim-dap-virtual-text
-# Adapters:  Python (debugpy), Go (delve via nvim-dap-go), Lua/Neovim (osv)
+# Adapters:  Python (debugpy), Go (delve via nvim-dap-go), Lua/Neovim (osv),
+#            C/C++/Rust (codelldb — adapter binary from vscode-lldb)
 {pkgs, ...}: {
   plugins = {
     dap = {
@@ -144,6 +145,40 @@
           port = 8086,
         },
       }
+
+      -- CodeLLDB: C/C++/Rust debug adapter. The binary ships inside the
+      -- vscode-lldb extension package; since 1.11 it speaks DAP over stdio,
+      -- so a plain executable adapter works (no port juggling).
+      dap.adapters.codelldb = {
+        type = "executable",
+        command = "${pkgs.vscode-extensions.vadimcn.vscode-lldb}/share/vscode/extensions/vadimcn.vscode-lldb/adapter/codelldb",
+      }
+
+      local codelldb_program = function()
+        return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+      end
+      local codelldb_configs = {
+        {
+          name = "Launch executable (codelldb)",
+          type = "codelldb",
+          request = "launch",
+          program = codelldb_program,
+          cwd = "$${workspaceFolder}",
+          stopOnEntry = false,
+          args = {},
+        },
+        {
+          name = "Attach to process (codelldb)",
+          type = "codelldb",
+          request = "attach",
+          program = codelldb_program,
+          pid = require("dap.utils").pick_process,
+          cwd = "$${workspaceFolder}",
+        },
+      }
+      dap.configurations.c = codelldb_configs
+      dap.configurations.cpp = codelldb_configs
+      dap.configurations.rust = codelldb_configs
 
       -- Open/close dap-ui automatically when a debug session starts/ends
       local dapui = require("dapui")

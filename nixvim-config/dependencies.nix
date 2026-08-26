@@ -49,6 +49,16 @@
     delve
     golangci-lint
     zsh
+    # C/C++ (clang ecosystem) — clangd LSP + clang-format + clang-tidy,
+    # static analysis, compile_commands.json generation, CMake.
+    # Wired in lsp.nix (clangd), plugins.nix (conform/clangd-extensions/
+    # cmake-tools/neotest-gtest), dap.nix (codelldb adapter), and
+    # overseer/cc_tasks.lua.
+    clang-tools # clangd, clang-tidy, clang-format, run-clang-tidy
+    cppcheck
+    include-what-you-use
+    bear # records compile_commands.json from any build command
+    cmake
     # dbt / Snowflake workflow — `snow` CLI, driven via overseer templates
     # (overseer/dbt_tasks.lua) and betterTerm. See snowflakeCli comment in
     # flake.nix: pinned to nixos-25.05 because current nixpkgs fails to build
