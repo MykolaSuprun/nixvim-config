@@ -38,10 +38,14 @@ nixvim-config/         # Full Neovim profile
   dap.nix              # nvim-dap, dap-ui, dap-python, dap-go, OSV
   # SQL ftplugin (Jinja-brace highlighting for dbt models) is an extraFiles
   # entry `ftplugin/sql.lua` inside plugins.nix — there is no ftplugin/ dir.
+  # Same pattern for lua/host_tool.lua (OrbStack host-binary resolution),
+  # lua/query_result.lua (resize-safe results float) and lua/sql_runner.lua
+  # (snow/sqlit query execution) — all extraFiles entries in plugins.nix.
   overseer/            # Overseer task runner config + per-language templates
     overseer.nix         # Registers every *.lua template via readFile
     dbt_tasks.lua        # dbt run/test/compile/build/show/parse/ls/debug + selector variants
     snowflake_tasks.lua  # `snow` CLI: describe/list/connection test + confirm-gated run
+                         # (all routed through host_tool — host Mac `snow` on OrbStack)
     airflow_tasks.lua    # Astro CLI + vanilla Airflow fallback
     python_tasks.lua     # pytest, mypy, ruff format, python run
     ruff_check.lua       # Ruff lint + BufWritePost auto-run
@@ -117,7 +121,8 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>a` | agentic (ACP chat) | keymaps.nix |
 | `<S-Space>` | window picker | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
-| `<leader>Q` | database (dbee + Snowflake CLI overseer templates) | keymaps.nix |
+| `<leader>Q` | database (dbee + Snowflake: dynamic results float via sql_runner; overseer templates) | keymaps.nix |
+| `<leader>Qs` | sqlit (run line/selection/buffer, open TUI) | keymaps.nix |
 | `<leader>X` | betterTerm send-to-terminal | keymaps.nix |
 | `<leader>d` | debug (DAP) | keymaps.nix |
 | `<leader>h` | harpoon | keymaps.nix |
@@ -177,20 +182,34 @@ All dbt operations are surfaced as **overseer templates** (`nixvim-config/overse
 
 Output goes to a split via the `open_output` component (overseer's own rendering — does **not** use snacks.terminal or betterTerm).
 
-### Querying Snowflake — `snow` CLI via overseer (`overseer/snowflake_tasks.lua`)
-Templates only register when `snow` is on `PATH`. Connections come from `~/.snowflake/config.toml` (or `$SNOWFLAKE_HOME`) connection profiles — **never** put a password in a template or a keymap; `snow` itself refuses to read a `config.toml` with permissions wider than `0600`.
+### Querying Snowflake — dynamic results float + overseer
+Connections come from `~/.snowflake/config.toml` (or `$SNOWFLAKE_HOME`) connection profiles — **never** put a password in a template or a keymap; `snow` itself refuses to read a `config.toml` with permissions wider than `0600`.
 
-Reachable via `<leader>Or`/`<leader>Qo` (OverseerRun picker), or directly:
+**Interactive runs** — `<leader>Qr` (line) / `<leader>Qv` (visual selection) / `<leader>Qb` (buffer) — go through `lua/sql_runner.lua`: the SQL is written to a temp file, executed via `snow sql -f <tmp> --format CSV --enable-templating NONE` (confirm-gated), parsed, and shown in `lua/query_result.lua`'s floating window — a table that re-renders to fit on every `VimResized`/`WinResized`. `snow`'s default TABLE output is deliberately **not** used for interactive runs: it's static ASCII sized at render time and unreadable in resizable terminal windows. `--enable-templating NONE` guarantees editor text (esp. dbt Jinja) reaches the server verbatim.
 
-- `<leader>Qr` — run current line (prompts **Run/Cancel** with a preview of the SQL before sending anything)
-- `<leader>Qv` (visual mode) — run visual selection (same confirm prompt)
-- `<leader>Qt` — connection test
+**Overseer templates** (`overseer/snowflake_tasks.lua`, reachable via `<leader>Or`/`<leader>Qo`) cover the batch/exploration side:
+
+- `<leader>Qt` / `snowflake: connection test`, `snowflake: connection list`
 - `snowflake: run compiled SQL for current dbt model` — runs `target/compiled/…/<model>.sql` (the *compiled* file, never the dbt source, since the source still has unexpanded Jinja that `snow sql` can't execute) — also confirm-gated
-- `snowflake: describe current table/view (cursor word)`, `list warehouses`, `list databases`, `list tables (prompt database.schema)`, `connection list` — read-only, run unprompted
+- `snowflake: describe current table/view (cursor word)`, `list warehouses`, `list databases`, `list tables (prompt database.schema)` — read-only, run unprompted
 
-**Safety model:** every template that executes arbitrary/buffer SQL shows a truncated preview and asks to confirm before running (a dbt `.sql` buffer can contain `DROP`/`DELETE`/`TRUNCATE`/`MERGE`, and overseer has no undo). Read-only templates (`describe`/`list`/`connection test`) skip the prompt. No template runs a whole *project* of SQL files unattended — unlike `dbt run`/`dbt build`, there's no dbt-style DAG/state layer to bound the blast radius of running raw SQL, so batch execution is intentionally not offered.
+**Safety model:** every path that executes arbitrary/buffer SQL (sql_runner keymaps *and* overseer templates) shows a truncated preview and asks to confirm before running (a dbt `.sql` buffer can contain `DROP`/`DELETE`/`TRUNCATE`/`MERGE` and there is no undo). Read-only templates skip the prompt. No template runs a whole *project* of SQL files unattended — unlike `dbt run`/`dbt build`, there's no dbt-style DAG/state layer to bound the blast radius of running raw SQL, so batch execution is intentionally not offered.
 
-For a persistent interactive session (not a one-shot query), use **betterTerm** + `snow sql -i`/`snow sql --interactive` rather than an overseer template — overseer's output panes are one-shot, not built for back-and-forth.
+**External-browser (SSO) auth:** set `authenticator = "EXTERNALBROWSER"` on the connection in `~/.snowflake/config.toml` / `connections.toml`, plus `client_store_temporary_credential = true` to cache the SSO token in the OS keyring (macOS Keychain on the host; Linux needs a Secret Service backend, typically absent in a headless VM → re-prompt every connect). This is why OrbStack runs are host-routed (see below). sqlit's Snowflake connections expose the same thing as the "SSO (Browser)" authenticator.
+
+For a persistent interactive session (not a one-shot query), use **betterTerm** + a bare `snow sql` (opens the interactive REPL; note `-i` means `--stdin`, not interactive) rather than an overseer template — overseer's output panes are one-shot, not built for back-and-forth.
+
+### sqlit (SQL TUI) + OrbStack host-preferred tools (`lua/host_tool.lua`)
+[sqlit](https://github.com/Maxteabag/sqlit) ("lazygit of SQL") is built from upstream's flake — with its own pinned nixpkgs, no `follows`; the CI-tested build — with duckdb/postgres/mysql/ssh driver extras, plus `snowflake` only where `snowflake-connector-python` builds (not `aarch64-linux` — same root-test failure as `snow`; there, Snowflake is reached through the host Mac's sqlit instead). Driven from `lua/sql_runner.lua`:
+
+- `<leader>Qsr` / `<leader>Qsv` / `<leader>Qsb` — run line/selection/buffer against a picked sqlit connection (confirm-gated, same resize-safe results float). Connection names come from `~/.config/sqlit/connections.json` (`$SQLIT_CONFIG_DIR` respected).
+- `<leader>Qsi` — open the sqlit TUI in a snacks.terminal float (a proper Textual app, resize-safe).
+
+**OrbStack host preference.** Inside an OrbStack machine, `lua/host_tool.lua` (setup called from `plugins.nix` extraConfigLua) prefers host macOS binaries for `snow`/`sqlit` via OrbStack's `mac` shim (`mac snow …`) when a host install is found (probed lazily via a login shell, cached): the SSO session, browser and Keychain all live on the Mac, so externalbrowser OAuth + token caching just work. stdio is proxied, so output/exit codes land in Neovim as usual. SQL always travels as a temp file passed with `-f` — written through the `/mnt/mac` shared mount when host-run (no stdin assumptions about the `mac` shim, no shell quoting anywhere). Detection: the `mac` guest shim on PATH, or `orbstack` in the kernel release string.
+
+On OrbStack, `host_tool.setup()` also points `SNOWFLAKE_HOME` / `SQLIT_CONFIG_DIR` at the host's `~/.snowflake` / `~/.config/sqlit` (the Mac fs is mounted at the same `/Users/...` path in the VM, so both sides share one set of connections — externalbrowser connections store no password, so the differing OS keyrings don't matter), and sets `BROWSER=open` as a fallback so a VM-local externalbrowser flow can still open the Mac browser (the OAuth loopback redirect completes because OrbStack forwards machine ports to macOS `localhost`).
+
+Escape hatch: `:let g:host_tools_prefer_local = 1` forces the nix-packaged binaries for the session.
 
 ### Airflow
 `overseer/airflow_tasks.lua` provides Astro CLI templates when `astro` is on PATH:
@@ -259,6 +278,8 @@ See README.md for full details.
 - Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + snacks picker cover the workflow and bit-rot less.
 - Do **not** re-add `vim-dadbod`/`vim-dadbod-ui`/`snowsql` for Snowflake — `snowsql` is unsupported on `aarch64-linux` (see "Why the Snowflake tooling looks the way it does" above). `nvim-dbee` is not a substitute either — it has no Snowflake driver.
 - Do **not** add a `--password`/credential flag to any Snowflake overseer template or keymap — connections must come from `~/.snowflake/config.toml` connection profiles.
+- Do **not** display `snow sql` / `sqlit query` default TABLE output for interactive query runs — static ASCII tables are sized at render time and unreadable in resizable terminals; use the CSV → `query_result` float (`lua/sql_runner.lua`) instead. Overseer task panes (batch-oriented, one-shot) are the exception.
+- Do **not** expect Snowflake to work from nixpkgs' `sqlit-tui` package — it omits `snowflake-connector-python`, and sqlit's driver wizard can't install into the Nix store. sqlit here is built from upstream's flake with driver extras (see `flake.nix`).
 - Do **not** enable `none-ls` — the block is intentionally removed in favour of `nvim-lint` + `conform-nvim`.
 - Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single 1400-line file by choice.
 
@@ -268,8 +289,9 @@ From `flake.lock`:
 - `nixvim` rev: `f316e949e0ed9df0e1e0bf645c6dce721d4e230e`
 - `nixpkgs`: `nixpkgs-unstable` (rev `7525d999cd850b9a488817abc89c75dc733acf17`)
 - `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from the main `nixpkgs` above.
+- `sqlit`: `github:Maxteabag/sqlit` — deliberately **no** `follows`; upstream's own pinned nixpkgs is the CI-tested build. Driver extras are set in `flake.nix` (`snowflake` only where the connector builds — not `aarch64-linux`).
 
 Available as nixvim by-name modules at this rev: `sidekick`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
 
 **Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`), `herd.nvim` (MomePP, `extra-plugins.nix`), **`opencode.nvim`** (sudo-tee, pinned in `extra-plugins.nix`, loaded via `plugins.lz-n.plugins` in `plugins.nix`), and **`agentic.nvim`** (carlos-algms, `extra-plugins.nix`, same lz-n route). Note: nixpkgs' `vimPlugins.opencode-nvim` tracks **nickjvandyke/opencode.nvim** — the fork that keeps the legacy `vim.g.opencode_opts` / `require("opencode").{ask,select,operator,statusline}` API — so that API was *not* removed upstream. We deliberately pin sudo-tee's main instead for the new unified `:Opencode` command API (`require("opencode.api").<action>`) and its richer features (quick chat, diff view, snapshots, MCP picker, skills browser). Bump deliberately — the `<leader>o` keymaps in `keymaps.nix` call that API. `agentic.nvim` uses the built-in `opencode-acp` provider (`opencode acp` — the opencode CLI speaks ACP natively, no extra npm packages); its keymaps live under `<leader>a` in `keymaps.nix`.
-`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) is passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (unstable ships ≥ 0.8.2, satisfying herd.nvim's 0.7.5 requirement — no separate pin needed).
+`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (unstable ships ≥ 0.8.2, satisfying herd.nvim's 0.7.5 requirement — no separate pin needed).

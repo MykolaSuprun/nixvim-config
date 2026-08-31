@@ -1746,12 +1746,18 @@
         '';
     }
 
-    # ── database (dbee + Snowflake CLI overseer templates) — <leader>Q ────
-    # dbee has no Snowflake driver (see plugins.nix); Snowflake is queried via
-    # the `snow` CLI, wired up as overseer templates in
-    # overseer/snowflake_tasks.lua. Qr/Qv are direct shortcuts to the two most
-    # common ones (each asks for confirmation before sending SQL); everything
-    # else (describe/list/connection test/…) is reachable via <leader>Or or Qo.
+    # ── database (dbee + Snowflake + sqlit) — <leader>Q ──────────────────
+    # dbee has no Snowflake driver (see plugins.nix). Interactive paths:
+    #   * Qr/Qv/Qb (Snowflake via `snow` CLI) and Qs{r,v,b} (any sqlit
+    #     connection) run line/selection/buffer via lua/sql_runner.lua —
+    #     confirm-gated, host-preferred on OrbStack, results shown in
+    #     query_result's resize-safe float (CSV parsed + re-rendered on
+    #     resize — NOT the tools' static ASCII tables, which break on
+    #     terminal resize).
+    #   * Qsi opens the sqlit TUI (a proper resize-safe Textual app) in a
+    #     snacks.terminal float.
+    # Overseer templates (describe/list/connection test/run compiled dbt SQL)
+    # stay reachable via <leader>Or / Qo — see overseer/snowflake_tasks.lua.
     {
       key = "<leader>Qd";
       options = {
@@ -1774,12 +1780,12 @@
       key = "<leader>Qr";
       options = {
         silent = true;
-        desc = "Snowflake: run current line (confirm)";
+        desc = "Snowflake: run current line (confirm → float)";
       };
       mode = ["n"];
       action.__raw = ''
         function()
-          require("overseer").run_template({ name = "snowflake: run current line" })
+          require("sql_runner").snow_line()
         end
       '';
     }
@@ -1787,12 +1793,77 @@
       key = "<leader>Qv";
       options = {
         silent = true;
-        desc = "Snowflake: run visual selection (confirm)";
+        desc = "Snowflake: run visual selection (confirm → float)";
       };
       mode = ["x"];
       action.__raw = ''
         function()
-          require("overseer").run_template({ name = "snowflake: run visual selection" })
+          require("sql_runner").snow_selection()
+        end
+      '';
+    }
+    {
+      key = "<leader>Qb";
+      options = {
+        silent = true;
+        desc = "Snowflake: run whole buffer (confirm → float)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("sql_runner").snow_buffer()
+        end
+      '';
+    }
+    {
+      key = "<leader>Qsr";
+      options = {
+        silent = true;
+        desc = "sqlit: run current line (confirm → float)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("sql_runner").sqlit_line()
+        end
+      '';
+    }
+    {
+      key = "<leader>Qsv";
+      options = {
+        silent = true;
+        desc = "sqlit: run visual selection (confirm → float)";
+      };
+      mode = ["x"];
+      action.__raw = ''
+        function()
+          require("sql_runner").sqlit_selection()
+        end
+      '';
+    }
+    {
+      key = "<leader>Qsb";
+      options = {
+        silent = true;
+        desc = "sqlit: run whole buffer (confirm → float)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("sql_runner").sqlit_buffer()
+        end
+      '';
+    }
+    {
+      key = "<leader>Qsi";
+      options = {
+        silent = true;
+        desc = "sqlit: open TUI (terminal float)";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("sql_runner").sqlit_tui()
         end
       '';
     }
@@ -1891,6 +1962,11 @@
     {
       __unkeyed-1 = "<leader>Q";
       group = "database";
+      icon = "󰆼";
+    }
+    {
+      __unkeyed-1 = "<leader>Qs";
+      group = "sqlit";
       icon = "󰆼";
     }
     {

@@ -1,6 +1,7 @@
 {
   pkgs,
   snowflakeCli,
+  sqlitPkg,
   ...
 }: {
   dependencies = {
@@ -64,6 +65,11 @@
     # flake.nix: pinned to nixos-25.05 because current nixpkgs fails to build
     # snowflake-connector-python's test suite on aarch64-linux.
     snowflakeCli
+    # sqlit TUI (github:Maxteabag/sqlit), built via upstream's flake with the
+    # duckdb/postgres/mysql/ssh extras (+ snowflake where the connector
+    # builds — see flake.nix). Driven from keymaps via lua/sql_runner.lua;
+    # on OrbStack the host macOS sqlit is preferred at runtime (host_tool.lua).
+    sqlitPkg
     tmux # sidekick.cli.mux backend (enabled=false by default, available if wanted)
     # opencode CLI — the opencode.nvim plugin spawns `opencode serve` itself.
     # (Previously provided by the nixvim `plugins.opencode` module's

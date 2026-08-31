@@ -14,6 +14,11 @@
     # the fix lands upstream: https://github.com/NixOS/nixpkgs/issues (check
     # snowflake-connector-python test suite for the root-permission test).
     nixpkgs-snowflake.url = "github:nixos/nixpkgs/nixos-25.05";
+    # sqlit — terminal UI for SQL databases (github:Maxteabag/sqlit). NOT wired
+    # through `follows`: upstream's flake.lock pins a nixpkgs rev that its CI
+    # builds against (sqlit's textual/hatchling version floors move fast), so
+    # using its own input is the tested path. Used via lib.makeSqlit below.
+    sqlit.url = "github:Maxteabag/sqlit";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
@@ -54,11 +59,29 @@
           })
           .snowflake-cli;
 
+        # sqlit TUI, built via upstream's flake (see the sqlit input comment).
+        # The `snowflake` extra pulls in snowflake-connector-python, which hits
+        # the same aarch64-linux test failure described above for `snow` — so
+        # it is only enabled where it builds. On aarch64-linux (the OrbStack
+        # target) Snowflake is instead reached through the HOST macOS sqlit via
+        # OrbStack's `mac` shim (see nixvim-config/plugins.nix host_tool.lua),
+        # which is the preferred path there anyway for external-browser OAuth.
+        sqlitPkg = inputs.sqlit.lib.${system}.makeSqlit {
+          extras =
+            [
+              "duckdb"
+              "postgres"
+              "mysql"
+              "ssh"
+            ]
+            ++ pkgs.lib.optionals (system != "aarch64-linux") ["snowflake"];
+        };
+
         nixvimModule = {
           inherit pkgs; # pkgs has config.allowUnfree = true
           module = import ./nixvim-config;
           extraSpecialArgs = {
-            inherit snowflakeCli;
+            inherit snowflakeCli sqlitPkg;
           };
         };
 

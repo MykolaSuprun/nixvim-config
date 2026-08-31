@@ -15,6 +15,10 @@
 --   sql -i`, not an overseer template — overseer output panes are one-shot
 --   and not meant for a back-and-forth session.
 local overseer = require("overseer")
+-- Host-tool resolution (lua/host_tool.lua): inside an OrbStack machine,
+-- `snow` runs on the macOS host via the `mac` shim when a host install
+-- exists — externalbrowser OAuth then uses the Mac browser + Keychain.
+local host_tool = require("host_tool")
 
 local function bottom_output(dispose_timeout)
 	return {
@@ -60,7 +64,7 @@ overseer.register_template({
 	builder = function()
 		local object = vim.fn.expand("<cword>")
 		return {
-			cmd = { "snow", "sql", "-q", "describe table " .. object },
+			cmd = host_tool.cmd("snow", { "sql", "-q", "describe table " .. object }),
 			name = "snowflake describe: " .. object,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(60),
@@ -73,7 +77,7 @@ overseer.register_template({
 	name = "snowflake: list warehouses",
 	builder = function()
 		return {
-			cmd = { "snow", "object", "list", "warehouse" },
+			cmd = host_tool.cmd("snow", { "object", "list", "warehouse" }),
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(60),
 		}
@@ -84,7 +88,7 @@ overseer.register_template({
 	name = "snowflake: list databases",
 	builder = function()
 		return {
-			cmd = { "snow", "object", "list", "database" },
+			cmd = host_tool.cmd("snow", { "object", "list", "database" }),
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(60),
 		}
@@ -95,7 +99,7 @@ overseer.register_template({
 	name = "snowflake: list tables (prompt database.schema)",
 	builder = function(params)
 		local scope = params and params.schema or ""
-		local cmd = { "snow", "object", "list", "table" }
+		local cmd = host_tool.cmd("snow", { "object", "list", "table" })
 		if scope ~= "" then
 			-- "--in schema <db.schema>" scopes the listing; `scope` is passed
 			-- as a single argv element (no shell involved), so this is safe
@@ -122,7 +126,7 @@ overseer.register_template({
 	name = "snowflake: connection test",
 	builder = function()
 		return {
-			cmd = { "snow", "connection", "test" },
+			cmd = host_tool.cmd("snow", { "connection", "test" }),
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(60),
 		}
@@ -133,7 +137,7 @@ overseer.register_template({
 	name = "snowflake: connection list",
 	builder = function()
 		return {
-			cmd = { "snow", "connection", "list" },
+			cmd = host_tool.cmd("snow", { "connection", "list" }),
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(30),
 		}
@@ -149,7 +153,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: current line")
 		end
 		return {
-			cmd = { "snow", "sql", "-q", line },
+			cmd = host_tool.cmd("snow", { "sql", "-q", line }),
 			name = "snowflake run: current line",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -174,7 +178,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: selection")
 		end
 		return {
-			cmd = { "snow", "sql", "-q", query },
+			cmd = host_tool.cmd("snow", { "sql", "-q", query }),
 			name = "snowflake run: selection",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -208,8 +212,12 @@ overseer.register_template({
 		if not confirm_run_sql(preview) then
 			return cancelled_task("snowflake run compiled: " .. model)
 		end
+		-- A host-run `snow` can't see VM paths: route the compiled SQL through
+		-- the OrbStack shared mount and pass the host-visible path instead.
+		local runner = host_tool.runner("snow")
+		local arg_path = runner.host and host_tool.write_query_tmp(true, table.concat(vim.fn.readfile(path), "\n")) or path
 		return {
-			cmd = { "snow", "sql", "-f", path },
+			cmd = host_tool.cmd("snow", { "sql", "-f", arg_path }),
 			name = "snowflake run compiled: " .. model,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(300),

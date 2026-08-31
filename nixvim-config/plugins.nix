@@ -734,6 +734,588 @@
         return M
       '';
 
+    # ── OrbStack host-tool resolution ────────────────────────────────────
+    # When Neovim runs inside an OrbStack Linux machine, `snow` / `sqlit`
+    # (and anything else needing a real browser or OS keyring) are better
+    # executed on the macOS HOST via OrbStack's `mac` command shim:
+    #   * externalbrowser OAuth opens the Mac browser (SSO session lives
+    #     there) and caches the token in the macOS Keychain;
+    #   * stdio is proxied, so output/exit codes behave like a local process.
+    # Resolution per tool: host binary (OrbStack + host has it) → nix-packaged
+    # binary on PATH. Host probing is lazy and cached. Escape hatch:
+    # `let g:host_tools_prefer_local = 1` forces the local binaries.
+    "lua/host_tool.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        local orbstack = nil
+
+        -- OrbStack machines always ship the `mac` guest shim on PATH; the
+        -- kernel release string ("-orbstack-") is the fallback signal.
+        function M.is_orbstack()
+          if orbstack == nil then
+            local release = (vim.uv or vim.loop).os_uname().release or ""
+            orbstack = vim.fn.executable("mac") == 1 or release:find("orbstack") ~= nil
+          end
+          return orbstack
+        end
+
+        local host_probe = {}
+
+        -- Probed via a login shell so Homebrew (/opt/homebrew/bin) and pipx
+        -- (~/.local/bin) installs are visible.
+        function M.host_executable(name)
+          if vim.g.host_tools_prefer_local or not M.is_orbstack() then
+            return false
+          end
+          if host_probe[name] == nil then
+            vim.fn.system({ "mac", "sh", "-lc", "command -v " .. name .. " >/dev/null 2>&1" })
+            host_probe[name] = vim.v.shell_error == 0
+          end
+          return host_probe[name]
+        end
+
+        --- { prefix = argv head, host = bool } for running `name`.
+        function M.runner(name)
+          if M.host_executable(name) then
+            return { prefix = { "mac", name }, host = true }
+          end
+          return { prefix = { name }, host = false }
+        end
+
+        --- Full argv for running `name` with `args`, host-preferred.
+        function M.cmd(name, args)
+          local argv = vim.deepcopy(M.runner(name).prefix)
+          return vim.list_extend(argv, args or {})
+        end
+
+        --- Write SQL text to a temp file, returning the path to pass to the
+        --- tool. Host-run tools can't see the VM filesystem, so the file goes
+        --- through the OrbStack mount (/mnt/mac) and the returned path is the
+        --- host-visible equivalent. Files land in tmp on both sides and are
+        --- left for the OS to clean (boot-time cleanup on macOS and NixOS).
+        function M.write_query_tmp(for_host, content)
+          local name = ("nvim-query-%d-%d.sql"):format(
+            vim.fn.getpid(),
+            (vim.uv or vim.loop).hrtime() % 1000000000
+          )
+          if for_host then
+            local vm_path = "/mnt/mac/tmp/" .. name
+            vim.fn.writefile(vim.split(content, "\n", { plain = true }), vm_path)
+            return "/tmp/" .. name
+          end
+          local path = vim.fn.tempname() .. ".sql"
+          vim.fn.writefile(vim.split(content, "\n", { plain = true }), path)
+          return path
+        end
+
+        --- One-time startup setup (cheap: fs/executable checks only, no host
+        --- probing). Shares config dirs with the host so host-run and VM-run
+        --- tools see one set of connections, and gives in-VM externalbrowser
+        --- OAuth a way to open the Mac browser as a fallback: OrbStack links
+        --- `open` into machines by default, and machine-bound ports are
+        --- reachable from the Mac at localhost:<port> (docs.orbstack.dev/
+        --- machines/network), so the OAuth loopback redirect can complete.
+        function M.setup()
+          if not M.is_orbstack() then
+            return
+          end
+          local mac_home = "/Users/" .. (vim.env.USER or "")
+          -- snow CLI + snowflake-connector-python both honour SNOWFLAKE_HOME;
+          -- the Mac fs is mounted at the same /Users/... path inside the VM.
+          if not vim.env.SNOWFLAKE_HOME and vim.fn.isdirectory(mac_home .. "/.snowflake") == 1 then
+            vim.env.SNOWFLAKE_HOME = mac_home .. "/.snowflake"
+          end
+          -- Same for sqlit ($XDG_CONFIG_HOME/sqlit, overridable). Password
+          -- auth entries won't unlock (OS keyrings differ), but
+          -- externalbrowser connections store no password and share cleanly.
+          if not vim.env.SQLIT_CONFIG_DIR and vim.fn.isdirectory(mac_home .. "/.config/sqlit") == 1 then
+            vim.env.SQLIT_CONFIG_DIR = mac_home .. "/.config/sqlit"
+          end
+          if not vim.env.BROWSER and vim.fn.executable("open") == 1 then
+            vim.env.BROWSER = "open"
+          end
+        end
+
+        return M
+      '';
+
+    # ── Resize-safe query result viewer ──────────────────────────────────
+    # `snow sql` / `sqlit query` print static ASCII tables sized to the
+    # terminal at render time — unreadable in resizable windows. Both tools
+    # emit CSV instead; output is parsed once and re-rendered to fit the
+    # current window width on every VimResized/WinResized. JSON would lose
+    # column order (vim.json.decode → Lua hash tables), hence CSV.
+    "lua/query_result.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        local MAX_SCAN_ROWS = 200 -- rows sampled for width estimation
+        local MAX_SHOW_ROWS = 2000 -- rows rendered at most
+        local MAX_COL_W = 40
+        local MIN_COL_W = 4
+
+        -- RFC-4180-ish CSV: quoted fields, "" escapes, embedded newlines.
+        function M.parse_csv(text)
+          local rows, row, field = {}, {}, {}
+          local i, n = 1, #text
+          local in_quotes = false
+          local field_started = false
+
+          local function end_field()
+            row[#row + 1] = table.concat(field)
+            field = {}
+            field_started = false
+          end
+          local function end_row()
+            end_field()
+            rows[#rows + 1] = row
+            row = {}
+          end
+
+          while i <= n do
+            local c = text:sub(i, i)
+            if in_quotes then
+              if c == '"' then
+                if text:sub(i + 1, i + 1) == '"' then
+                  field[#field + 1] = '"'
+                  i = i + 2
+                else
+                  in_quotes = false
+                  i = i + 1
+                end
+              else
+                field[#field + 1] = c
+                i = i + 1
+              end
+            elseif c == '"' and not field_started then
+              in_quotes = true
+              field_started = true
+              i = i + 1
+            elseif c == "," then
+              end_field()
+              i = i + 1
+            elseif c == "\n" then
+              end_row()
+              i = i + 1
+            elseif c == "\r" then
+              i = i + 1 -- tolerate CRLF
+            else
+              field[#field + 1] = c
+              field_started = true
+              i = i + 1
+            end
+          end
+
+          if in_quotes then
+            error("malformed CSV: unterminated quoted field")
+          end
+          if field_started or #row > 0 then
+            end_row()
+          end
+          -- drop trailing blank lines at EOF
+          while #rows > 0 and #rows[#rows] == 1 and rows[#rows][1] == "" do
+            rows[#rows] = nil
+          end
+          if #rows == 0 then
+            return { columns = {}, rows = {} }
+          end
+          return { columns = table.remove(rows, 1), rows = rows }
+        end
+
+        local function cell_text(v)
+          if v == nil then
+            return ""
+          end
+          return (tostring(v):gsub("[%c]", " ")) -- control chars (incl. \n) → space
+        end
+
+        -- Column widths from content (capped), then shrink the widest columns
+        -- until everything fits the window width.
+        local function fit_widths(columns, rows, avail)
+          local widths = {}
+          for i, c in ipairs(columns) do
+            widths[i] = math.min(MAX_COL_W, math.max(MIN_COL_W, #cell_text(c)))
+          end
+          for r = 1, math.min(#rows, MAX_SCAN_ROWS) do
+            for i = 1, #columns do
+              local w = #cell_text(rows[r][i])
+              if w > widths[i] then
+                widths[i] = math.min(MAX_COL_W, w)
+              end
+            end
+          end
+          local sep_w = 3 * (#columns - 1)
+          local function total()
+            local t = 0
+            for _, w in ipairs(widths) do
+              t = t + w
+            end
+            return t
+          end
+          while #columns > 0 and total() + sep_w > avail do
+            local widest, wmax = 1, 0
+            for i, w in ipairs(widths) do
+              if w > wmax then
+                wmax, widest = w, i
+              end
+            end
+            if wmax <= MIN_COL_W then
+              break
+            end
+            widths[widest] = wmax - 1
+          end
+          return widths
+        end
+
+        -- Display-width aware pad/truncate (… is multibyte — # lies).
+        local function fit_cell(v, width)
+          local cell = cell_text(v)
+          local dw = vim.fn.strdisplaywidth(cell)
+          if dw <= width then
+            return cell .. string.rep(" ", width - dw)
+          end
+          return vim.fn.strcharpart(cell, 0, width - 1) .. "…"
+        end
+
+        local function format_row(values, widths)
+          local parts = {}
+          for i = 1, #widths do
+            parts[i] = fit_cell(values[i], widths[i])
+          end
+          return table.concat(parts, " | ")
+        end
+
+        local view = { win = nil, buf = nil, data = nil, note = nil }
+
+        local function render()
+          if not (view.win and vim.api.nvim_win_is_valid(view.win)) then
+            return
+          end
+          local widths = fit_widths(view.data.columns, view.data.rows, vim.api.nvim_win_get_width(view.win))
+          local lines = { format_row(view.data.columns, widths) }
+          local sep = {}
+          for i, w in ipairs(widths) do
+            sep[i] = string.rep("─", w)
+          end
+          lines[2] = table.concat(sep, "─┼─")
+          local shown = math.min(#view.data.rows, MAX_SHOW_ROWS)
+          for r = 1, shown do
+            lines[#lines + 1] = format_row(view.data.rows[r], widths)
+          end
+          if #view.data.rows > shown then
+            lines[#lines + 1] = ("… showing %d of %d rows"):format(shown, #view.data.rows)
+          end
+          if view.note and view.note ~= "" then
+            for _, l in ipairs(vim.split(view.note, "\n", { plain = true, trimempty = true })) do
+              lines[#lines + 1] = l
+            end
+          end
+          local buf = view.buf
+          vim.bo[buf].modifiable = true
+          vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+          vim.bo[buf].modifiable = false
+        end
+
+        function M.close()
+          if view.win and vim.api.nvim_win_is_valid(view.win) then
+            vim.api.nvim_win_close(view.win, true)
+          end
+        end
+
+        --- data: { columns = {...}, rows = {...} }; opts: { title, note }
+        function M.show(data, opts)
+          opts = opts or {}
+          M.close()
+          local buf = vim.api.nvim_create_buf(false, true)
+          vim.bo[buf].bufhidden = "wipe"
+          local width = math.floor(vim.o.columns * 0.85)
+          local height = math.floor(vim.o.lines * 0.8)
+          local win = vim.api.nvim_open_win(buf, true, {
+            relative = "editor",
+            width = width,
+            height = height,
+            col = math.floor((vim.o.columns - width) / 2),
+            row = math.floor((vim.o.lines - height) / 2),
+            style = "minimal",
+            border = "rounded",
+            title = opts.title or " query result ",
+            title_pos = "center",
+            footer = " q close · y yank row · re-renders on resize ",
+            footer_pos = "center",
+          })
+          vim.wo[win].wrap = false
+          vim.wo[win].cursorline = true
+          view = { win = win, buf = buf, data = data, note = opts.note }
+          render()
+          pcall(vim.api.nvim_buf_add_highlight, buf, -1, "Title", 0, 0, -1)
+
+          local group = vim.api.nvim_create_augroup("query_result_view", { clear = true })
+          vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
+            group = group,
+            callback = function()
+              if not (view.win and vim.api.nvim_win_is_valid(view.win)) then
+                return true
+              end
+              local w = math.floor(vim.o.columns * 0.85)
+              local h = math.floor(vim.o.lines * 0.8)
+              vim.api.nvim_win_set_config(view.win, {
+                relative = "editor",
+                width = w,
+                height = h,
+                col = math.floor((vim.o.columns - w) / 2),
+                row = math.floor((vim.o.lines - h) / 2),
+              })
+              render()
+            end,
+          })
+          vim.api.nvim_create_autocmd("WinClosed", {
+            group = group,
+            pattern = tostring(win),
+            once = true,
+            callback = function()
+              view = { win = nil, buf = nil, data = nil, note = nil }
+            end,
+          })
+
+          vim.keymap.set("n", "q", M.close, { buffer = buf, nowait = true, desc = "close results" })
+          vim.keymap.set("n", "<Esc>", M.close, { buffer = buf, nowait = true, desc = "close results" })
+          vim.keymap.set("n", "y", function()
+            local row_idx = vim.api.nvim_win_get_cursor(0)[1] - 2 -- header + separator
+            local row = view.data and view.data.rows[row_idx]
+            if not row then
+              return
+            end
+            vim.fn.setreg('"', table.concat(vim.tbl_map(cell_text, row), "\t"))
+            vim.notify("row yanked", vim.log.levels.INFO, { title = "query result" })
+          end, { buffer = buf, desc = "yank row (TSV)" })
+        end
+
+        --- Fallback for non-tabular output (DDL/DML status, error text).
+        function M.show_raw(text, title)
+          local rows = {}
+          for _, l in ipairs(vim.split(text or "", "\n", { plain = true })) do
+            rows[#rows + 1] = { l }
+          end
+          M.show({ columns = { "output" }, rows = rows }, { title = title })
+        end
+
+        return M
+      '';
+
+    # ── SQL runner (snow CLI + sqlit) ────────────────────────────────────
+    # Runs the current line / visual selection / whole buffer and shows
+    # results in query_result's float. Tools resolve through host_tool
+    # (host-first on OrbStack); every run is confirm-gated like the overseer
+    # snowflake templates — editor text can contain DROP/DELETE/TRUNCATE.
+    "lua/sql_runner.lua".text =
+      #lua
+      ''
+        local host_tool = require("host_tool")
+        local viewer = require("query_result")
+
+        local M = {}
+
+        local SQLIT_ROW_LIMIT = "5000"
+        local TUI_PICKER = "(connection picker)"
+
+        local function notify(msg, level)
+          vim.notify(msg, level or vim.log.levels.INFO, { title = "sql runner" })
+        end
+
+        local function confirm_run(sql)
+          local snippet = sql:gsub("%s+", " "):sub(1, 200)
+          local choice = vim.fn.confirm(
+            "Run this against the database?\n\n" .. snippet .. (#sql > 200 and " …" or ""),
+            "&Run\n&Cancel",
+            2
+          )
+          return choice == 1
+        end
+
+        local function current_line()
+          return vim.api.nvim_get_current_line()
+        end
+
+        local function visual_selection()
+          local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
+          local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
+          local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
+          if #lines == 0 then
+            return ""
+          end
+          lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
+          lines[1] = string.sub(lines[1], sc + 1)
+          return table.concat(lines, "\n")
+        end
+
+        local function whole_buffer()
+          return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
+        end
+
+        local function run(argv, title)
+          notify("running query…")
+          vim.system(argv, { text = true }, function(res)
+            vim.schedule(function()
+              if res.code ~= 0 then
+                notify(
+                  ("query failed (exit %d)\n%s\n%s"):format(
+                    res.code,
+                    res.stderr or "",
+                    (res.stdout or ""):sub(1, 400)
+                  ),
+                  vim.log.levels.ERROR
+                )
+                return
+              end
+              local out = res.stdout or ""
+              local ok, parsed = pcall(viewer.parse_csv, out)
+              if not ok or #parsed.columns == 0 then
+                viewer.show_raw(out ~= "" and out or (res.stderr or ""), title)
+                return
+              end
+              viewer.show(parsed, { title = title, note = res.stderr })
+            end)
+          end)
+        end
+
+        -- The query always travels as a temp file passed with -f: identical
+        -- for local and host-run tools (no stdin assumptions about the `mac`
+        -- shim) and immune to shell-quoting issues (exec argv, no shell).
+        local function run_with_file(tool, sql, args, title)
+          local runner = host_tool.runner(tool)
+          local path = host_tool.write_query_tmp(runner.host, sql)
+          local argv = vim.deepcopy(runner.prefix)
+          for _, a in ipairs(args(path)) do
+            argv[#argv + 1] = a
+          end
+          run(argv, title)
+        end
+
+        -- --enable-templating NONE: editor text (esp. dbt Jinja) must reach
+        -- the server verbatim — no client-side &/<% variable substitution.
+        function M.snow_run(sql)
+          if not sql or sql:match("^%s*$") then
+            return
+          end
+          if not confirm_run(sql) then
+            return
+          end
+          run_with_file("snow", sql, function(path)
+            return { "sql", "-f", path, "--format", "CSV", "--enable-templating", "NONE" }
+          end, "snowflake")
+        end
+
+        local function sqlit_config_dir()
+          return vim.env.SQLIT_CONFIG_DIR or (vim.fn.expand("~") .. "/.config/sqlit")
+        end
+
+        -- Connection names from connections.json; shape parsed defensively
+        -- (list of {name=...} or a name→config map, optionally wrapped).
+        local function sqlit_connections()
+          local path = sqlit_config_dir() .. "/connections.json"
+          if vim.fn.filereadable(path) == 0 then
+            return {}
+          end
+          local ok, data = pcall(vim.json.decode, table.concat(vim.fn.readfile(path), "\n"))
+          if not ok or type(data) ~= "table" then
+            return {}
+          end
+          local list = data.connections or data
+          local names = {}
+          if vim.islist(list) then
+            for _, c in ipairs(list) do
+              if type(c) == "table" and type(c.name) == "string" then
+                names[#names + 1] = c.name
+              end
+            end
+          else
+            for name in pairs(list) do
+              names[#names + 1] = name
+            end
+          end
+          table.sort(names)
+          return names
+        end
+
+        function M.sqlit_run(sql)
+          if not sql or sql:match("^%s*$") then
+            return
+          end
+          local names = sqlit_connections()
+          if #names == 0 then
+            notify(
+              "no sqlit connections in "
+                .. sqlit_config_dir()
+                .. "/connections.json — add one via the sqlit TUI or `sqlit connections add`",
+              vim.log.levels.WARN
+            )
+            return
+          end
+          vim.ui.select(names, { prompt = "sqlit connection" }, function(name)
+            if not name or not confirm_run(sql) then
+              return
+            end
+            run_with_file("sqlit", sql, function(path)
+              return { "query", "-c", name, "-f", path, "--format", "csv", "--limit", SQLIT_ROW_LIMIT }
+            end, "sqlit: " .. name)
+          end)
+        end
+
+        -- The sqlit TUI is a proper Textual app (resize-safe), opened in a
+        -- snacks.terminal float. On OrbStack it resolves to the host sqlit
+        -- via `mac`; if TUI-through-`mac` ever misbehaves, set
+        -- g:host_tools_prefer_local to force the nix-packaged binary.
+        function M.sqlit_tui()
+          local items = sqlit_connections()
+          table.insert(items, 1, TUI_PICKER)
+          vim.ui.select(items, { prompt = "sqlit" }, function(choice)
+            if not choice then
+              return
+            end
+            local args = {}
+            if choice ~= TUI_PICKER then
+              args = { "-c", choice }
+            end
+            Snacks.terminal.open(host_tool.cmd("sqlit", args), {
+              win = {
+                position = "float",
+                width = 0.92,
+                height = 0.88,
+                border = "rounded",
+                title = " sqlit ",
+                title_pos = "center",
+              },
+              interactive = true,
+              start_insert = true,
+            })
+          end)
+        end
+
+        function M.snow_line()
+          M.snow_run(current_line())
+        end
+        function M.snow_selection()
+          M.snow_run(visual_selection())
+        end
+        function M.snow_buffer()
+          M.snow_run(whole_buffer())
+        end
+        function M.sqlit_line()
+          M.sqlit_run(current_line())
+        end
+        function M.sqlit_selection()
+          M.sqlit_run(visual_selection())
+        end
+        function M.sqlit_buffer()
+          M.sqlit_run(whole_buffer())
+        end
+
+        return M
+      '';
+
     "ftplugin/sql.lua".text =
       #lua
       ''
@@ -790,6 +1372,11 @@
     #lua
     ''
       -- require("fyler").setup()
+
+      -- OrbStack host-tool setup (lua/host_tool.lua): share Snowflake/sqlit
+      -- config dirs with the macOS host and set BROWSER=open so in-VM
+      -- externalbrowser OAuth can open the Mac browser. Cheap no-op elsewhere.
+      require("host_tool").setup()
 
       -- otter: activate embedded-language LSP only for buffers that (a) have an
       -- embedded language we care about, and (b) actually loaded the otter plugin
