@@ -253,6 +253,14 @@ local oc = require("opencode.config").values
 check("opencode ~ disabled", oc.keymap.input_window["~"] == false, vim.inspect(oc.keymap.input_window["~"]))
 check("opencode <C-p> palette mapped", oc.keymap.input_window["<C-p>"] ~= nil)
 
+-- ── 12. conform markdown (M14) ──────────────────────────────────────────
+local conform = require("conform")
+check(
+  "conform markdown uses injected",
+  vim.tbl_contains(conform.formatters_by_ft.markdown or {}, "injected"),
+  vim.inspect(conform.formatters_by_ft.markdown)
+)
+
 -- ── summary ─────────────────────────────────────────────────────────────
 print(string.format("\n%d checks, %d failures", checks, #failures))
 if #failures > 0 then

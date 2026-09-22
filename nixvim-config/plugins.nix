@@ -308,6 +308,10 @@
           json = ["jq"];
           yaml = ["yamlfmt"];
           sql = ["sqruff"];
+          # Fenced code blocks are formatted by their own language formatter
+          # (treesitter `injected`), not by a markdown formatter — pairs with
+          # otter (LSP/intellisense) without overlap. M14.
+          markdown = ["injected"];
           "_" = ["trim_whitespace"];
         };
         formatters = {
