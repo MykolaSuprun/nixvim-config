@@ -62,7 +62,11 @@ if vim.fn.executable("snow") == 1 then
 overseer.register_template({
 	name = "snowflake: describe current table/view (cursor word)",
 	builder = function()
-		local object = vim.fn.expand("<cword>")
+		-- <cword> stops at '.', so a qualified name (DB.SCHEMA.TABLE) would be
+		-- truncated to its last segment; <cWORD> keeps the dots but can include
+		-- trailing punctuation (e.g. the ';' in "select * from DB.S.T;"), so
+		-- strip non-identifier characters from both ends.
+		local object = vim.fn.expand("<cWORD>"):gsub("^[^%w_]+", ""):gsub("[^%w_%.]+$", "")
 		return {
 			cmd = host_tool.cmd("snow", { "sql", "-q", "describe table " .. object }),
 			name = "snowflake describe: " .. object,

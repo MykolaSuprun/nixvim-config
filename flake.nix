@@ -11,8 +11,10 @@
     # chmod-based permission check never triggers and the test fails. This
     # pin only feeds `snowflake-cli` (see dependencies.nix); everything else
     # still comes from the main `nixpkgs` input above. Bump/drop this once
-    # the fix lands upstream: https://github.com/NixOS/nixpkgs/issues (check
-    # snowflake-connector-python test suite for the root-permission test).
+    # the fix lands upstream — no dedicated issue for the root-permission
+    # test as of 2026-09-22; related open work: NixOS/nixpkgs#545397
+    # (snowflake-connector-python 4.3.0 -> 4.7.1, disables some tests) and
+    # NixOS/nixpkgs#543941 (snowflake-cli check phase).
     nixpkgs-snowflake.url = "github:nixos/nixpkgs/nixos-25.05";
     # sqlit — terminal UI for SQL databases (github:Maxteabag/sqlit). NOT wired
     # through `follows`: upstream's flake.lock pins a nixpkgs rev that its CI

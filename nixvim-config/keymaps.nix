@@ -1588,6 +1588,9 @@
     }
 
     # ── Overseer extras ──────────────────────────────────────────────────────
+    # overseer v2 removed the OverseerRestartLast / OverseerQuickAction commands
+    # (CHANGELOG: "remove OverseerQuickAction command"); the replacements are
+    # the task actions (restart / watch) run via run_action on the last task.
     {
       key = "<leader>OR";
       options = {
@@ -1595,7 +1598,19 @@
         desc = "Restart Last Task";
       };
       mode = ["n"];
-      action = "<cmd>OverseerRestartLast<CR>";
+      action.__raw =
+        #lua
+        ''
+          function()
+            local overseer = require("overseer")
+            local tasks = overseer.list_tasks({ unique = false })
+            if #tasks == 0 then
+              vim.notify("Overseer: no tasks", vim.log.levels.INFO)
+              return
+            end
+            overseer.run_action(tasks[1], "restart")
+          end
+        '';
     }
     {
       key = "<leader>Ow";
@@ -1604,7 +1619,19 @@
         desc = "Watch (Restart on Save)";
       };
       mode = ["n"];
-      action = "<cmd>OverseerQuickAction restart on save<CR>";
+      action.__raw =
+        #lua
+        ''
+          function()
+            local overseer = require("overseer")
+            local tasks = overseer.list_tasks({ unique = false })
+            if #tasks == 0 then
+              vim.notify("Overseer: no tasks", vim.log.levels.INFO)
+              return
+            end
+            overseer.run_action(tasks[1], "watch")
+          end
+        '';
     }
 
     # ── sidekick / herd (AI CLI agents) — <leader><tab> ─────────────────────
@@ -1898,7 +1925,7 @@
       mode = ["n"];
       action.__raw = ''
         function()
-          require("overseer").run_template({ name = "snowflake: connection test" })
+          require("overseer").run_task({ name = "snowflake: connection test" })
         end
       '';
     }

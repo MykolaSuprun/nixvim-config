@@ -67,7 +67,7 @@ overseer.register_template({
 overseer.register_template({
 	name = "make",
 	builder = function()
-		local jobs = vim.loop.available_parallelism()
+		local jobs = vim.uv.available_parallelism()
 		return {
 			cmd = { "make", "-j" .. tostring(jobs) },
 			cwd = vim.fn.getcwd(),
@@ -86,7 +86,7 @@ overseer.register_template({
 overseer.register_template({
 	name = "bear make (regenerate compile_commands.json)",
 	builder = function()
-		local jobs = vim.loop.available_parallelism()
+		local jobs = vim.uv.available_parallelism()
 		return {
 			cmd = { "bear", "--", "make", "-j" .. tostring(jobs) },
 			cwd = vim.fn.getcwd(),
@@ -147,7 +147,7 @@ overseer.register_template({
 				"--enable=warning,style,performance,portability",
 				"--inline-suppr",
 				"--suppress=missingIncludeSystem",
-				"-j" .. tostring(vim.loop.available_parallelism()),
+				"-j" .. tostring(vim.uv.available_parallelism()),
 			},
 			cwd = vim.fn.getcwd(),
 			components = {

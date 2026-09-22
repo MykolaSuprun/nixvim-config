@@ -551,14 +551,9 @@
       settings = {
         cmake_executor = {
           name = "overseer";
-          opts.new_task_opts.strategy = {
-            # Lua table { "toggleterm", direction = ..., ... } — positional
-            # entries need nixvim's __unkeyed-N convention.
-            __unkeyed-1 = "toggleterm";
-            direction = "horizontal";
-            auto_scroll = true;
-            quit_on_exit = "success";
-          };
+          # No strategy override: overseer v2 removed the toggleterm strategy
+          # (CHANGELOG: "remove toggleterm and terminal strategies"); the
+          # default jobstart strategy runs the task in a terminal buffer.
         };
         cmake_notifications.enabled = false;
         cmake_dap_configuration = {
