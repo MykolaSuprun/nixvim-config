@@ -101,7 +101,7 @@
       enable = true;
       setupLspCapabilities = true;
       settings = {
-        cmdline.enabled = false;
+        cmdline.enabled = true;
         # NOTE: opencode.nvim's old `opencode_ask` in-process LSP is gone on the
         # pinned (new-API) version — it ships its own completion system, so no
         # per_filetype blink source is needed here.

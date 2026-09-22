@@ -698,6 +698,25 @@
       mode = ["n"];
       action = "<cmd>NoNeckPain<CR>";
     }
+    # snacks dim / zen (modules enabled in plugins.nix)
+    {
+      key = "<leader>uD";
+      options = {
+        silent = true;
+        desc = "Toggle dim (snacks)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("snacks").toggle.dim():toggle() end'';
+    }
+    {
+      key = "<leader>uz";
+      options = {
+        silent = true;
+        desc = "Toggle zen mode (snacks)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("snacks").toggle.zen():toggle() end'';
+    }
     {
       key = "<leader>ui";
       options = {

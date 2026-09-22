@@ -149,6 +149,9 @@
           fps = 120;
         };
         image.enabled = true;
+        # dim/zen toggles (<leader>uD / <leader>uz in keymaps.nix)
+        dim.enabled = true;
+        zen.enabled = true;
         bigfile = {
           enabled = true;
           notify = true;
@@ -210,6 +213,25 @@
               }
             '';
         };
+      };
+    };
+    # render-markdown — markdown rendering (LazyVim's markdown-extra set).
+    # Configured via the nixvim module (was a raw extraPlugins entry).
+    render-markdown = {
+      enable = true;
+      settings = {
+        code = {
+          sign = false;
+          width = "block";
+          right_pad = 1;
+        };
+        heading = {
+          sign = false;
+          icons = {};
+        };
+        checkbox.enabled = true;
+        # LSP-backed completions for `[ ]` / `[!NOTE]` etc.
+        completions.lsp.enabled = true;
       };
     };
     hardtime = {
@@ -349,7 +371,6 @@
             "*.jinja2"
             "*.quarto"
             "*.qmd"
-            "*.ipynb"
           ];
         }
       ];
@@ -1453,8 +1474,6 @@
   ];
 
   extraPlugins = with pkgs.vimPlugins; [
-    # fyler-nvim
-    render-markdown-nvim
     # neotest-gtest: not a nixvim adapter submodule (see the neotest block)
     # — packaged explicitly so the raw-Lua adapter can require it.
     neotest-gtest
@@ -1479,7 +1498,6 @@
       local otter_filetypes = {
         ["markdown"] = true,
         ["quarto"] = true,
-        ["ipynb"] = true,
         ["sql"] = true,
         ["jinja"] = true,
         ["jinja2"] = true,

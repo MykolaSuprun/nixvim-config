@@ -62,7 +62,7 @@ overseer.register_template({
 		-- strip non-identifier characters from both ends.
 		local object = vim.fn.expand("<cWORD>"):gsub("^[^%w_]+", ""):gsub("[^%w_%.]+$", "")
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-q", "describe table " .. object }),
+			cmd = host_tool.cmd("snow", { "sql", "-q", "describe table " .. object, "--format", "JSON", "--enhanced-exit-codes" }),
 			name = "snowflake describe: " .. object,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(60),
@@ -151,7 +151,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: current line")
 		end
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-q", line }),
+			cmd = host_tool.cmd("snow", { "sql", "-q", line, "--enhanced-exit-codes" }),
 			name = "snowflake run: current line",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -171,7 +171,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: selection")
 		end
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-q", query }),
+			cmd = host_tool.cmd("snow", { "sql", "-q", query, "--enhanced-exit-codes" }),
 			name = "snowflake run: selection",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -210,7 +210,7 @@ overseer.register_template({
 		local runner = host_tool.runner("snow")
 		local arg_path = runner.host and host_tool.write_query_tmp(true, table.concat(vim.fn.readfile(path), "\n")) or path
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-f", arg_path }),
+			cmd = host_tool.cmd("snow", { "sql", "-f", arg_path, "--enhanced-exit-codes" }),
 			name = "snowflake run compiled: " .. model,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(300),

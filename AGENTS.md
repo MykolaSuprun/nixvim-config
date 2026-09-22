@@ -211,6 +211,8 @@ On OrbStack, `host_tool.setup()` also points `SNOWFLAKE_HOME` / `SQLIT_CONFIG_DI
 
 Escape hatch: `:let g:host_tools_prefer_local = 1` forces the nix-packaged binaries for the session.
 
+Connection profiles come from `~/.snowflake/config.toml` (or `$SNOWFLAKE_HOME`). Trap: if a `connections.toml` exists, `config.toml` entries are ignored — use `snow --info` / `snow connection list|test|set-default` to see which profile is actually active (`snow helpers import-snowsql-connections` imports legacy SnowSQL connections).
+
 ### Airflow
 `overseer/airflow_tasks.lua` provides Astro CLI templates when `astro` is on PATH:
 - `astro dev parse` — DAG parse validation
