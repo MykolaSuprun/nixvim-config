@@ -213,12 +213,39 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<leader>at` | n, v, i | Toggle chat window |
+| `<leader>at` | n, v | Toggle chat window |
 | `<leader>aa` | n, v | Add selection / file to context |
-| `<leader>an` | n, v, i | New session |
-| `<leader>ar` | n, v, i | Restore session |
+| `<leader>an` | n, v | New session |
+| `<leader>ar` | n, v | Restore session |
 | `<leader>ad` | n | Add current-line diagnostics to context |
 | `<leader>aD` | n | Add buffer diagnostics to context |
+
+> Insert mode is deliberately excluded — `<Space>a` + `t`/`n`/`r` collides with
+> ordinary prose (" a t", " a n", " a r"). Model/provider switching lives inside
+> the agentic widget (below).
+
+### agentic — widget keys
+
+> Active **inside** the agentic chat/prompt buffers only. `<localleader>` is `\`.
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<localleader>m` | n | Switch model (keeps history) |
+| `<localleader>s` | n | Switch ACP provider (keeps history) |
+| `<localleader>t` | n | Select thought-effort level |
+| `<localleader>o` | n | Open options modal |
+| `<localleader>l` | n | List live sessions and open one |
+| `<localleader>]` / `<localleader>[` | n | Next / previous session |
+| `<localleader>D` | n | Destroy current session |
+| `<S-Tab>` | n, v, i | Switch agent mode |
+| `<CR>` / `<C-s>` | n / n, v, i | Submit prompt |
+| `<localleader>p` / `<C-v>` | n / i | Paste image from clipboard |
+| `<Tab>` | i | Accept file completion |
+| `q` | n | Hide widget (session keeps running) |
+| `d` | n, v | Remove file / selection / diagnostic at cursor |
+| `]]` / `[[` | n | Next / previous chat heading |
+| `]t` / `[t` | n | Next / previous tool call |
+| `]c` / `[c` | n | Next / previous diff hunk |
 
 ---
 
@@ -232,16 +259,21 @@ Scope: `nixvim-config` only.
 | Key | Mode | Action |
 |-----|------|--------|
 | `<CR>` / `<S-CR>` | n / n, i | Submit prompt |
-| `~` | i | Mention file in context |
-| `@` | i | Open mention picker |
-| `/` | i | Slash commands picker |
-| `#` | i | Context items picker |
+| `<C-p>` | n, i | Command palette (model/provider, session, agent, variant, timeline) |
+| `@` | i | Mention completion (blink menu) |
+| `/` | i | Slash-command completion (blink menu) |
+| `#` | i | Context-items completion (blink menu) |
 | `<M-v>` | i | Paste image from clipboard |
 | `<M-m>` | n, i | Switch agent mode (build/plan) |
 | `<M-r>` | n, i | Cycle model variants |
 | `<M-i>` | n, i | Toggle input window |
-| `<up>` / `<down>` | n, i | Prompt history |
-| `<esc>` / `<C-c>` | — | Close windows / cancel request |
+| `<up>` / `<down>` | n, i | Prompt history (at buffer boundaries) |
+| `<esc>` / `<C-c>` | n | Close windows / cancel request |
+
+> `~` is disabled — it opened the plugin's file picker on a plain character.
+> File mentions still work via `@` + the blink completion menu.
+> `<C-p>` shadows blink's scroll-documentation-up inside the opencode input
+> window only.
 
 ### Output window
 

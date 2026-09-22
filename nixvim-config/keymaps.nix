@@ -1004,10 +1004,28 @@
       key = "<leader>os";
       options = {
         silent = true;
+        desc = "OpenCode: select session";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").select_session() end'';
+    }
+    {
+      key = "<leader>oC";
+      options = {
+        silent = true;
         desc = "OpenCode: commands";
       };
-      mode = ["n" "x"];
+      mode = ["n"];
       action.__raw = ''function() require("opencode.api").commands_list() end'';
+    }
+    {
+      key = "<leader>oA";
+      options = {
+        silent = true;
+        desc = "OpenCode: select agent/mode";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("opencode.api").select_agent() end'';
     }
     {
       key = "<leader>oo";
@@ -1133,13 +1151,17 @@
     # are interchangeable between Neovim and the opencode terminal TUI.
     # <C-\> (agentic's suggested toggle) is taken by snacks.terminal, so the
     # whole group lives under <leader>a (previously unused).
+    # Insert mode is deliberately excluded: <Space>a + t/n/r collides with
+    # ordinary prose (" a t", " a n", " a r") and fired the agentic actions
+    # mid-sentence. Model/provider switching lives inside the agentic widget
+    # (<localleader>m / <localleader>s — see KEYBINDS.md).
     {
       key = "<leader>at";
       options = {
         silent = true;
         desc = "Agentic: toggle chat";
       };
-      mode = ["n" "v" "i"];
+      mode = ["n" "v"];
       action.__raw = ''function() require("agentic").toggle() end'';
     }
     {
@@ -1157,7 +1179,7 @@
         silent = true;
         desc = "Agentic: new session";
       };
-      mode = ["n" "v" "i"];
+      mode = ["n" "v"];
       action.__raw = ''function() require("agentic").new_session() end'';
     }
     {
@@ -1166,7 +1188,7 @@
         silent = true;
         desc = "Agentic: restore session";
       };
-      mode = ["n" "v" "i"];
+      mode = ["n" "v"];
       action.__raw = ''function() require("agentic").restore_session() end'';
     }
     {

@@ -379,6 +379,22 @@
                 -- default_global_keymaps=false: our <leader>o* binds replace them
                 default_global_keymaps = false,
                 preferred_picker = "snacks",
+                keymap = {
+                  input_window = {
+                    -- `~` opens the plugin's file picker on a plain character
+                    -- (e.g. typing a path) — disabled. File mentions still work
+                    -- via `@` + the blink completion menu.
+                    ["~"] = false,
+                    -- <C-p> command palette (model/provider, session, agent,
+                    -- variant, timeline). Buffer-local, so it only shadows
+                    -- blink's <C-p> inside the opencode input window.
+                    ["<C-p>"] = {
+                      function() require("opencode_palette").open() end,
+                      mode = { "n", "i" },
+                      desc = "Opencode: command palette",
+                    },
+                  },
+                },
                 hooks = {
                   on_done_thinking = function()
                     vim.schedule(function()
@@ -1311,6 +1327,43 @@
         end
         function M.sqlit_buffer()
           M.sqlit_run(whole_buffer())
+        end
+
+        return M
+      '';
+
+    # ── opencode command palette (<C-p>) ─────────────────────────────────
+    # Buffer-local <C-p> in the opencode input window (wired in the lz-n
+    # opencode setup above) opens this menu — the nixvim equivalent of the
+    # opencode TUI's <C-p> command palette for the actions that matter here.
+    "lua/opencode_palette.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        local function menu()
+          local api = require("opencode.api")
+          return {
+            { label = "Model / provider", run = api.configure_provider },
+            { label = "Session", run = api.select_session },
+            { label = "Agent / mode", run = api.select_agent },
+            { label = "Model variant", run = api.configure_variant },
+            { label = "Timeline", run = api.timeline },
+          }
+        end
+
+        function M.open()
+          local items = menu()
+          local labels = vim.tbl_map(function(item) return item.label end, items)
+          vim.ui.select(labels, { prompt = "Opencode" }, function(choice)
+            if not choice then return end
+            for _, item in ipairs(items) do
+              if item.label == choice then
+                item.run()
+                return
+              end
+            end
+          end)
         end
 
         return M
