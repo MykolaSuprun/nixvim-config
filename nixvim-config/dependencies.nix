@@ -34,6 +34,8 @@
     shellcheck
     shellharden
     markdownlint-cli2
+    prettier
+    markdown-toc
     shfmt
     sqruff
     yamllint

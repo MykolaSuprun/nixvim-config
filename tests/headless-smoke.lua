@@ -253,12 +253,13 @@ local oc = require("opencode.config").values
 check("opencode ~ disabled", oc.keymap.input_window["~"] == false, vim.inspect(oc.keymap.input_window["~"]))
 check("opencode <C-p> palette mapped", oc.keymap.input_window["<C-p>"] ~= nil)
 
--- ── 12. conform markdown (M14) ──────────────────────────────────────────
+-- ── 12. conform markdown (M13/M14) ──────────────────────────────────────
 local conform = require("conform")
+local md_chain = conform.formatters_by_ft.markdown or {}
 check(
-  "conform markdown uses injected",
-  vim.tbl_contains(conform.formatters_by_ft.markdown or {}, "injected"),
-  vim.inspect(conform.formatters_by_ft.markdown)
+  "conform markdown chain",
+  table.concat(md_chain, ",") == "prettier,markdownlint-cli2,markdown-toc,injected",
+  vim.inspect(md_chain)
 )
 
 -- ── summary ─────────────────────────────────────────────────────────────

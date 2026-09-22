@@ -311,11 +311,21 @@
           # Fenced code blocks are formatted by their own language formatter
           # (treesitter `injected`), not by a markdown formatter — pairs with
           # otter (LSP/intellisense) without overlap. M14.
-          markdown = ["injected"];
+          # prettier → markdownlint-cli2 → markdown-toc → injected (M13).
+          markdown = ["prettier" "markdownlint-cli2" "markdown-toc" "injected"];
           "_" = ["trim_whitespace"];
         };
         formatters = {
           injected = {options = {ignore_errors = true;};};
+          # markdown-toc only runs when the buffer carries a TOC marker —
+          # without one it would insert a generated TOC on every save.
+          markdown-toc = {
+            condition.__raw = ''
+              function(self, ctx)
+                return vim.fn.search("<!-- toc -->", "nw") > 0
+              end
+            '';
+          };
         };
       };
       luaConfig.post =
