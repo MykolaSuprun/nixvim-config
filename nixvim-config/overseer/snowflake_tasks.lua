@@ -11,9 +11,10 @@
 --   DROP/DELETE/TRUNCATE/MERGE and overseer has no undo.
 -- * No template ever runs a whole *project* of SQL files unattended (unlike
 --   dbt run/build, there is no dbt-style DAG/state guarding what executes).
--- * For a persistent interactive session, use betterTerm (<leader>Xt) + `snow
---   sql -i`, not an overseer template — overseer output panes are one-shot
---   and not meant for a back-and-forth session.
+-- * For a persistent interactive session, use betterTerm (<leader>Xt) + bare
+--   `snow sql` (the REPL; `-i` is --stdin, not --interactive), not an overseer
+--   template — overseer output panes are one-shot and not meant for a
+--   back-and-forth session.
 local overseer = require("overseer")
 -- Host-tool resolution (lua/host_tool.lua): inside an OrbStack machine,
 -- `snow` runs on the macOS host via the `mac` shim when a host install

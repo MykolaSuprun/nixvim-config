@@ -149,7 +149,7 @@ commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 - Heavy/optional plugins gate on a command: `lazyLoad.settings.cmd = "..."`.
 - LLM/AI plugins gate on `["VimEnter"]` so they don't block initial UI.
 - `otter` gates on `BufReadPost` for `md,sql,jinja,quarto,ipynb` (embedded languages). The nixvim module's `autoActivate` is **disabled** (its global LspAttach hook would `require('otter')` on every LSP attach and throw on non-matching buffers that haven't lazy-loaded). A guarded, `pcall`-protected `LspAttach` autocmd (in `plugins.nix` `extraConfigLua`) replaces it.
-- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666) and `herd.nvim` (MomePP).
+- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666), `herd.nvim` (MomePP), `opencode.nvim` (sudo-tee) and `agentic.nvim` (carlos-algms).
 - `nix-develop` gates on `BufReadPost *.nix`.
 
 ### When adding a new plugin
@@ -163,7 +163,7 @@ commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 ## dbt + Snowflake workflow
 
 ### Why the Snowflake tooling looks the way it does
-`vim-dadbod`'s built-in `snowflake://` adapter shells out to `snowsql`, which nixpkgs only packages for `x86_64-linux` — it fails to evaluate on `aarch64-linux` (e.g. this repo's OrbStack/NixOS target on Apple Silicon). `nvim-dbee` was evaluated as a dadbod replacement but has **no Snowflake driver** (tracked upstream: kndndrj/nvim-dbee#23, unmerged PRs #109/#186) and no CLI-shelling adapter mechanism to bolt one on. So both dadbod and dbee are out for Snowflake specifically. The replacement is the official **Snowflake CLI (`snow`)**, packaged as `snowflake-cli` in nixpkgs, driven through **overseer task templates** and **betterTerm**.
+`vim-dadbod`'s built-in `snowflake://` adapter shells out to `snowsql`, which nixpkgs only packages for `x86_64-linux` — it fails to evaluate on `aarch64-linux` (e.g. this repo's OrbStack/NixOS target on Apple Silicon). This is a local-eval observation, not an upstream-documented fact — re-verify before relying on it. `nvim-dbee` was evaluated as a dadbod replacement but has **no Snowflake driver** (tracked upstream: kndndrj/nvim-dbee#23, unmerged PRs #109/#186) and no CLI-shelling adapter mechanism to bolt one on. So both dadbod and dbee are out for Snowflake specifically. The replacement is the official **Snowflake CLI (`snow`)**, packaged as `snowflake-cli` in nixpkgs, driven through **overseer task templates** and **betterTerm**.
 
 `snowflake-cli` itself has a build wrinkle: at `nixpkgs-unstable`/`nixos-unstable`, its `snowflake-connector-python` dependency fails its test suite on `aarch64-linux` (`test_log_debug_config_file_parent_dir_permissions` assumes the process isn't root; Nix's build sandbox always runs as root, so the test's `chmod`-based permission check never fires and the assertion fails). It builds cleanly — as a cached binary, no compile — on the `nixos-25.05` release channel. `flake.nix` therefore pins a second nixpkgs input, `nixpkgs-snowflake` (`github:nixos/nixpkgs/nixos-25.05`), used **only** to source `snowflake-cli`; everything else in the flake still comes from the main `nixpkgs-unstable` input. See the comment above `nixpkgs-snowflake.url` in `flake.nix`. Revisit/drop this pin once the upstream test is fixed.
 
@@ -230,7 +230,7 @@ Plus fallback `airflow dags test` / `airflow tasks test` templates that only reg
 
 ### Send to a persistent terminal
 For interactive dbt/`snow sql`/airflow shells, use **betterTerm**:
-- `<C-\\>` — toggle/open a new betterTerm tab
+- `<leader>Xt` — toggle/open a new betterTerm tab
 - `<leader>X1..5` — focus terminal 1–5
 - `<leader>Xs` — send current line to the current terminal
 - `<leader>Xv` — send visual selection (visual mode)
@@ -245,17 +245,8 @@ For interactive dbt/`snow sql`/airflow shells, use **betterTerm**:
 - `filetype` stays `sql` on dbt `.sql` models (so `sqls` LSP works), with a small `ftplugin/sql.lua` (extraFiles in `plugins.nix`) adding Jinja-brace highlighting only (see below).
 - `otter` (lazy `BufReadPost` for `md,sql,jinja,quarto,ipynb`) handles embedded-language LSP — e.g. SQL blocks inside markdown or `.sql.jinja` files.
 
-### opt-in: sqls + Snowflake catalog completion
-`sqls` is already enabled in `lsp.nix`. To get in-editor schema/table/column completion on dbt `.sql` models, create `~/.config/sqls/config.yml`:
-
-```yaml
-connections:
-  - alias: snowflake-prod
-    driver: snowflake
-    dataSourceName: "user:password@account/database/schema?warehouse=WH&role=ROLE"
-```
-
-Then restart Neovim. No flake changes required — purely an opt-in per-user config.
+### sqls — generic SQL intelligence (no Snowflake catalog)
+`sqls` is enabled in `lsp.nix` for generic SQL intelligence on `.sql` files. It supports MySQL/PostgreSQL/SQLite3/MSSQL/H2/Vertica drivers only — **there is no Snowflake driver**, so a `~/.config/sqls/config.yml` Snowflake connection cannot yield schema/table/column completion. Keep sqls for generic SQL editing; use the `snow` CLI templates (`<leader>Q*`) for Snowflake work. (See the sqls README for the supported-driver connection format.)
 
 ## Docker
 
@@ -281,7 +272,7 @@ See README.md for full details.
 - Do **not** display `snow sql` / `sqlit query` default TABLE output for interactive query runs — static ASCII tables are sized at render time and unreadable in resizable terminals; use the CSV → `query_result` float (`lua/sql_runner.lua`) instead. Overseer task panes (batch-oriented, one-shot) are the exception.
 - Do **not** expect Snowflake to work from nixpkgs' `sqlit-tui` package — it omits `snowflake-connector-python`, and sqlit's driver wizard can't install into the Nix store. sqlit here is built from upstream's flake with driver extras (see `flake.nix`).
 - Do **not** enable `none-ls` — the block is intentionally removed in favour of `nvim-lint` + `conform-nvim`.
-- Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single 1400-line file by choice.
+- Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single large file by choice (currently ~1980 lines).
 
 ## Pinned versions (relevant to plugin availability)
 

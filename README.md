@@ -22,16 +22,21 @@ shared/           # Modules imported by all configs
 nixvim-config/    # Full Neovim profile
   lsp.nix         # LSP servers, blink-cmp, nvim-lint, trouble
   plugins.nix     # nixvim-only plugins (snacks, noice, oil, sidekick, dbee, …)
-  extra-plugins.nix  # plugins built from source (betterTerm.nvim)
+  extra-plugins.nix  # plugins built from source (betterTerm, herd, opencode, agentic)
   keymaps.nix     # nixvim-only keymaps + which-key groups (pickers, tabs, dbt, sqlit, opencode, …)
   visual.nix      # Colorscheme and visual options
   dap.nix         # DAP (nvim-dap, dap-ui, dap-python, dap-go, OSV)
   overseer/       # Overseer task runner config + per-language templates
+    overseer.nix        # registers every *.lua template via readFile
     dbt_tasks.lua       # dbt run/build/test/compile(+preview)/show/parse/ls/debug + selectors
     snowflake_tasks.lua # `snow` CLI: describe/list/connection test + confirm-gated run (host-routed on OrbStack)
     airflow_tasks.lua   # Astro CLI + vanilla Airflow fallback
     python_tasks.lua    # pytest, mypy, ruff format, python run
-    go_tasks.lua / lua_tasks.lua / nix_tasks.lua / ruff_check.lua
+    go_tasks.lua        # go build/test/vet/golangci-lint
+    lua_tasks.lua       # lua
+    nix_tasks.lua       # alejandra, statix, deadnix, nix flake check, nix build
+    cc_tasks.lua        # cmake configure/build, ctest, make, bear, clang-tidy, cppcheck
+    ruff_check.lua      # ruff lint + BufWritePost auto-run
 
 See [AGENTS.md](AGENTS.md) for a full directory map, build/validate commands, the
 `<leader>` group reference, the dbt + Snowflake workflow docs, and guidelines for
