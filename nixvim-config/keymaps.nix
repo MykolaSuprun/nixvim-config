@@ -1764,17 +1764,9 @@
         #lua
         ''
           function()
-            local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
-            local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
-            local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
-            if #lines == 0 then return end
-            lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
-            if #lines == 1 then
-              lines[1] = string.sub(lines[1], sc + 1)
-            else
-              lines[1] = string.sub(lines[1], sc + 1)
-            end
-            require("betterTerm").send(table.concat(lines, "\n"), 1)
+            local text = require("overseer_helpers").visual_selection()
+            if not text then return end
+            require("betterTerm").send(text, 1)
           end
         '';
     }

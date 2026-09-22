@@ -4,15 +4,8 @@
 -- `airflow` is present, so the two never clobber each other.
 local overseer = require("overseer")
 
-local function bottom_output(dispose_timeout)
-	return {
-		{ "open_output", direction = "bottom", on_start = "always" },
-		{ "on_complete_notify", statuses = { "SUCCESS", "FAILURE" } },
-		{ "unique", replace = true },
-		"on_exit_set_status",
-		{ "on_complete_dispose", timeout = dispose_timeout or 300 },
-	}
-end
+-- Shared component bundle (lua/overseer_helpers.lua).
+local bottom_output = require("overseer_helpers").bottom_output
 
 -- ── Astro CLI (preferred — wraps Airflow with a better dev loop) ──────────
 if vim.fn.executable("astro") == 1 then

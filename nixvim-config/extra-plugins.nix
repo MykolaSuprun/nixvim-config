@@ -146,14 +146,15 @@
       })
 
       -- herd.nvim: spawnable agents + disable ALL default keys (they conflict
-      -- with <leader>s). The opencode tool uses `--port` so
-      -- opencode.nvim can auto-discover the server, and `--continue` to resume
-      -- the last session. OPENCODE_EXPERIMENTAL_LSP_TOOL enables the in-process
-      -- LSP used by opencode.nvim's ask completions.
+      -- with <leader>s). `--continue` resumes the last session. No `--port`:
+      -- opencode's flag takes a number (`--port <n>`, default 0), so a bare
+      -- `--port` is malformed — opencode.nvim discovers the server without it.
+      -- OPENCODE_EXPERIMENTAL_LSP_TOOL enables the in-process LSP used by
+      -- opencode.nvim's ask completions.
       require("herd").setup({
         tools = {
           opencode = {
-            cmd = { "opencode", "--port", "--continue" },
+            cmd = { "opencode", "--continue" },
             env = { OPENCODE_EXPERIMENTAL_LSP_TOOL = "true" },
           },
         },

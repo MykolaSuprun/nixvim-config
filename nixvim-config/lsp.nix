@@ -56,13 +56,15 @@
     lint = {
       enable = true;
       lintersByFt = {
+        # ruff/statix are deliberately NOT listed: their LSPs (lsp.servers.ruff
+        # / statix) already publish live per-file diagnostics, and the overseer
+        # `ruff check` template covers the project-wide sweep. nvim-lint only
+        # adds linters with no LSP equivalent.
         python = [
-          "ruff"
           "codespell"
           "bandit"
         ];
         nix = [
-          "statix"
           "deadnix"
           "codespell"
         ];

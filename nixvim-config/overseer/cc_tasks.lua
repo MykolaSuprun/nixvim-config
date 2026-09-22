@@ -21,8 +21,9 @@ overseer.register_template({
 			cmd = { "cmake", "-S", ".", "-B", "build", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" },
 			cwd = vim.fn.getcwd(),
 			components = {
+				-- quickfix owns configure output (jump-to-error); no bottom
+				-- pane — two surfaces competed for focus (Stage 01 W6).
 				{ "on_output_quickfix", open = true, set_diagnostics = true },
-				{ "open_output", direction = "bottom", on_start = "always" },
 				unpack(default_components),
 			},
 		}

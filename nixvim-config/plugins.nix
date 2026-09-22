@@ -1364,6 +1364,50 @@
         return M
       '';
 
+    # ── overseer shared helpers ──────────────────────────────────────────
+    # Single definition of the bottom-split component bundle and the
+    # visual-selection slicing, used by overseer/*.lua templates and the
+    # betterTerm send keymaps (keymaps.nix). Previously duplicated in
+    # dbt/snowflake/airflow_tasks.lua and keymaps.nix (Stage 01 W8/W10).
+    "lua/overseer_helpers.lua".text =
+      #lua
+      ''
+        local M = {}
+
+        -- Standard "show output in a bottom split, then dispose" bundle.
+        -- dispose_timeout is per-domain (60s for quick reads, up to 1800s for
+        -- long builds); 600s matches the dbt default.
+        function M.bottom_output(dispose_timeout)
+          return {
+            { "open_output", direction = "bottom", on_start = "always" },
+            { "on_complete_notify", statuses = { "SUCCESS", "FAILURE" } },
+            { "unique", replace = true },
+            "on_exit_set_status",
+            { "on_complete_dispose", timeout = dispose_timeout or 600 },
+          }
+        end
+
+        -- Text of the last visual selection (end column inclusive), or nil when
+        -- there is no selection. Marks are 0-indexed byte offsets; the end
+        -- column is inclusive, hence the +1.
+        function M.visual_selection()
+          local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
+          local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
+          if sr == 0 or er == 0 then
+            return nil
+          end
+          local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
+          if #lines == 0 then
+            return nil
+          end
+          lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
+          lines[1] = string.sub(lines[1], sc + 1)
+          return table.concat(lines, "\n")
+        end
+
+        return M
+      '';
+
     "ftplugin/sql.lua".text =
       #lua
       ''

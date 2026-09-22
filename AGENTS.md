@@ -238,6 +238,9 @@ For interactive dbt/`snow sql`/airflow shells, use **betterTerm**:
 - `<leader>Xr` — rename the current terminal
 - `<leader>Xk` — kill the current terminal
 
+See `docs/ownership.md` for the full AI-surface + terminal ownership inventory
+(which surface owns which job).
+
 ### dbee (non-Snowflake connections)
 `dbee` (`<leader>Qd` toggles its UI) is still wired up for ad-hoc exploration of databases it *does* support natively (postgres, mysql, sqlite, duckdb, clickhouse, bigquery, redshift, databricks, oracle, sqlserver, mongo, redis) — just not Snowflake.
 

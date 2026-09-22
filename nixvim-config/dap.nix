@@ -94,10 +94,13 @@
       };
     };
 
-    # Python adapter wrapping debugpy (debugpy must be in extraPackages)
+    # Python adapter wrapping debugpy. The adapter python must be able to
+    # `import debugpy` — the wrapper's bare `python` (3.14) cannot, so point at
+    # a python that bundles it. The debuggee's interpreter stays configurable
+    # per launch config (dap-python `pythonPath`).
     dap-python = {
       enable = true;
-      adapterPythonPath = "python";
+      adapterPythonPath = "${pkgs.python313.withPackages (ps: [ps.debugpy])}/bin/python";
     };
 
     # Go adapter using delve (delve must be in extraPackages)

@@ -21,15 +21,8 @@ local overseer = require("overseer")
 -- exists — externalbrowser OAuth then uses the Mac browser + Keychain.
 local host_tool = require("host_tool")
 
-local function bottom_output(dispose_timeout)
-	return {
-		{ "open_output", direction = "bottom", on_start = "always" },
-		{ "on_complete_notify", statuses = { "SUCCESS", "FAILURE" } },
-		{ "unique", replace = true },
-		"on_exit_set_status",
-		{ "on_complete_dispose", timeout = dispose_timeout or 300 },
-	}
-end
+-- Shared component bundle (lua/overseer_helpers.lua).
+local bottom_output = require("overseer_helpers").bottom_output
 
 -- Ask before running anything that executes arbitrary SQL text. Returns true
 -- if the user confirmed, false otherwise. `preview` is shown truncated so a
@@ -170,15 +163,10 @@ overseer.register_template({
 overseer.register_template({
 	name = "snowflake: run visual selection",
 	builder = function()
-		local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
-		local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
-		local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
-		if #lines == 0 then
+		local query = require("overseer_helpers").visual_selection()
+		if not query then
 			return cancelled_task("snowflake run: selection")
 		end
-		lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
-		lines[1] = string.sub(lines[1], sc + 1)
-		local query = table.concat(lines, "\n")
 		if not confirm_run_sql(query) then
 			return cancelled_task("snowflake run: selection")
 		end

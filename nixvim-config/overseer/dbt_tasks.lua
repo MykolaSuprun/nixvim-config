@@ -5,16 +5,9 @@
 -- `snow sql` / astro shells use betterTerm (<leader>Xt> + send keys).
 local overseer = require("overseer")
 
--- Shared component bundle for a bottom-split dbt run/build/test.
-local function bottom_output(dispose_timeout)
-	return {
-		{ "open_output", direction = "bottom", on_start = "always" },
-		{ "on_complete_notify", statuses = { "SUCCESS", "FAILURE" } },
-		{ "unique", replace = true },
-		"on_exit_set_status",
-		{ "on_complete_dispose", timeout = dispose_timeout or 600 },
-	}
-end
+-- Shared component bundle (lua/overseer_helpers.lua) — one definition for
+-- every template that shows output in a bottom split.
+local bottom_output = require("overseer_helpers").bottom_output
 
 -- Confirm before firing an unscoped (no `--select`) mutating dbt command —
 -- `dbt run`/`build`/`seed`/`snapshot` with no selector touch every model in
