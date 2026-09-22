@@ -75,6 +75,10 @@ nix build .#CodeVim
 # Build nixvim's own test derivation for the NixVim profile specifically
 nix build .#checks.x86_64-linux.NixVim
 
+# Headless smoke tests (keymaps, overseer templates, dap, render-markdown, …)
+# Builds .#NixVim, runs tests/headless-smoke.lua, exits non-zero on failure.
+tests/run.sh
+
 # Run a profile without installing
 nix run .#NixVim
 nix run .            # default app is nixvim-wrapper

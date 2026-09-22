@@ -227,7 +227,10 @@
         };
         heading = {
           sign = false;
-          icons = {};
+          # `icons = {}` is a no-op: vim.tbl_deep_extend drops empty tables, so
+          # the plugin's default heading icons survive. A one-element list with
+          # an empty string is the smallest value that actually clears them.
+          icons = [""];
         };
         checkbox.enabled = true;
         # LSP-backed completions for `[ ]` / `[!NOTE]` etc.
