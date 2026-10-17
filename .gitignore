@@ -2,3 +2,7 @@ result
 # Per-project dadbod-ui connection storage (g:db_ui_save_location = ".local")
 .local/
 .opencode/
+# Workflow session scratch (opencode-workflow sessions/tasks live here)
+.tmp/
+# Project workflow env (vault paths; machine-local — never committed)
+.envrc
