@@ -93,6 +93,15 @@
         zsh = [
           "zsh"
         ];
+        # shellcheck moved here from conform's formatters_by_ft (plugins.nix):
+        # lint belongs in the lint layer. nvim-lint ships a shellcheck linter;
+        # the try_lint autocmd (nixvim lint module) already fires on save.
+        bash = [
+          "shellcheck"
+        ];
+        sh = [
+          "shellcheck"
+        ];
       };
     };
     # NOTE: none-ls is intentionally removed in favour of nvim-lint + conform-nvim.

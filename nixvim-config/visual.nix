@@ -34,9 +34,10 @@
   };
 in {
   colorschemes = {
+    # base16 disabled: catppuccin owns theming (autoload below) and
+    # $STYLIX_COLORSCHEME in extraConfigLuaPost is the override path.
     base16 = {
-      enable = true;
-      # colorscheme = "catppuccin-latte";
+      enable = false;
     };
     catppuccin = {
       enable = true;
@@ -48,14 +49,13 @@ in {
           blink = true;
           gitsigns = true;
           bufferline = true;
-          telescope = true;
-          headlines = true;
+          # telescope/headlines integrations removed: neither plugin is shipped
+          # (telescope refused per AGENTS.md; render-markdown replaced headlines).
           illuminate = true;
           fzf = true;
           flash = true;
           treesitter = true;
           treesitter_context = true;
-          # harpoon = true;
           harpoon = true;
           notifier = true;
           noice = true;
@@ -64,9 +64,7 @@ in {
             enabled = true;
             indent_scope_color = "lavender";
           };
-          # dap = true;
           dap = true;
-          # dap-ui = true;
           dap_ui = true;
           semantic_tokens = true;
           native_lsp = {
@@ -79,7 +77,6 @@ in {
             };
           };
           window_picker = true;
-          # indent-blankline = {enabled = true;};
           mini = true;
           which_key = true;
           markdown = true;

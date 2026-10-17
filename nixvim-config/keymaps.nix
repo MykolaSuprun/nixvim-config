@@ -1229,18 +1229,39 @@
       action.__raw = ''function() require("agentic").add_buffer_diagnostics() end'';
     }
 
-    # ── obsidian (<leader>O — capital) ─────────────────────────────────────
-    # Shares the <leader>O prefix with the overseer group: pressing <leader>O
-    # alone opens Obsidian; pressing <leader>O + <sub> runs an overseer command
-    # (Neovim waits `timeoutlen` before firing the direct action).
+    # ── obsidian + overseer (<leader>O — capital) ──────────────────────────
+    # Shared prefix: bare <leader>O opens the Obsidian command menu
+    # (`:Obsidian` with no args → show_menu, verified v3.16.6); <leader>O +
+    # <sub> runs an overseer command. Neovim waits `timeoutlen` (300ms) to
+    # disambiguate, so every overseer bind pays that delay — accepted cost.
+    # Keep Obsidian directs on otherwise-free keys (Oq/Of) to avoid deepening it.
     {
       key = "<leader>O";
       options = {
         silent = true;
-        desc = "Obsidian";
+        desc = "Obsidian command menu";
       };
       mode = ["n"];
       action = "<cmd>Obsidian<cr>";
+    }
+    # Obsidian directs (menu above stays the front door; these skip it)
+    {
+      key = "<leader>Oq";
+      options = {
+        silent = true;
+        desc = "Obsidian: quick switch note";
+      };
+      mode = ["n"];
+      action = "<cmd>Obsidian quick_switch<cr>";
+    }
+    {
+      key = "<leader>Of";
+      options = {
+        silent = true;
+        desc = "Obsidian: search vault";
+      };
+      mode = ["n"];
+      action = "<cmd>Obsidian search<cr>";
     }
     # Overseer
     {
@@ -2007,11 +2028,12 @@
       group = "agentic";
       icon = "";
     }
-    # NOTE: <leader>O (capital) is shared — direct action opens Obsidian, the
-    # group label is overseer (sub-keys Ot/Or/Oa/Oo/Oc/Os/Ow). See AGENTS.md.
+    # NOTE: <leader>O (capital) is shared — bare key opens the Obsidian
+    # command menu, sub-keys Ot/Or/Oa/Oo/Oc/Os/Ow run overseer, Oq/Of are
+    # Obsidian directs. See AGENTS.md.
     {
       __unkeyed-1 = "<leader>O";
-      group = "overseer";
+      group = "Obsidian/overseer";
       icon = "󰓧";
     }
     {

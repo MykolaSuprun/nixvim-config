@@ -184,6 +184,28 @@ Scope: `nixvim-config` only.
 
 ---
 
+## Obsidian (`<leader>O`) + Overseer
+
+> `<leader>O` is a shared prefix: bare `O` opens the Obsidian command menu,
+> `O` + key runs overseer. Every overseer bind waits `timeoutlen` (300 ms)
+> for disambiguation — accepted cost, so Obsidian directs use free keys only.
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<leader>O` | n | Obsidian command menu |
+| `<leader>Oq` | n | Obsidian quick switch note |
+| `<leader>Of` | n | Obsidian search vault |
+| `<leader>Ot` | n | Overseer toggle tasks list |
+| `<leader>Or` | n | Overseer run task (template picker) |
+| `<leader>Oa` | n | Overseer task action |
+| `<leader>Oo` | n | Overseer open tasks list |
+| `<leader>Oc` | n | Overseer close tasks list |
+| `<leader>Os` | n | Overseer run shell command as task |
+| `<leader>OR` | n | Overseer restart last task |
+| `<leader>Ow` | n | Overseer watch (restart on save) |
+
+---
+
 ## AI Agents — sidekick / herd (`<leader><tab>`)
 
 > The same keys have **different actions depending on the active backend**

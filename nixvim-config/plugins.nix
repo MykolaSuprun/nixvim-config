@@ -299,11 +299,13 @@
           cpp = ["clang-format"];
           python = ["ruff_format" "ruff_organize_imports"];
           nix = ["alejandra"];
-          bash = [
-            "shellcheck"
-            "shellharden"
-            "shfmt"
-          ];
+          # shfmt owns shell formatting; shellcheck lints via nvim-lint
+          # (lintersByFt in lsp.nix) — the conform shellcheck entry is a
+          # diff-patch hack that needs `patch` on PATH and errors on every
+          # save when lint findings exist. shellharden dropped (opinionated
+          # forced-quoting; shfmt covers formatting).
+          bash = ["shfmt"];
+          sh = ["shfmt"];
           css = ["css_beautify"];
           json = ["jq"];
           yaml = ["yamlfmt"];
@@ -468,6 +470,12 @@
         };
       };
       settings = {
+        # Pin the picker explicitly (auto-detect would find snacks anyway —
+        # snacks backend verified present at v3.16.6); menu/quick_switch/search
+        # then reuse the Snacks UI for both vaults.
+        picker = {
+          name = "snacks.picker";
+        };
         workspaces = [
           {
             name = "general-1";
@@ -550,7 +558,19 @@
       settings = {
         adapters = [
           {
-            __raw = "require('neotest-gtest').setup({ debug_adapter = 'codelldb' })";
+            # setup() returns the adapter table at the pinned rev (verified
+            # 2026-09-04, alfaix 2025-09-26); pcall makes a future nil/throw
+            # fail loud at startup instead of silently dropping C++ tests.
+            __raw = ''
+              (function()
+                local ok, adapter = pcall(require('neotest-gtest').setup, { debug_adapter = 'codelldb' })
+                if not ok or type(adapter) ~= 'table' then
+                  vim.notify('neotest-gtest adapter failed to load', vim.log.levels.WARN)
+                  return nil
+                end
+                return adapter
+              end)()
+            '';
           }
         ];
       };
