@@ -73,12 +73,25 @@
     # on OrbStack the host macOS sqlit is preferred at runtime (host_tool.lua).
     sqlitPkg
     tmux # sidekick.cli.mux backend (enabled=false by default, available if wanted)
-    # opencode CLI — the opencode.nvim plugin spawns `opencode serve` itself.
-    # (Previously provided by the nixvim `plugins.opencode` module's
-    # `dependencies = ["opencode"]`, which we no longer use — see plugins.nix.)
+    # ── AI stack binaries (sidekick + codecompanion — see plugins.nix) ──────
+    # opencode CLI — the agent sidekick manages in its terminal AND the
+    # `opencode acp` server codecompanion's chat adapter speaks to. Also the
+    # target of herdr's own integration (`herdr integration install opencode`).
     opencode
-    # herdr — herd.nvim's backend daemon. Requires ≥ 0.7.5 (the `--kind`
-    # migration); main nixpkgs-unstable ships 0.8.2, no separate pin needed.
+    # claude-code CLI — sidekick's `claude` tool (and codecompanion's
+    # claude_code ACP adapter if it is ever enabled via claude-agent-acp).
+    claude-code
+    # lsof + procps — sidekick's opencode external-session backend finds the
+    # running `opencode serve` by scanning listening TCP ports; without lsof
+    # that backend silently does not exist (guarded by executable("lsof")).
+    lsof
+    procps
+    # markitdown — codecompanion v20's fetch_webpage tool (web page → markdown).
+    markitdown
+    # herdr — the agent multiplexer; herdr-nvim's backend daemon (owns each
+    # agent's PTY, reports working/blocked/idle, resumes sessions). Requires
+    # ≥ 0.7.5; our locked nixpkgs ships 0.8.2 (0.9.5 on newer unstable), so no
+    # separate pin is needed.
     herdr
   ];
   extraLuaPackages = ps: [ps.magick];

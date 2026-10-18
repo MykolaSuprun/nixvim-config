@@ -7,10 +7,10 @@
 --
 -- Exits non-zero when any check fails (cquit 1).
 --
--- Covers: keymaps (opencode/agentic/snacks), overseer helpers + template
--- builders, dap-python adapter, render-markdown config, snacks dim/zen,
--- blink cmdline, nvim-lint ownership, herd opencode cmd, otter lazy spec,
--- opencode input-window keymaps.
+-- Covers: keymaps (sidekick/codecompanion/herdr-nvim/overseer/snacks), overseer
+-- helpers + template builders, dap-python adapter, render-markdown config,
+-- snacks dim/zen, blink cmdline, nvim-lint ownership, otter lazy spec,
+-- conform markdown, and the AI stack (sidekick + codecompanion + herdr-nvim).
 
 local failures = {}
 local checks = 0
@@ -37,13 +37,36 @@ end
 
 -- ── 1. keymaps ──────────────────────────────────────────────────────────
 local L = vim.g.mapleader
-for _, k in ipairs({ "OR", "Ow", "os", "oC", "oA", "uD", "uz" }) do
+for _, k in ipairs({ "OR", "Ow", "uD", "uz" }) do
   check("keymap <leader>" .. k .. " (normal)", has_map("n", L .. k) ~= nil)
 end
-for _, k in ipairs({ "at", "an", "ar" }) do
+-- sidekick (<leader><tab>*): <Tab> notation differs between the keymap APIs,
+-- so accept either spelling rather than guessing. `<leader><tab>v` is
+-- visual-mode only, so both modes are checked.
+local function has_tab_map(sub)
+  for _, mode in ipairs({ "n", "x" }) do
+    if vim.fn.maparg(L .. "<Tab>" .. sub, mode) ~= "" or vim.fn.maparg(L .. "<tab>" .. sub, mode) ~= "" then
+      return true
+    end
+  end
+  return false
+end
+for _, k in ipairs({ "t", "s", "f", "p", "x", "e", "v", "d" }) do
+  check("keymap <leader><tab>" .. k, has_tab_map(k))
+end
+-- codecompanion (<leader>a*) + herdr-nvim (<leader>h*)
+for _, k in ipairs({ "aa", "aA", "hc", "hl", "hs", "hS", "hi" }) do
   check("keymap <leader>" .. k .. " (normal)", has_map("n", L .. k) ~= nil)
+end
+-- The insert-mode exclusion is a regression guard: <Space>a + a letter used to
+-- fire mid-prose with the old agentic group (nixvim-config 0eb7abb).
+for _, k in ipairs({ "aa", "aA", "hc", "hS" }) do
   check("keymap <leader>" .. k .. " not in insert", has_map("i", L .. k) == nil)
 end
+check(
+  "keymap <c-.> (sidekick focus)",
+  has_map("n", "<C-.>") ~= nil or has_map("i", "<C-.>") ~= nil or has_map("t", "<C-.>") ~= nil
+)
 
 -- ── 2. overseer helpers ─────────────────────────────────────────────────
 local ok_ov, overseer = pcall(require, "overseer")
@@ -225,15 +248,7 @@ check(
   vim.inspect(lint.linters_by_ft.nix)
 )
 
--- ── 9. herd opencode cmd (W15) ──────────────────────────────────────────
-local herd_cmd = require("herd.config").get().tools.opencode.cmd
-check(
-  "herd opencode cmd is --continue",
-  table.concat(herd_cmd, " ") == "opencode --continue",
-  table.concat(herd_cmd, " ")
-)
-
--- ── 10. otter lazy spec (J10) ───────────────────────────────────────────
+-- ── 9. otter lazy spec (J10) ─────────────────────────────────────────────
 local otter_spec = require("lz.n").lookup("otter.nvim")
 check("otter lazy spec found", otter_spec ~= nil)
 if otter_spec then
@@ -241,19 +256,44 @@ if otter_spec then
   check("otter pattern excludes *.ipynb", not vim.tbl_contains(patterns, "*.ipynb"), vim.inspect(patterns))
 end
 
--- ── 11. opencode input-window keymaps (0eb7abb) ─────────────────────────
+-- ── 10. AI stack: sidekick + codecompanion + herdr-nvim ──────────────────
+-- sidekick/codecompanion are lazy-loaded on VimEnter and lz.n defers the load,
+-- so trigger it explicitly (herdr-nvim is an eager extraPlugin and needs none).
 local lzn = require("lz.n")
-if lzn.lookup("opencode-nvim") then
-  pcall(lzn.trigger_load, "opencode-nvim")
-  vim.wait(2000, function()
-    return package.loaded["opencode"] ~= nil
-  end, 50)
+for _, name in ipairs({ "sidekick.nvim", "codecompanion.nvim" }) do
+  if lzn.lookup(name) then
+    pcall(lzn.trigger_load, name)
+  end
 end
-local oc = require("opencode.config").values
-check("opencode ~ disabled", oc.keymap.input_window["~"] == false, vim.inspect(oc.keymap.input_window["~"]))
-check("opencode <C-p> palette mapped", oc.keymap.input_window["<C-p>"] ~= nil)
+vim.wait(3000, function()
+  return package.loaded["sidekick"] ~= nil and package.loaded["codecompanion"] ~= nil
+end, 50)
 
--- ── 12. conform markdown (M13/M14) ──────────────────────────────────────
+local ok_sk = pcall(require, "sidekick")
+check("sidekick loads", ok_sk)
+check("sidekick.cli loads", pcall(require, "sidekick.cli"))
+if ok_sk then
+  local ok_cfg, sk_cfg = pcall(require, "sidekick.config")
+  local ok_get, cfg = pcall(function()
+    return sk_cfg.get()
+  end)
+  if ok_cfg and ok_get and cfg and cfg.nes then
+    check("sidekick NES disabled (CLI-only mode)", cfg.nes.enabled == false, vim.inspect(cfg.nes.enabled))
+  end
+end
+
+local ok_cc = pcall(require, "codecompanion")
+check("codecompanion loads", ok_cc)
+-- v20 marker: integrations/herdr only exists from v20 (nixpkgs still ships
+-- 19.22, so this proves the pinned package override is actually in effect).
+check("codecompanion v20 (herdr integration present)", pcall(require, "codecompanion.integrations.herdr"))
+check("codecompanion opencode ACP adapter present", pcall(require, "codecompanion.adapters.acp.opencode"))
+
+local ok_hn = pcall(require, "herdr-nvim")
+check("herdr-nvim loads", ok_hn)
+check(":Herdr command registered", vim.fn.exists(":Herdr") == 2)
+
+-- ── 11. conform markdown (M13/M14) ──────────────────────────────────────
 local conform = require("conform")
 local md_chain = conform.formatters_by_ft.markdown or {}
 check(

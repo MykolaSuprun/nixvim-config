@@ -990,243 +990,174 @@
       action = "<cmd>9tabnext<CR>";
     }
     # Trouble (<leader>xx/xX/xS/cl/cL/cQ/xp) are in ../shared/keymaps.nix
-    # NOTE: avante keymap removed — avante disabled; AI surface is now
-    # sidekick/herd (<leader><tab>) + opencode (<leader>o) + agentic (<leader>a).
-    # See AGENTS.md.
+    # NOTE: avante keymap removed — avante disabled. The AI surface is now
+    # sidekick (CLI agents, <leader><tab>) + codecompanion (chat / inline /
+    # ACP, <leader>a) + herdr-nvim (herdr bridge, <leader>h). See AGENTS.md.
 
-    # ── opencode (<leader>o) ───────────────────────────────────────────────
-    # opencode.nvim (pinned from source, new `:Opencode` command API — see
-    # plugins.nix). The plugin auto-spawns its own `opencode serve` server and
-    # manages its own window; these binds drive the new API via
-    # require("opencode.api"). The plugin's default_global_keymaps are disabled.
-    # Quick-chat context tags: #cursor #errors #warnings #info #file #selection
-    # #agents #buffer #git_diff (see opencode.nvim util.parse_quick_context_args).
+    # ── sidekick (AI CLI agents) — <leader><tab> ───────────────────────────
+    # sidekick.nvim manages external AI coding CLIs (claude / opencode / …) in
+    # its own terminal window. These maps are static — the old runtime
+    # backend-swapper (lua/agent_backend.lua) is gone together with herd.nvim.
+    # <c-.> is sidekick's own suggested focus bind and works from normal,
+    # terminal, insert and visual mode.
     {
-      key = "<leader>oa";
+      key = "<leader><tab>t";
       options = {
         silent = true;
-        desc = "OpenCode: ask (quick chat)";
+        desc = "Sidekick: toggle CLI terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").toggle() end'';
+    }
+    {
+      key = "<leader><tab>s";
+      options = {
+        silent = true;
+        desc = "Sidekick: select CLI";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").select({ filter = { installed = true } }) end'';
+    }
+    {
+      key = "<leader><tab>f";
+      options = {
+        silent = true;
+        desc = "Sidekick: focus terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("sidekick.cli").focus() end'';
+    }
+    {
+      key = "<leader><tab>p";
+      options = {
+        silent = true;
+        desc = "Sidekick: pick prompt";
       };
       mode = ["n" "x"];
-      action.__raw = ''function() require("opencode.api").quick_chat() end'';
+      action.__raw = ''function() require("sidekick.cli").prompt() end'';
     }
     {
-      key = "<leader>od";
+      key = "<leader><tab>x";
       options = {
         silent = true;
-        desc = "OpenCode: explain diagnostics (#errors)";
+        desc = "Sidekick: send this";
       };
       mode = ["n" "x"];
-      action.__raw = ''function() require("opencode.api").quick_chat({ "#errors " }) end'';
+      action.__raw = ''function() require("sidekick.cli").send({ msg = "{this}" }) end'';
     }
     {
-      key = "<leader>os";
+      key = "<leader><tab>e";
       options = {
         silent = true;
-        desc = "OpenCode: select session";
+        desc = "Sidekick: send file";
       };
       mode = ["n"];
-      action.__raw = ''function() require("opencode.api").select_session() end'';
+      action.__raw = ''function() require("sidekick.cli").send({ msg = "{file}" }) end'';
     }
     {
-      key = "<leader>oC";
+      key = "<leader><tab>v";
       options = {
         silent = true;
-        desc = "OpenCode: commands";
+        desc = "Sidekick: send selection";
+      };
+      mode = ["x"];
+      action.__raw = ''function() require("sidekick.cli").send({ msg = "{selection}" }) end'';
+    }
+    {
+      key = "<leader><tab>d";
+      options = {
+        silent = true;
+        desc = "Sidekick: detach CLI";
       };
       mode = ["n"];
-      action.__raw = ''function() require("opencode.api").commands_list() end'';
+      action.__raw = ''function() require("sidekick.cli").close() end'';
     }
     {
-      key = "<leader>oA";
+      key = "<c-.>";
       options = {
         silent = true;
-        desc = "OpenCode: select agent/mode";
+        desc = "Sidekick: focus CLI";
       };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").select_agent() end'';
-    }
-    {
-      key = "<leader>oo";
-      options = {
-        silent = true;
-        desc = "OpenCode: quick chat selection";
-      };
-      mode = ["n" "x"];
-      action.__raw = ''function() require("opencode.api").quick_chat({ "#selection " }) end'';
-    }
-    {
-      key = "<leader>og";
-      options = {
-        silent = true;
-        desc = "OpenCode: toggle window";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").toggle() end'';
-    }
-    {
-      key = "<leader>oI";
-      options = {
-        silent = true;
-        desc = "OpenCode: new session input";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").open_input_new_session() end'';
-    }
-    {
-      key = "<leader>oq";
-      options = {
-        silent = true;
-        desc = "OpenCode: close window";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").close() end'';
-    }
-    {
-      key = "<leader>oh";
-      options = {
-        silent = true;
-        desc = "OpenCode: history";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").select_history() end'';
-    }
-    {
-      key = "<leader>op";
-      options = {
-        silent = true;
-        desc = "OpenCode: configure provider";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").configure_provider() end'';
-    }
-    {
-      key = "<leader>oV";
-      options = {
-        silent = true;
-        desc = "OpenCode: configure model variant";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").configure_variant() end'';
-    }
-    {
-      key = "<leader>oT";
-      options = {
-        silent = true;
-        desc = "OpenCode: session timeline";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").timeline() end'';
-    }
-    {
-      key = "<leader>or";
-      options = {
-        silent = true;
-        desc = "OpenCode: reload current buffer";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            vim.cmd("edit")
-            Snacks.notifier.notify("Buffer reloaded", { title = "OpenCode" })
-          end
-        '';
-    }
-    # Toggle the opencode CLI terminal (snacks.terminal). The plugin spawns its
-    # own server, so this is just a raw interactive CLI for ad-hoc use.
-    {
-      key = "<leader>ot";
-      options = {
-        silent = true;
-        desc = "OpenCode: toggle CLI terminal";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            require("snacks.terminal").toggle("opencode --port", {
-              win = { position = "right", enter = false },
-            })
-          end
-        '';
-    }
-    # Cancel the running opencode request — stops a runaway agent.
-    {
-      key = "<leader>oi";
-      options = {
-        silent = true;
-        desc = "OpenCode: cancel request";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("opencode.api").cancel() end'';
+      mode = ["n" "t" "i" "x"];
+      action.__raw = ''function() require("sidekick.cli").focus() end'';
     }
 
-    # ── agentic (<leader>a) ────────────────────────────────────────────────
-    # agentic.nvim (pinned from source — see extra-plugins.nix) — ACP chat
-    # interface. Provider is `opencode-acp` (spawns `opencode acp`), so sessions
-    # are interchangeable between Neovim and the opencode terminal TUI.
-    # <C-\> (agentic's suggested toggle) is taken by snacks.terminal, so the
-    # whole group lives under <leader>a (previously unused).
-    # Insert mode is deliberately excluded: <Space>a + t/n/r collides with
-    # ordinary prose (" a t", " a n", " a r") and fired the agentic actions
-    # mid-sentence. Model/provider switching lives inside the agentic widget
-    # (<localleader>m / <localleader>s — see KEYBINDS.md).
-    {
-      key = "<leader>at";
-      options = {
-        silent = true;
-        desc = "Agentic: toggle chat";
-      };
-      mode = ["n" "v"];
-      action.__raw = ''function() require("agentic").toggle() end'';
-    }
+    # ── codecompanion (chat / inline / ACP) — <leader>a ─────────────────────
+    # Only the entry points live here: codecompanion's own bindings are
+    # buffer-local to its chat/inline windows (g1-g4 approvals, gv diff,
+    # <C-s> send, ga adapter/model, gr regenerate, gR goto file, ]h/[h hunks —
+    # full table in KEYBINDS.md), so nothing here can collide with them.
     {
       key = "<leader>aa";
       options = {
         silent = true;
-        desc = "Agentic: add selection/file to context";
+        desc = "CodeCompanion: toggle chat";
       };
-      mode = ["n" "v"];
-      action.__raw = ''function() require("agentic").add_selection_or_file_to_context() end'';
+      mode = ["n" "x"];
+      action = "<cmd>CodeCompanionChat Toggle<cr>";
     }
     {
-      key = "<leader>an";
+      key = "<leader>aA";
       options = {
         silent = true;
-        desc = "Agentic: new session";
+        desc = "CodeCompanion: action palette";
       };
-      mode = ["n" "v"];
-      action.__raw = ''function() require("agentic").new_session() end'';
+      mode = ["n" "x"];
+      action = "<cmd>CodeCompanionActions<cr>";
+    }
+
+    # ── herdr-nvim (herdr bridge) — <leader>h ──────────────────────────────
+    # herdr-nvim's annotation flow: comment lines/selections, list them, paste
+    # or auto-submit them into any agent pane, and drop bare path:line refs.
+    # Needs nvim running INSIDE a herdr session (herdr exports
+    # HERDR_WORKSPACE_ID / HERDR_TAB_ID) and the herdr binary on PATH. The
+    # plugin's own default <leader>a* maps are disabled in extra-plugins.nix —
+    # that namespace belongs to codecompanion now. `comment`/`ref` honor the
+    # command range, so the visual-mode binds carry the selection automatically.
+    {
+      key = "<leader>hc";
+      options = {
+        silent = true;
+        desc = "Herdr: comment line/selection";
+      };
+      mode = ["n" "x"];
+      action = "<cmd>Herdr comment<cr>";
     }
     {
-      key = "<leader>ar";
+      key = "<leader>hl";
       options = {
         silent = true;
-        desc = "Agentic: restore session";
-      };
-      mode = ["n" "v"];
-      action.__raw = ''function() require("agentic").restore_session() end'';
-    }
-    {
-      key = "<leader>ad";
-      options = {
-        silent = true;
-        desc = "Agentic: add current line diagnostics";
+        desc = "Herdr: list comments";
       };
       mode = ["n"];
-      action.__raw = ''function() require("agentic").add_current_line_diagnostics() end'';
+      action = "<cmd>Herdr list<cr>";
     }
     {
-      key = "<leader>aD";
+      key = "<leader>hs";
       options = {
         silent = true;
-        desc = "Agentic: add buffer diagnostics";
+        desc = "Herdr: paste comments to agent input";
       };
       mode = ["n"];
-      action.__raw = ''function() require("agentic").add_buffer_diagnostics() end'';
+      action = "<cmd>Herdr send<cr>";
+    }
+    {
+      key = "<leader>hS";
+      options = {
+        silent = true;
+        desc = "Herdr: send comments (auto-submit)";
+      };
+      mode = ["n"];
+      action = "<cmd>Herdr submit<cr>";
+    }
+    {
+      key = "<leader>hi";
+      options = {
+        silent = true;
+        desc = "Herdr: insert file:line reference";
+      };
+      mode = ["n" "x"];
+      action = "<cmd>Herdr ref<cr>";
     }
 
     # ── obsidian + overseer (<leader>O — capital) ──────────────────────────
@@ -1514,7 +1445,7 @@
     # ── Harpoon (<leader>h) ─────────────────────────────────────────────────
     # Moved from <leader>w (now window-picker) to <leader>h.
     {
-      key = "<leader>ha";
+      key = "<leader>Ha";
       options = {
         silent = true;
         desc = "Harpoon: Add File";
@@ -1523,7 +1454,7 @@
       action.__raw = ''function() require("harpoon"):list():add() end'';
     }
     {
-      key = "<leader>hh";
+      key = "<leader>Hh";
       options = {
         silent = true;
         desc = "Harpoon: Quick Menu";
@@ -1537,7 +1468,7 @@
       '';
     }
     {
-      key = "<leader>h1";
+      key = "<leader>H1";
       options = {
         silent = true;
         desc = "Harpoon: File 1";
@@ -1546,7 +1477,7 @@
       action.__raw = ''function() require("harpoon"):list():select(1) end'';
     }
     {
-      key = "<leader>h2";
+      key = "<leader>H2";
       options = {
         silent = true;
         desc = "Harpoon: File 2";
@@ -1555,7 +1486,7 @@
       action.__raw = ''function() require("harpoon"):list():select(2) end'';
     }
     {
-      key = "<leader>h3";
+      key = "<leader>H3";
       options = {
         silent = true;
         desc = "Harpoon: File 3";
@@ -1564,7 +1495,7 @@
       action.__raw = ''function() require("harpoon"):list():select(3) end'';
     }
     {
-      key = "<leader>h4";
+      key = "<leader>H4";
       options = {
         silent = true;
         desc = "Harpoon: File 4";
@@ -1573,7 +1504,7 @@
       action.__raw = ''function() require("harpoon"):list():select(4) end'';
     }
     {
-      key = "<leader>hp";
+      key = "<leader>Hp";
       options = {
         silent = true;
         desc = "Harpoon: Prev File";
@@ -1582,7 +1513,7 @@
       action.__raw = ''function() require("harpoon"):list():prev() end'';
     }
     {
-      key = "<leader>hn";
+      key = "<leader>Hn";
       options = {
         silent = true;
         desc = "Harpoon: Next File";
@@ -1672,23 +1603,6 @@
             overseer.run_action(tasks[1], "watch")
           end
         '';
-    }
-
-    # ── sidekick / herd (AI CLI agents) — <leader><tab> ─────────────────────
-    # Both sidekick and herd bind their keys under <leader><tab>*. Which is
-    # active is stored in vim.g.agents_backend and toggled via the <leader>C
-    # config dashboard (lua/config_dashboard.lua). The actual <leader><tab>*
-    # keymaps are installed at runtime by lua/agent_backend.lua (on VimEnter),
-    # so they are NOT defined statically here — only the which-key group
-    # (below) and the dashboard entry point.
-    {
-      key = "<leader>C";
-      options = {
-        silent = true;
-        desc = "Config dashboard (agents backend)";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("config_dashboard").open() end'';
     }
 
     # ── betterTerm (persistent send-to-terminal) — <leader>X ───────────────
@@ -2001,12 +1915,22 @@
       group = "debug";
       icon = "";
     }
-    # <leader>h is now harpoon; <leader>w is window-picker (direct map, no
+    # <leader>H is now harpoon (moved off <leader>h — now herdr-nvim); <leader>w is window-picker (direct map, no
     # sub-keys — so no which-key group spec for it).
     {
-      __unkeyed-1 = "<leader>h";
+      __unkeyed-1 = "<leader>H";
       group = "harpoon";
       icon = "󰛢";
+    }
+    {
+      __unkeyed-1 = "<leader>h";
+      group = "herdr";
+      icon = "";
+    }
+    {
+      __unkeyed-1 = "<leader>a";
+      group = "ai";
+      icon = "";
     }
     {
       __unkeyed-1 = "<leader><tab>";
@@ -2017,16 +1941,6 @@
       __unkeyed-1 = "<leader>t";
       group = "tabs";
       icon = "󰓩";
-    }
-    {
-      __unkeyed-1 = "<leader>o";
-      group = "opencode";
-      icon = "󰚩";
-    }
-    {
-      __unkeyed-1 = "<leader>a";
-      group = "agentic";
-      icon = "";
     }
     # NOTE: <leader>O (capital) is shared — bare key opens the Obsidian
     # command menu, sub-keys Ot/Or/Oa/Oo/Oc/Os/Ow run overseer, Oq/Of are

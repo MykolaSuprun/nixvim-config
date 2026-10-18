@@ -206,109 +206,88 @@ Scope: `nixvim-config` only.
 
 ---
 
-## AI Agents — sidekick / herd (`<leader><tab>`)
+## AI Agents — sidekick (CLI agents, `<leader><tab>`)
 
-> The same keys have **different actions depending on the active backend**
-> (switch via `<leader>C` → agents-backend). Default: `herd` standalone,
-> `sidekick` when nvim runs inside a herdr pane.
+> sidekick.nvim manages external AI coding CLIs (claude / opencode / …) in its
+> own terminal window. NES (next-edit suggestions) is intentionally off — it
+> requires the Copilot language server, which this config refuses.
 
-| Key | Mode | herd backend | sidekick backend |
-|-----|------|--------------|------------------|
-| `<leader><tab>t` | n | Toggle agent float | Toggle CLI terminal |
-| `<leader><tab>s` | n | Select agent | Select CLI |
-| `<leader><tab>S` | n | Dashboard | — |
-| `<leader><tab>f` | n | — | Focus terminal |
-| `<leader><tab>p` | n, x | — | Pick prompt |
-| `<leader><tab>x` | n, x | — | Send `{this}` to CLI |
-| `<leader><tab>e` | n | — | Send `{file}` to CLI |
-| `<leader><tab>D` | n | Send LSP diagnostics to agent | — |
-| `<leader><tab>j` | n | Jump to `path:line` refs from output (quickfix) | — |
-| `<leader><tab>` | x | Send selection to agent | — |
-| `<leader><tab>d` | n | — | Detach CLI |
+| Key | Mode | Action |
+|-----|------|--------|
+| `<leader><tab>t` | n | Toggle CLI terminal |
+| `<leader><tab>s` | n | Select CLI (installed only) |
+| `<leader><tab>f` | n | Focus terminal |
+| `<leader><tab>p` | n, x | Pick prompt |
+| `<leader><tab>x` | n, x | Send `{this}` (position + selection) |
+| `<leader><tab>e` | n | Send `{file}` |
+| `<leader><tab>v` | x | Send visual selection |
+| `<leader><tab>d` | n | Detach CLI |
+| `<c-.>` | n, t, i, x | Focus CLI terminal |
+
+> Inside a Snacks picker, `<a-a>` sends the selected items to the active CLI.
+> With `cli.mux.enabled = true` (off by default) sessions persist across
+> Neovim restarts via tmux.
 
 ---
 
-## agentic — ACP Chat (`<leader>a`)
+## CodeCompanion — chat / inline / ACP (`<leader>a`)
 
-> Provider is `opencode-acp`; sessions are interchangeable with the opencode
-> terminal TUI.
-
-| Key | Mode | Action |
-|-----|------|--------|
-| `<leader>at` | n, v | Toggle chat window |
-| `<leader>aa` | n, v | Add selection / file to context |
-| `<leader>an` | n, v | New session |
-| `<leader>ar` | n, v | Restore session |
-| `<leader>ad` | n | Add current-line diagnostics to context |
-| `<leader>aD` | n | Add buffer diagnostics to context |
-
-> Insert mode is deliberately excluded — `<Space>a` + `t`/`n`/`r` collides with
-> ordinary prose (" a t", " a n", " a r"). Model/provider switching lives inside
-> the agentic widget (below).
-
-### agentic — widget keys
-
-> Active **inside** the agentic chat/prompt buffers only. `<localleader>` is `\`.
+> Chat talks to **opencode over ACP** (`opencode acp`) and therefore uses the
+> models, MCP servers, permissions and rules from
+> `~/.config/opencode/opencode.jsonc` — sessions stay interchangeable with the
+> opencode TUI. Inline and cmd use **LM Studio** over its OpenAI-compatible
+> endpoint (`http://localhost:1234`). `AGENTS.md` autoloads as rules.
+> `#{...}` inserts editor context (`#{buffer}`, `#{diagnostics}`,
+> `#{selection}`, `#{quickfix}`, `#{diff}`, …).
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<localleader>m` | n | Switch model (keeps history) |
-| `<localleader>s` | n | Switch ACP provider (keeps history) |
-| `<localleader>t` | n | Select thought-effort level |
-| `<localleader>o` | n | Open options modal |
-| `<localleader>l` | n | List live sessions and open one |
-| `<localleader>]` / `<localleader>[` | n | Next / previous session |
-| `<localleader>D` | n | Destroy current session |
-| `<S-Tab>` | n, v, i | Switch agent mode |
-| `<CR>` / `<C-s>` | n / n, v, i | Submit prompt |
-| `<localleader>p` / `<C-v>` | n / i | Paste image from clipboard |
-| `<Tab>` | i | Accept file completion |
-| `q` | n | Hide widget (session keeps running) |
-| `d` | n, v | Remove file / selection / diagnostic at cursor |
-| `]]` / `[[` | n | Next / previous chat heading |
-| `]t` / `[t` | n | Next / previous tool call |
-| `]c` / `[c` | n | Next / previous diff hunk |
+| `<leader>aa` | n, x | Toggle chat |
+| `<leader>aA` | n, x | Action palette (prompts / inline / cmd) |
+
+### Chat-buffer keys (buffer-local, plugin defaults)
+
+> Active inside the chat / inline windows only.
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `<C-s>` / `<CR>` | n / n, i | Submit prompt |
+| `?` | n | Show all keymaps |
+| `ga` | n | Change adapter / model |
+| `gr` | n | Regenerate response |
+| `gs` | n | Edit system prompt |
+| `gM` | n | Clear rules |
+| `gx` | n | Clear chat |
+| `gy` | n | Yank code block |
+| `gc` | n | Codeblock actions |
+| `gR` | n | Go to file under cursor |
+| `}}` / `{{` | n | Next / previous chat |
+| `]]` / `[[` | n | Next / previous heading |
+| `gtx` / `gty` | n | Cycle approval mode / YOLO |
+| `gv` | n | View diff |
+| `g1` – `g4` | n | Always-accept / accept / reject / cancel |
+| `ga` / `gr` / `u` | n | Accept / reject / undo hunk |
+| `]h` / `[h` | n | Next / previous hunk |
 
 ---
 
-## opencode.nvim — Window-Internal Keys
+## herdr-nvim — herdr bridge (`<leader>h`)
 
-> Active **inside** opencode's input/output windows only (the plugin's global
-> keymaps are disabled; our `<leader>o*` binds replace them).
-
-### Input window
-
-| Key | Mode | Action |
-|-----|------|--------|
-| `<CR>` / `<S-CR>` | n / n, i | Submit prompt |
-| `<C-p>` | n, i | Command palette (model/provider, session, agent, variant, timeline) |
-| `@` | i | Mention completion (blink menu) |
-| `/` | i | Slash-command completion (blink menu) |
-| `#` | i | Context-items completion (blink menu) |
-| `<M-v>` | i | Paste image from clipboard |
-| `<M-m>` | n, i | Switch agent mode (build/plan) |
-| `<M-r>` | n, i | Cycle model variants |
-| `<M-i>` | n, i | Toggle input window |
-| `<up>` / `<down>` | n, i | Prompt history (at buffer boundaries) |
-| `<esc>` / `<C-c>` | n | Close windows / cancel request |
-
-> `~` is disabled — it opened the plugin's file picker on a plain character.
-> File mentions still work via `@` + the blink completion menu.
-> `<C-p>` shadows blink's scroll-documentation-up inside the opencode input
-> window only.
-
-### Output window
+> The annotation flow between Neovim and the coding agents running in herdr
+> panes. Needs nvim running **inside** a herdr session (herdr exports
+> `HERDR_WORKSPACE_ID` / `HERDR_TAB_ID`) and the `herdr` binary on PATH.
+> `comment` and `ref` honor the command range, so the visual-mode binds carry
+> the selection automatically.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `]]` / `[[` | n | Next / previous message |
-| `]u` / `[u` | n | Next / previous *user* message |
-| `<tab>` | n | Toggle input/output panes |
-| `i` | n | Focus input |
-| `gr` | n | Browse code references |
-| `gf` / `<CR>` | n | Jump to file / target at cursor |
+| `<leader>hc` | n, x | Comment line / selection |
+| `<leader>hl` | n | List comments (float) |
+| `<leader>hs` | n | Paste comments into the agent input |
+| `<leader>hS` | n | Send comments (auto-submit) |
+| `<leader>hi` | n, x | Insert `path:line` reference |
 
-### Quick-chat context tags
-
-> Prefixes for `<leader>oa` prompts (e.g. `<leader>oa` then `#errors fix these`):
-> `#cursor` `#errors` `#warnings` `#info` `#file` `#selection` `#agents` `#buffer` `#git_diff`
+> The herdr-side keys (`prefix+e` nvim sidebar, `prefix+o` file picker) live in
+> `~/.config/herdr/config.toml` and belong to the Rust half installed with
+> `herdr plugin install ChmaraX/herdr-nvim`. See the vault plan
+> `200_projects/nixvim-config/review/stage-05-ai-stack-consolidation-plan.md`.

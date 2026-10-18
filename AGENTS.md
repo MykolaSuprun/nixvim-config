@@ -33,7 +33,7 @@ nixvim-config/         # Full Neovim profile
   options.nix          # nixvim-only opts (tabline, OSC 52 clipboard, snacks indent toggle)
   visual.nix           # Colorscheme (catppuccin/base16), bufferline, lualine, which-key base
   lsp.nix              # LSP servers, blink-cmp, nvim-lint, trouble
-  plugins.nix          # nixvim-only plugins (snacks, oil, noice, opencode, sidekick, dbee, …)
+  plugins.nix          # nixvim-only plugins (snacks, oil, noice, sidekick, codecompanion, dbee, …)
   keymaps.nix          # nixvim-only keymaps + which-key group specs
   dap.nix              # nvim-dap, dap-ui, dap-python, dap-go, OSV
   # SQL ftplugin (Jinja-brace highlighting for dbt models) is an extraFiles
@@ -120,9 +120,9 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>ut` | treesitter | keymaps.nix |
 | `<leader>t` | tabs | keymaps.nix |
 | `<leader>T` | test (neotest) | keymaps.nix |
-| `<leader><tab>` | agents (sidekick / herd) | keymaps.nix |
-| `<leader>o` | opencode | keymaps.nix |
-| `<leader>a` | agentic (ACP chat) | keymaps.nix |
+| `<leader><tab>` | agents (sidekick CLI) | keymaps.nix |
+| `<leader>a` | AI chat (codecompanion) | keymaps.nix |
+| `<leader>h` | herdr bridge (herdr-nvim) | keymaps.nix |
 | `<S-Space>` | window picker | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
 | `<leader>Q` | database (dbee + Snowflake: dynamic results float via sql_runner; overseer templates) | keymaps.nix |
@@ -153,7 +153,7 @@ commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 - Heavy/optional plugins gate on a command: `lazyLoad.settings.cmd = "..."`.
 - LLM/AI plugins gate on `["VimEnter"]` so they don't block initial UI.
 - `otter` gates on `BufReadPost` for `md,sql,jinja,quarto,ipynb` (embedded languages). The nixvim module's `autoActivate` is **disabled** (its global LspAttach hook would `require('otter')` on every LSP attach and throw on non-matching buffers that haven't lazy-loaded). A guarded, `pcall`-protected `LspAttach` autocmd (in `plugins.nix` `extraConfigLua`) replaces it.
-- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666), `herd.nvim` (MomePP), `opencode.nvim` (sudo-tee) and `agentic.nvim` (carlos-algms).
+- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666) and `herdr-nvim` (ChmaraX, rev `d2dd189` = v1.2.1 — Lua half only; its Rust sidebar half is installed imperatively via `herdr plugin install`).
 - `nix-develop` gates on `BufReadPost *.nix`.
 
 ### When adding a new plugin
@@ -273,8 +273,8 @@ See README.md for full details.
 ## Things to avoid
 
 - Do **not** enable `copilot-lsp` — sidekick NES is intentionally disabled (CLI-terminal mode only).
-- Do **not** wire `copilot-lua` completion — Avante and sidekick own the AI surface; `copilot-lua` is disabled.
-- Do **not** enable `herd.nvim` default keys — they are disabled in `extra-plugins.nix` because they would shadow the `<leader>s` search group and `<leader>o` opencode group; keep them off and use the `<leader><tab>` bindings installed by `lua/agent_backend.lua` instead.
+- Do **not** wire `copilot-lua` completion — sidekick and codecompanion own the AI surface; `copilot-lua` is disabled.
+- Do **not** enable herdr-nvim's default keymaps — they live under its `prefix = "<leader>a"`, which now belongs to codecompanion; they are disabled in `extra-plugins.nix` and the five actions are bound under `<leader>h` in `keymaps.nix` instead.
 - Do **not** introduce `telescope.nvim` / `plenary.nvim` standalone dbt plugins (`dbt.nvim`, `dbtpal`) — overseer + snacks picker cover the workflow and bit-rot less.
 - Do **not** re-add `vim-dadbod`/`vim-dadbod-ui`/`snowsql` for Snowflake — `snowsql` is unsupported on `aarch64-linux` (see "Why the Snowflake tooling looks the way it does" above). `nvim-dbee` is not a substitute either — it has no Snowflake driver.
 - Do **not** add a `--password`/credential flag to any Snowflake overseer template or keymap — connections must come from `~/.snowflake/config.toml` connection profiles.
@@ -291,7 +291,7 @@ From `flake.lock`:
 - `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from the main `nixpkgs` above.
 - `sqlit`: `github:Maxteabag/sqlit` — deliberately **no** `follows`; upstream's own pinned nixpkgs is the CI-tested build. Driver extras are set in `flake.nix` (`snowflake` only where the connector builds — not `aarch64-linux`).
 
-Available as nixvim by-name modules at this rev: `sidekick`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
+Available as nixvim by-name modules at this rev: `sidekick`, `codecompanion`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
 
-**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`), `herd.nvim` (MomePP, `extra-plugins.nix`), **`opencode.nvim`** (sudo-tee, pinned in `extra-plugins.nix`, loaded via `plugins.lz-n.plugins` in `plugins.nix`), and **`agentic.nvim`** (carlos-algms, `extra-plugins.nix`, same lz-n route). Note: nixpkgs' `vimPlugins.opencode-nvim` tracks **nickjvandyke/opencode.nvim** — the fork that keeps the legacy `vim.g.opencode_opts` / `require("opencode").{ask,select,operator,statusline}` API — so that API was *not* removed upstream. We deliberately pin sudo-tee's main instead for the new unified `:Opencode` command API (`require("opencode.api").<action>`) and its richer features (quick chat, diff view, snapshots, MCP picker, skills browser). Bump deliberately — the `<leader>o` keymaps in `keymaps.nix` call that API. `agentic.nvim` uses the built-in `opencode-acp` provider (`opencode acp` — the opencode CLI speaks ACP natively, no extra npm packages); its keymaps live under `<leader>a` in `keymaps.nix`.
-`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (unstable ships ≥ 0.8.2, satisfying herd.nvim's 0.7.5 requirement — no separate pin needed).
+**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`) and `herdr-nvim` (ChmaraX, `extra-plugins.nix`, rev `d2dd189` = v1.2.1 — the Lua half; the Rust sidebar daemon comes from `herdr plugin install ChmaraX/herdr-nvim`, which is imperative by design). `codecompanion` **is** a by-name module but is pinned to **v20.0.1** via `plugins.codecompanion.package` because nixpkgs still ships 19.22.0 — v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the `insert_edit_into_file` → `edit_file` tool rename; bump rev + hash together. Its `settings` is freeform, so everything reaches `require("codecompanion").setup()` verbatim (no `extraConfigLua`); never set the stale `strategies` alias.
+`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (our locked rev ships 0.8.2, satisfying herdr-nvim's 0.7.5 requirement — no separate pin needed).

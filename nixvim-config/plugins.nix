@@ -54,7 +54,19 @@
         nes.enabled = false;
         cli = {
           watch = true; # reload files in Neovim when an AI CLI edits them
+          picker = "snacks"; # explicit: the <a-a> picker-send action depends on it
           win.layout = "right";
+          tools = {
+            # Both first-class at this rev — declared explicitly so the set is
+            # visible here. claude: `--resume`/`--continue` + @file#L10-20
+            # context formatting. opencode: `<a-p>` prompt key, native_scroll,
+            # and an HTTP external-session backend that attaches to an opencode
+            # already running in a herdr pane (needs `lsof` — dependencies.nix).
+            # Everything else keeps sidekick's own defaults (empty tables
+            # deep-merge, they don't disable anything).
+            claude = {};
+            opencode = {};
+          };
           mux = {
             # Persist CLI sessions across Neovim restarts via tmux/zellij.
             # Kept off by default to avoid surprising side-effects; flip to true
@@ -62,6 +74,102 @@
             backend = "tmux";
             enabled = false;
           };
+        };
+      };
+      lazyLoad.settings.event = ["VimEnter"];
+    };
+
+    # codecompanion.nvim — chat / inline / ACP interface for AI agents. This is
+    # the chat half of the AI stack; sidekick (above) owns the CLI-terminal
+    # half, and the two never fight over keys (codecompanion installs no global
+    # <leader> maps — every bind of its own is buffer-local to its windows).
+    # Pinned to v20.0.1 via `package` because nixpkgs still ships 19.22.0:
+    # v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the
+    # `insert_edit_into_file` → `edit_file` tool rename. Bump deliberately
+    # (rev + hash). `settings` is freeform in the nixvim module (no
+    # settingsOptions), so everything below reaches
+    # require("codecompanion").setup() verbatim — no extraConfigLua needed.
+    # NEVER set `strategies` (stale alias for `interactions`, silently ignored).
+    # The editor-context trigger is `#` (v19+), not `@` (which is tools only).
+    codecompanion = {
+      enable = true;
+      # nixpkgs ships 19.22.0; pin v20.0.1 through the package decorator. The
+      # `package` option itself is a pkgs *path* (string/list), not a
+      # derivation — passing one there is silently ignored, which is how the
+      # first attempt at this ended up building 19.22.0 anyway.
+      # Bump rev + hash together.
+      packageDecorator = pkg:
+        pkg.overrideAttrs (_: {
+          version = "20.0.1";
+          src = pkgs.fetchFromGitHub {
+            owner = "olimorris";
+            repo = "codecompanion.nvim";
+            rev = "v20.0.1";
+            hash = "sha256-29Z/aTSK6xtLCNp+FJH1D89MpNztm6Hjgfz80XZVTlI=";
+          };
+        });
+      settings = {
+        # ── adapters, per interaction ─────────────────────────────────────
+        # chat → opencode over ACP (`opencode acp`): the agent runs with the
+        #   user's own ~/.config/opencode/opencode.jsonc (models, MCP, rules,
+        #   permissions) and sessions stay interchangeable with the opencode TUI.
+        # inline / cmd → LM Studio over its OpenAI-compatible endpoint: inline
+        #   edits go through the `edit_file` tool, which needs a tool-calling
+        #   model (ACP is chat-only anyway).
+        interactions = {
+          chat.adapter = "opencode";
+          inline.adapter = {
+            name = "lm_studio";
+            model = "qwen3-coder";
+          };
+          cmd.adapter = {
+            name = "lm_studio";
+            model = "qwen3-coder";
+          };
+          # `#{buffer}` sends the whole buffer, not just the visible slice.
+          shared.editor_context.buffer.opts.default_params = "all";
+        };
+        # ── rules: AGENTS.md autoloads (the `claude` parser resolves @imports) ──
+        rules.opts.chat.autoload = "default";
+        # v20: keep rules OUT of inline prompts — they would otherwise ride
+        # along on top of the inline context limit.
+        rules.opts.inline.autoload = {};
+        # ── LM Studio adapter (shape documented verbatim upstream) ─────────
+        adapters.http.lm_studio.__raw =
+          #lua
+          ''
+            function()
+              return require("codecompanion.adapters").extend("openai_compatible", {
+                formatted_name = "LM Studio",
+                env = { url = "http://localhost:1234", api_key = "lm-studio" },
+                schema = { model = { default = "qwen3-coder" } },
+              })
+            end
+          '';
+        # ── ACP tuning: hand the agent our MCP servers, raise the timeout ───
+        # (the agent normally uses the MCP servers from opencode.jsonc itself;
+        # this only matters for servers defined on the codecompanion side.)
+        adapters.acp.extend.opencode.defaults = {
+          mcpServers = "inherit_from_config";
+          timeout = 30000;
+        };
+        # ── display ───────────────────────────────────────────────────────
+        display = {
+          chat = {
+            # render-markdown owns the header separator (it renders the buffer).
+            show_header_separator = false;
+            window.layout = "vertical";
+          };
+          action_palette.provider = "snacks";
+          diff.enabled = true;
+        };
+        # ── v20-only extras (ignored on the 19.x fallback) ─────────────────
+        integrations.herdr.enabled = true;
+        extensions.history.enabled = true;
+        opts = {
+          log_level = "ERROR";
+          language = "English";
+          triggers.editor_context = "#";
         };
       };
       lazyLoad.settings.event = ["VimEnter"];
@@ -184,21 +292,14 @@
             #lua
             "{ layout = { backdrop = false } }";
 
-          # Custom picker actions: send selected items to an AI agent.
-          #   <a-o> → opencode.nvim (require("opencode.api").quick_chat)
-          #   <a-a> → sidekick.nvim (require("sidekick.cli.picker.snacks").send)
-          # `actions` and `win.input.keys` are deep-merged with snacks defaults,
-          # so `__raw` here only adds our two actions/keys on top of the built-ins.
+          # Custom picker action: send the selected items to the active AI CLI
+          # (sidekick.nvim). `actions` and `win.input.keys` are deep-merged with
+          # snacks defaults, so `__raw` here only adds our action/key on top of
+          # the built-ins.
           actions.__raw =
             #lua
             ''
               {
-                opencode_send = function(picker)
-                  local items = vim.tbl_map(function(item)
-                    return item.file or item.text
-                  end, picker:selected({ fallback = true }))
-                  require("opencode.api").quick_chat(table.concat(items, " ") .. " ")
-                end,
                 sidekick_send = function(picker)
                   require("sidekick.cli.picker.snacks").send(picker)
                 end,
@@ -208,7 +309,6 @@
             #lua
             ''
               {
-                ["<a-o>"] = { "opencode_send", mode = { "n", "i" } },
                 ["<a-a>"] = { "sidekick_send", mode = { "n", "i" } },
               }
             '';
@@ -395,73 +495,9 @@
       ];
     };
 
-    # opencode.nvim — integrates the OpenCode AI CLI (new unified `:Opencode`
-    # command API). Pinned from source (see `opencodeNvim` in extra-plugins.nix)
-    # — nixpkgs' vimPlugins.opencode-nvim tracks nickjvandyke's fork (legacy
-    # vim.g.opencode_opts API), which we deliberately don't use.
-    # Registered via plugins.lz-n.plugins (the plugin manager at this nixvim
-    # rev) so lz.n packadds it and runs `require("opencode").setup(opts)` on
-    # VimEnter. The plugin auto-spawns its own `opencode serve` server — no
-    # snacks.terminal server.start hack needed. Editor keymaps live in
-    # keymaps.nix (<leader>o group); the plugin's default_global_keymaps are
-    # disabled to avoid clashing with them.
-    lz-n = {
-      plugins = [
-        {
-          __unkeyed-1 = "opencode-nvim";
-          event = ["VimEnter"];
-          after = ''
-            function()
-              -- Only non-default options are set here; everything else uses
-              -- opencode.nvim's own defaults (mode "build", context
-              -- file/selection/diagnostics all enabled).
-              require("opencode").setup({
-                -- default_global_keymaps=false: our <leader>o* binds replace them
-                default_global_keymaps = false,
-                preferred_picker = "snacks",
-                keymap = {
-                  input_window = {
-                    -- `~` opens the plugin's file picker on a plain character
-                    -- (e.g. typing a path) — disabled. File mentions still work
-                    -- via `@` + the blink completion menu.
-                    ["~"] = false,
-                    -- <C-p> command palette (model/provider, session, agent,
-                    -- variant, timeline). Buffer-local, so it only shadows
-                    -- blink's <C-p> inside the opencode input window.
-                    ["<C-p>"] = {
-                      function() require("opencode_palette").open() end,
-                      mode = { "n", "i" },
-                      desc = "Opencode: command palette",
-                    },
-                  },
-                },
-                hooks = {
-                  on_done_thinking = function()
-                    vim.schedule(function()
-                      vim.notify("opencode: done", vim.log.levels.INFO, { title = "opencode" })
-                    end)
-                  end,
-                },
-              })
-            end
-          '';
-        }
-        {
-          __unkeyed-1 = "agentic-nvim";
-          event = ["VimEnter"];
-          after = ''
-            function()
-              require("agentic").setup({
-                provider = "opencode-acp",
-              })
-            end
-          '';
-        }
-      ];
-    };
     # grug-far is in ../shared/plugins.nix
-    # NOTE: avante has been removed in favour of sidekick (AI CLI terminal) +
-    # opencode. See AGENTS.md "Things to avoid".
+    # NOTE: avante was removed in favour of sidekick (AI CLI terminal) +
+    # codecompanion (chat / inline / ACP). See AGENTS.md "Things to avoid".
     obsidian = {
       enable = true;
       lazyLoad = {
@@ -670,137 +706,6 @@
             }
           end,
         }
-      '';
-    # ── Agent backend runtime keymap swapper ─────────────────────────────
-    # Both sidekick and herd bind their keys under `<leader><tab>*`. Which
-    # backend is active is stored in `vim.g.agents_backend` and toggled via
-    # the `<leader>C` dashboard (lua/config_dashboard.lua). This module
-    # unmaps the previous backend's `<leader><tab>*` keys and maps the new
-    # one's at runtime. Setup is invoked from extra-plugins.nix on VimEnter
-    # (after sidekick/herd have lazy-loaded).
-    "lua/agent_backend.lua".text =
-      #lua
-      ''
-        local M = {}
-
-        M.backends = {
-          sidekick = {
-            map = function()
-              local cli = require("sidekick.cli")
-              local opts = function(desc) return { desc = desc, silent = true } end
-              vim.keymap.set("n", "<leader><tab>t", function() cli.toggle() end, opts("Sidekick: toggle"))
-              vim.keymap.set("n", "<leader><tab>s", function() cli.select({ filter = { installed = true } }) end, opts("Sidekick: select"))
-              vim.keymap.set("n", "<leader><tab>f", function() cli.focus() end, opts("Sidekick: focus"))
-              vim.keymap.set({ "n", "x" }, "<leader><tab>p", function() cli.prompt() end, opts("Sidekick: pick prompt"))
-              vim.keymap.set({ "n", "x" }, "<leader><tab>x", function() cli.send({ msg = "{this}" }) end, opts("Sidekick: send this"))
-              vim.keymap.set("n", "<leader><tab>e", function() cli.send({ msg = "{file}" }) end, opts("Sidekick: send file"))
-              vim.keymap.set("n", "<leader><tab>d", function() cli.close() end, opts("Sidekick: detach"))
-            end,
-            unmap = function()
-              for _, k in ipairs({ "t", "s", "f", "p", "x", "e", "d" }) do
-                pcall(vim.keymap.del, "n", "<leader><tab>" .. k)
-                pcall(vim.keymap.del, "x", "<leader><tab>" .. k)
-              end
-            end,
-          },
-          herd = {
-            map = function()
-              local herd = require("herd")
-              local opts = function(desc) return { desc = desc, silent = true } end
-              vim.keymap.set("n", "<leader><tab>t", function() herd.toggle() end, opts("Herd: toggle"))
-              vim.keymap.set("n", "<leader><tab>s", function() herd.select() end, opts("Herd: select"))
-              vim.keymap.set("n", "<leader><tab>S", function() herd.dashboard() end, opts("Herd: dashboard"))
-              vim.keymap.set("x", "<leader><tab>", function() herd.send() end, opts("Herd: send selection"))
-              -- herd-only extras (no default keymaps in herd.nvim): push the
-              -- current buffer's LSP diagnostics to the active agent, and jump
-              -- to path:line references the agent emitted in its recent output.
-              vim.keymap.set("n", "<leader><tab>D", function() herd.diagnostics() end, opts("Herd: send diagnostics"))
-              vim.keymap.set("n", "<leader><tab>j", function() herd.jump() end, opts("Herd: jump to references"))
-            end,
-            unmap = function()
-              for _, k in ipairs({ "t", "s", "S", "D", "j" }) do
-                pcall(vim.keymap.del, "n", "<leader><tab>" .. k)
-              end
-              pcall(vim.keymap.del, "x", "<leader><tab>")
-            end,
-          },
-        }
-
-        function M.get()
-          return vim.g.agents_backend
-        end
-
-        function M.set(name)
-          if not M.backends[name] then return end
-          local prev = M.get()
-          if prev and M.backends[prev] then M.backends[prev].unmap() end
-          vim.g.agents_backend = name
-          M.backends[name].map()
-        end
-
-        function M.setup()
-          -- Auto-detect the default backend:
-          --   * When Neovim runs INSIDE a herdr session, herdr owns the pane
-          --     lifecycle — herd.nvim's float mode would fight it, so default
-          --     to sidekick (which uses its own terminal, independent of herdr).
-          --   * Otherwise (standalone nvim), default to herd so the user gets
-          --     the herdr-backed dashboard/status hooks.
-          -- Detection: herdr sets HERDR_TAB_ID / HERDR_WORKSPACE_ID on any pane
-          -- it spawns (documented in MomePP/herd.nvim "Native mode"). Either
-          -- being set means we're inside herdr.
-          local inside_herdr = vim.env.HERDR_TAB_ID ~= nil or vim.env.HERDR_WORKSPACE_ID ~= nil
-          local default = inside_herdr and "sidekick" or "herd"
-          M.set(vim.g.agents_backend or default)
-        end
-
-        return M
-      '';
-
-    # ── Agent backend toggle dashboard (<leader>C) ────────────────────────
-    # A small nui.menu TUI. Currently exposes one group — `agents-backend` —
-    # with a sidekick/herd submenu. Selecting a backend calls
-    # `require("agent_backend").set(...)` which swaps the `<leader><tab>*`
-    # keymaps at runtime.
-    "lua/config_dashboard.lua".text =
-      #lua
-      ''
-        local M = {}
-
-        local function open_submenu()
-          local Menu = require("nui.menu")
-          local agent_backend = require("agent_backend")
-          local current = agent_backend.get()
-          local lines = {
-            Menu.item("sidekick" .. (current == "sidekick" and "  (active)" or ""), { name = "sidekick" }),
-            Menu.item("herd" .. (current == "herd" and "  (active)" or ""), { name = "herd" }),
-          }
-          local menu = Menu({
-            position = "50%",
-            size = { width = 40 },
-            border = { style = "rounded", text = { top = " agents backend " } },
-          }, {
-            lines = lines,
-            on_submit = function(item) agent_backend.set(item.name) end,
-          })
-          menu:mount()
-        end
-
-        function M.open()
-          local Menu = require("nui.menu")
-          local menu = Menu({
-            position = "50%",
-            size = { width = 40 },
-            border = { style = "rounded", text = { top = " config " } },
-          }, {
-            lines = { Menu.item("agents-backend", { name = "agents-backend" }) },
-            on_submit = function(item)
-              if item.name == "agents-backend" then open_submenu() end
-            end,
-          })
-          menu:mount()
-        end
-
-        return M
       '';
 
     # ── OrbStack host-tool resolution ────────────────────────────────────
@@ -1381,44 +1286,6 @@
         function M.sqlit_buffer()
           M.sqlit_run(whole_buffer())
         end
-
-        return M
-      '';
-
-    # ── opencode command palette (<C-p>) ─────────────────────────────────
-    # Buffer-local <C-p> in the opencode input window (wired in the lz-n
-    # opencode setup above) opens this menu — the nixvim equivalent of the
-    # opencode TUI's <C-p> command palette for the actions that matter here.
-    "lua/opencode_palette.lua".text =
-      #lua
-      ''
-        local M = {}
-
-        local function menu()
-          local api = require("opencode.api")
-          return {
-            { label = "Model / provider", run = api.configure_provider },
-            { label = "Session", run = api.select_session },
-            { label = "Agent / mode", run = api.select_agent },
-            { label = "Model variant", run = api.configure_variant },
-            { label = "Timeline", run = api.timeline },
-          }
-        end
-
-        function M.open()
-          local items = menu()
-          local labels = vim.tbl_map(function(item) return item.label end, items)
-          vim.ui.select(labels, { prompt = "Opencode" }, function(choice)
-            if not choice then return end
-            for _, item in ipairs(items) do
-              if item.label == choice then
-                item.run()
-                return
-              end
-            end
-          end)
-        end
-
         return M
       '';
 

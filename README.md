@@ -21,9 +21,9 @@ shared/           # Modules imported by all configs
 
 nixvim-config/    # Full Neovim profile
   lsp.nix         # LSP servers, blink-cmp, nvim-lint, trouble
-  plugins.nix     # nixvim-only plugins (snacks, noice, oil, sidekick, dbee, …)
-  extra-plugins.nix  # plugins built from source (betterTerm, herd, opencode, agentic)
-  keymaps.nix     # nixvim-only keymaps + which-key groups (pickers, tabs, dbt, sqlit, opencode, …)
+  plugins.nix     # nixvim-only plugins (snacks, noice, oil, sidekick, codecompanion, dbee, …)
+  extra-plugins.nix  # plugins built from source (betterTerm, herdr-nvim)
+  keymaps.nix     # nixvim-only keymaps + which-key groups (pickers, tabs, dbt, sqlit, …)
   visual.nix      # Colorscheme and visual options
   dap.nix         # DAP (nvim-dap, dap-ui, dap-python, dap-go, OSV)
   overseer/       # Overseer task runner config + per-language templates

@@ -111,9 +111,11 @@
       setupLspCapabilities = true;
       settings = {
         cmdline.enabled = true;
-        # NOTE: opencode.nvim's old `opencode_ask` in-process LSP is gone on the
-        # pinned (new-API) version — it ships its own completion system, so no
-        # per_filetype blink source is needed here.
+        # NOTE: codecompanion ships a first-party blink source
+        # (lua/codecompanion/providers/completion/blink) that self-registers
+        # for the codecompanion / codecompanion_input filetypes on blink >= 0.11
+        # — no per_filetype entry needed here. On an older blink you would add
+        # `codecompanion = [ "codecompanion" ]` to sources.per_filetype.
         sources = {
           providers.lsp.fallbacks = [];
         };

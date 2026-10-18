@@ -26,77 +26,30 @@
       meta.license = lib.licenses.mit;
     })
 
-    # herd.nvim — drives herdr coding agents from Neovim (nvim is the host,
-    # herdr is the backend daemon). Built from source (not in nixpkgs).
-    # Repo:  MomePP/herd.nvim
-    # Rev:   aabb981b6198bafa4603d2db3e26b206352f6379 (2026-08-17, post-herdr-
-    #        0.7.5-migration). Requires herdr ≥ 0.7.5 on PATH — main
-    #        nixpkgs-unstable ships 0.8.2 (see dependencies.nix).
-    # API:   require("herd").{toggle,select,send,dashboard,diagnostics,jump,spawn}
-    # Used for: the "herd" agent backend under <leader><tab> (toggled via the
-    #          <leader>ca dashboard — see lua/agent_backend.lua). Default keys
-    #          are disabled here so they don't shadow <leader>s (search group);
-    #          the agent_backend module rebinds them under <leader><tab>* at
-    #          runtime.
+    # herdr-nvim — Neovim bridge for herdr (the agent multiplexer). The upstream
+    # repo holds TWO halves: a Rust herdr plugin (installed imperatively with
+    # `herdr plugin install ChmaraX/herdr-nvim`, which provides the sidebar
+    # daemon) and this Lua half. buildVimPlugin's installPhase only copies
+    # lua/ + plugin/ + doc/, so the Rust half is ignored automatically — the
+    # sidebar comes from the herdr-side install, not from here.
+    # Repo:  ChmaraX/herdr-nvim
+    # Rev:   d2dd1899dd7b4ee36719e315e97f326b8aada171 (v1.2.1, 2026-10-16)
+    # Requires: nvim >= 0.10 (have 0.12.5); herdr >= 0.7.5 on PATH (nixpkgs
+    #           ships 0.9.5); annotations need nvim running INSIDE a herdr
+    #           session (HERDR_WORKSPACE_ID / HERDR_TAB_ID — provided by
+    #           herdr, not by the plugin).
+    # API:   require("herdr-nvim").{comment,list,send,submit,ref,statusline}
+    # Keymaps: <leader>h* in keymaps.nix.
     (pkgs.vimUtils.buildVimPlugin {
-      pname = "herd";
-      version = "unstable-2026-08-17";
+      pname = "herdr-nvim";
+      version = "1.2.1";
       src = pkgs.fetchFromGitHub {
-        owner = "MomePP";
-        repo = "herd.nvim";
-        rev = "aabb981b6198bafa4603d2db3e26b206352f6379";
-        hash = "sha256-mDr2HvjMWaRj52oh1L+xmV+O3YOk9+gU0ZMV55sTxbc=";
+        owner = "ChmaraX";
+        repo = "herdr-nvim";
+        rev = "d2dd1899dd7b4ee36719e315e97f326b8aada171";
+        hash = "sha256-EghtchK820sWZmq67qdHhKSWkLnG2CqLza/dmUqNNi0=";
       };
-      meta.homepage = "https://github.com/MomePP/herd.nvim";
-      meta.license = lib.licenses.mit;
-    })
-
-    # opencode.nvim — integrates the OpenCode AI CLI. Pinned from source: the
-    # nixpkgs vimPlugins snapshot tracks nickjvandyke/opencode.nvim (the fork
-    # that keeps the legacy vim.g.opencode_opts /
-    # require("opencode").{ask,select,operator,statusline} API) — that API was
-    # NOT removed upstream. We deliberately pin sudo-tee's main instead for the
-    # unified `:Opencode` command API (require("opencode.api").<action>) and its
-    # richer features (quick chat, diff view, snapshots, MCP picker, skills).
-    # Repo: sudo-tee/opencode.nvim, rev cdf00c5f4ac8 (2026-07-27).
-    # Bump deliberately: the <leader>o keymaps in keymaps.nix call
-    # require("opencode.api").<action>. Loaded via plugins.lz-n.plugins
-    # (plugins.nix) on VimEnter; the plugin auto-spawns `opencode serve`.
-    (pkgs.vimUtils.buildVimPlugin {
-      pname = "opencode-nvim";
-      version = "unstable-2026-07-27";
-      src = pkgs.fetchFromGitHub {
-        owner = "sudo-tee";
-        repo = "opencode.nvim";
-        rev = "cdf00c5f4ac8161d3ec66bfcb8af140b30b42c6a";
-        hash = "sha256-2RWyh9ep+VGqjIAax+TvnF57JhzDqHgzNRBXLxkoi6M=";
-      };
-      meta.homepage = "https://github.com/sudo-tee/opencode.nvim";
-      meta.license = lib.licenses.mit;
-    })
-
-    # agentic.nvim — ACP (Agent Client Protocol) chat interface. Works with any
-    # ACP provider; we use the built-in `opencode-acp` provider, which spawns
-    # `opencode acp` — the opencode CLI (already in extraPackages) speaks ACP
-    # natively, so no extra npm/pnpm packages are needed. Sessions are
-    # interchangeable between Neovim and the terminal.
-    # Repo:  carlos-algms/agentic.nvim
-    # Rev:   9945381350664ab3057d480e5cee02a328ef21d5 (2026-08-09)
-    # API:   require("agentic").{setup,toggle,new_session,restore_session,
-    #         add_selection_or_file_to_context,add_current_line_diagnostics,
-    #         add_buffer_diagnostics,switch_provider,switch_model,...}
-    # Loaded via plugins.lz-n.plugins (plugins.nix) on VimEnter; keymaps live in
-    # keymaps.nix under the <leader>a group.
-    (pkgs.vimUtils.buildVimPlugin {
-      pname = "agentic-nvim";
-      version = "unstable-2026-08-09";
-      src = pkgs.fetchFromGitHub {
-        owner = "carlos-algms";
-        repo = "agentic.nvim";
-        rev = "9945381350664ab3057d480e5cee02a328ef21d5";
-        hash = "sha256-Sjon3QVcasCW4kYHGgwFeRN1eFhKBBURMm/hNqculuI=";
-      };
-      meta.homepage = "https://github.com/carlos-algms/agentic.nvim";
+      meta.homepage = "https://github.com/ChmaraX/herdr-nvim";
       meta.license = lib.licenses.mit;
     })
 
@@ -145,34 +98,17 @@
         },
       })
 
-      -- herd.nvim: spawnable agents + disable ALL default keys (they conflict
-      -- with <leader>s). `--continue` resumes the last session. No `--port`:
-      -- opencode's flag takes a number (`--port <n>`, default 0), so a bare
-      -- `--port` is malformed — opencode.nvim discovers the server without it.
-      -- OPENCODE_EXPERIMENTAL_LSP_TOOL enables the in-process LSP used by
-      -- opencode.nvim's ask completions.
-      require("herd").setup({
-        tools = {
-          opencode = {
-            cmd = { "opencode", "--continue" },
-            env = { OPENCODE_EXPERIMENTAL_LSP_TOOL = "true" },
-          },
-        },
-        keys = {
-          toggle = false,
-          send = false,
-          hide = false,
-          select = false,
-          dashboard = false,
-          newline = false,
-        },
-      })
-
-      -- Agent backend: install the default backend's <leader><tab>* keymaps
-      -- after sidekick/herd have had a chance to lazy-load on VimEnter.
-      vim.api.nvim_create_autocmd("VimEnter", {
-        once = true,
-        callback = function() require("agent_backend").setup() end,
+      -- herdr-nvim: the bridge between Neovim and herdr (agent multiplexer).
+      -- The plugin's own default keymaps live under `prefix = "<leader>a"`
+      -- with `keymaps = true` — that namespace now belongs to codecompanion,
+      -- so they are disabled here and the five actions are bound explicitly
+      -- in keymaps.nix (<leader>h*) via the plugin's :Herdr user command
+      -- (range-aware, so visual selections carry through).
+      -- Needs nvim running inside a herdr session (herdr exports
+      -- HERDR_WORKSPACE_ID / HERDR_TAB_ID) and the `herdr` binary on PATH.
+      require("herdr-nvim").setup({
+        prefix = "<leader>h",
+        keymaps = false,
       })
     '';
 }
