@@ -278,3 +278,20 @@ printf '\x1b[38;2;255;100;0mTRUECOLOR\x1b[0m\n'
 1. Create the `.nix` file in the appropriate config directory.
 2. Add it to that config's `default.nix` imports list.
 3. Run `nix flake check` to verify.
+
+## Native macOS and Home Manager
+
+All profiles build for native macOS as well as Linux. Run `nix run .#NixVim`
+or install `packages.aarch64-darwin.nvim` through Home Manager; OrbStack is
+optional for Linux-specific work. Keep the editor package pinned independently
+from the system/Home Manager nixpkgs input.
+
+Snowflake and sqlit execute locally on macOS, with its browser and Keychain.
+If Home Manager provides a workspace-aware sqlit wrapper, set
+`NIXVIM_SQLIT_BINARY` to that wrapper’s absolute executable path; this overrides
+the standalone binary bundled in Nixvim. `NIXVIM_SNOW_BINARY` provides the same
+optional contract for snow. Invalid explicit paths fail clearly. Linux OrbStack
+guests retain the existing host-tool preference and local fallback.
+
+`tests/run.sh` includes an isolated native/guest resolution suite that checks
+these overrides and confirms cancelling arbitrary SQL starts no process.

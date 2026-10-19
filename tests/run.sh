@@ -4,7 +4,7 @@
 #   tests/run.sh                 # build .#NixVim and run the suite
 #   tests/run.sh /path/to/nvim   # run against an existing nvim binary
 #
-# Runs two suites:
+# Runs three suites:
 #   1. tests/headless-smoke.lua  — targeted behaviour checks, incl. the
 #      real-load assertion that would have caught the codecompanion
 #      `extensions.history` bug (it never calls setup()).
@@ -12,6 +12,8 @@
 #      loadable, every declared keymap exists, <leader>a*/<leader>h* ownership.
 #      ⚠️ require()-only: it NEVER calls setup(), so it is a plugin-load gate,
 #      NOT proof that the config comes up clean. See the header of that file.
+#   3. tests/host-tool.lua      — isolated native/OrbStack tool resolution,
+#      explicit executable overrides, and SQL cancellation boundaries.
 #
 # Exits non-zero when any check fails.
 set -euo pipefail
@@ -58,3 +60,7 @@ awk '
 
 echo "expected keymaps extracted: $(wc -l < "$EXPECTED")"
 SWEEP_EXPECTED="$EXPECTED" "$NVIM" --headless -c "luafile tests/plugin-sweep.lua"
+
+echo
+echo "── native/OrbStack tool resolution ──────────────────────────────────"
+"$NVIM" --headless -c "luafile tests/host-tool.lua"

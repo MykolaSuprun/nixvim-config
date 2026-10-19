@@ -76,13 +76,15 @@ nix build .#CodeVim
 nix build .#checks.x86_64-linux.NixVim
 
 # Headless tests (keymaps, overseer templates, dap, render-markdown, AI stack).
-# Builds .#NixVim then runs BOTH suites; exits non-zero on failure:
+# Builds .#NixVim then runs all three suites; exits non-zero on failure:
 #   1. tests/headless-smoke.lua — targeted behaviour, incl. the real-load
 #      assertion for codecompanion's history extension (the bug that a
 #      require()-only sweep could not see, because it never calls setup()).
 #   2. tests/plugin-sweep.lua   — broad/shallow plugin-load + keymap-existence
 #      gate, plus <leader>a*/<leader>h* ownership. ⚠️ require()-only: it is a
 #      plugin-load gate, NOT proof the config comes up clean at startup.
+#   3. tests/host-tool.lua — native/OrbStack resolution, explicit binary overrides,
+#      and cancellation before arbitrary SQL execution.
 tests/run.sh
 
 # Run a profile without installing
@@ -215,11 +217,11 @@ For a persistent interactive session (not a one-shot query), use **betterTerm** 
 - `<leader>Qsr` / `<leader>Qsv` / `<leader>Qsb` — run line/selection/buffer against a picked sqlit connection (confirm-gated, same resize-safe results float). Connection names come from `~/.config/sqlit/connections.json` (`$SQLIT_CONFIG_DIR` respected).
 - `<leader>Qsi` — open the sqlit TUI in a snacks.terminal float (a proper Textual app, resize-safe).
 
-**OrbStack host preference.** Inside an OrbStack machine, `lua/host_tool.lua` (setup called from `plugins.nix` extraConfigLua) prefers host macOS binaries for `snow`/`sqlit` via OrbStack's `mac` shim (`mac snow …`) when a host install is found (probed lazily via a login shell, cached): the SSO session, browser and Keychain all live on the Mac, so externalbrowser OAuth + token caching just work. stdio is proxied, so output/exit codes land in Neovim as usual. SQL always travels as a temp file passed with `-f` — written through the `/mnt/mac` shared mount when host-run (no stdin assumptions about the `mac` shim, no shell quoting anywhere). Detection: the `mac` guest shim on PATH, or `orbstack` in the kernel release string.
+**OrbStack host preference.** Inside an OrbStack machine, `lua/host_tool.lua` (setup called from `plugins.nix` extraConfigLua) prefers host macOS binaries for `snow`/`sqlit` via OrbStack's `mac` shim (`mac snow …`) when a host install is found (probed lazily via a login shell, cached): the SSO session, browser and Keychain all live on the Mac, so externalbrowser OAuth + token caching just work. stdio is proxied, so output/exit codes land in Neovim as usual. SQL always travels as a temp file passed with `-f` — written through the `/mnt/mac` shared mount when host-run (no stdin assumptions about the `mac` shim, no shell quoting anywhere). Detection is Linux-only: the `mac` guest shim on PATH, or `orbstack` in the kernel release string.
 
 On OrbStack, `host_tool.setup()` also points `SNOWFLAKE_HOME` / `SQLIT_CONFIG_DIR` at the host's `~/.snowflake` / `~/.config/sqlit` (the Mac fs is mounted at the same `/Users/...` path in the VM, so both sides share one set of connections — externalbrowser connections store no password, so the differing OS keyrings don't matter), and sets `BROWSER=open` as a fallback so a VM-local externalbrowser flow can still open the Mac browser (the OAuth loopback redirect completes because OrbStack forwards machine ports to macOS `localhost`).
 
-Escape hatch: `:let g:host_tools_prefer_local = 1` forces the nix-packaged binaries for the session.
+Native macOS uses local tools without OrbStack. `NIXVIM_SQLIT_BINARY` and `NIXVIM_SNOW_BINARY` optionally select absolute executable paths for local execution; invalid paths fail clearly. Home Manager sets the sqlit override to its workspace-aware wrapper so Nixvim’s bundled PATH cannot bypass it. Guest host preference still wins when available. Escape hatch: `:let g:host_tools_prefer_local = 1` forces local resolution (explicit override, then bundled PATH).
 
 Connection profiles come from `~/.snowflake/config.toml` (or `$SNOWFLAKE_HOME`). Trap: if a `connections.toml` exists, `config.toml` entries are ignored — use `snow --info` / `snow connection list|test|set-default` to see which profile is actually active (`snow helpers import-snowsql-connections` imports legacy SnowSQL connections).
 

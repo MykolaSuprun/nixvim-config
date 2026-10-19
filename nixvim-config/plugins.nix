@@ -743,9 +743,12 @@
     #   * externalbrowser OAuth opens the Mac browser (SSO session lives
     #     there) and caches the token in the macOS Keychain;
     #   * stdio is proxied, so output/exit codes behave like a local process.
-    # Resolution per tool: host binary (OrbStack + host has it) → nix-packaged
-    # binary on PATH. Host probing is lazy and cached. Escape hatch:
-    # `let g:host_tools_prefer_local = 1` forces the local binaries.
+    # Resolution per tool: host binary (OrbStack + host has it) → explicit
+    # local binary → nix-packaged binary on PATH. NIXVIM_SQLIT_BINARY and
+    # NIXVIM_SNOW_BINARY let Home Manager supply an absolute executable (for
+    # example its workspace-aware sqlit wrapper) despite Nixvim's bundled
+    # PATH. Host probing is lazy and cached. Escape hatch:
+    # `let g:host_tools_prefer_local = 1` forces local resolution.
     "lua/host_tool.lua".text =
       #lua
       ''
@@ -753,12 +756,15 @@
 
         local orbstack = nil
 
-        -- OrbStack machines always ship the `mac` guest shim on PATH; the
-        -- kernel release string ("-orbstack-") is the fallback signal.
+        -- Only Linux guests use the `mac` shim. A same-named executable on
+        -- native macOS must not turn local tools into OrbStack commands.
+        -- The kernel release string ("-orbstack-") is the fallback signal.
         function M.is_orbstack()
           if orbstack == nil then
-            local release = (vim.uv or vim.loop).os_uname().release or ""
-            orbstack = vim.fn.executable("mac") == 1 or release:find("orbstack") ~= nil
+            local uname = (vim.uv or vim.loop).os_uname()
+            local release = uname.release or ""
+            orbstack = uname.sysname == "Linux"
+              and (vim.fn.executable("mac") == 1 or release:find("orbstack") ~= nil)
           end
           return orbstack
         end
@@ -778,15 +784,37 @@
           return host_probe[name]
         end
 
+        local local_overrides = {
+          sqlit = "NIXVIM_SQLIT_BINARY",
+          snow = "NIXVIM_SNOW_BINARY",
+        }
+
+        local function local_binary(name)
+          local variable = local_overrides[name]
+          local path = variable and vim.env[variable]
+          if not path or path == "" then
+            return name
+          end
+          if path:sub(1, 1) ~= "/" then
+            error(variable .. " must be an absolute executable path: " .. path, 2)
+          end
+          if vim.fn.executable(path) ~= 1 then
+            error(variable .. " is not executable: " .. path, 2)
+          end
+          return path
+        end
+
         --- { prefix = argv head, host = bool } for running `name`.
+        --- Overrides apply to local execution only; OrbStack's host tools
+        --- retain their browser/Keychain preference when available.
         function M.runner(name)
           if M.host_executable(name) then
             return { prefix = { "mac", name }, host = true }
           end
-          return { prefix = { name }, host = false }
+          return { prefix = { local_binary(name) }, host = false }
         end
 
-        --- Full argv for running `name` with `args`, host-preferred.
+        --- Full argv for running `name` with `args`, without a shell.
         function M.cmd(name, args)
           local argv = vim.deepcopy(M.runner(name).prefix)
           return vim.list_extend(argv, args or {})
