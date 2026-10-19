@@ -121,7 +121,7 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>t` | tabs | keymaps.nix |
 | `<leader>T` | test (neotest) | keymaps.nix |
 | `<leader><tab>` | agents (sidekick CLI) | keymaps.nix |
-| `<leader>a` | AI chat (codecompanion) | keymaps.nix |
+| `<leader>a` | AI chat (codecompanion — `aa` chat, `aA` palette, `av` add selection, `ai` inline, `ar` review, `as` sessions, `ac` gen cmd) | keymaps.nix |
 | `<leader>h` | herdr bridge (herdr-nvim) | keymaps.nix |
 | `<S-Space>` | window picker | keymaps.nix |
 | `<leader>N` | nix-develop | keymaps.nix |
@@ -293,5 +293,5 @@ From `flake.lock`:
 
 Available as nixvim by-name modules at this rev: `sidekick`, `codecompanion`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
 
-**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`) and `herdr-nvim` (ChmaraX, `extra-plugins.nix`, rev `d2dd189` = v1.2.1 — the Lua half; the Rust sidebar daemon comes from `herdr plugin install ChmaraX/herdr-nvim`, which is imperative by design). `codecompanion` **is** a by-name module but is pinned to **v20.0.1** via `plugins.codecompanion.package` because nixpkgs still ships 19.22.0 — v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the `insert_edit_into_file` → `edit_file` tool rename; bump rev + hash together. Its `settings` is freeform, so everything reaches `require("codecompanion").setup()` verbatim (no `extraConfigLua`); never set the stale `strategies` alias.
+**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`) and `herdr-nvim` (ChmaraX, `extra-plugins.nix`, rev `d2dd189` = v1.2.1 — the Lua half; the Rust sidebar daemon comes from `herdr plugin install ChmaraX/herdr-nvim`, which is imperative by design). `codecompanion` **is** a by-name module but is pinned to **v20.0.1** via `plugins.codecompanion.packageDecorator` because nixpkgs still ships 19.22.0 — v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the `insert_edit_into_file` → `edit_file` tool rename; bump rev + hash together. ⚠️ Use `packageDecorator`, never `package`: `package` is a pkgs *path* (string/list) and a derivation passed there is **silently ignored** (no eval error — the first attempt just built 19.22.0 anyway). Its `settings` is freeform, so everything reaches `require("codecompanion").setup()` verbatim (no `extraConfigLua`); never set the stale `strategies` alias. Chat history comes from the separate `codecompanion-history` module (own `plugins.codecompanion-history` block) — `extensions.history.enabled` alone is a **load error**, because that extension ships in that plugin, not in codecompanion.
 `snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (our locked rev ships 0.8.2, satisfying herdr-nvim's 0.7.5 requirement — no separate pin needed).

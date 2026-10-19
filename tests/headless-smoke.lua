@@ -55,12 +55,20 @@ for _, k in ipairs({ "t", "s", "f", "p", "x", "e", "v", "d" }) do
   check("keymap <leader><tab>" .. k, has_tab_map(k))
 end
 -- codecompanion (<leader>a*) + herdr-nvim (<leader>h*)
-for _, k in ipairs({ "aa", "aA", "hc", "hl", "hs", "hS", "hi" }) do
+-- normal mode
+for _, k in ipairs({ "aa", "aA", "ai", "ar", "as", "ac", "hc", "hl", "hs", "hS", "hi" }) do
   check("keymap <leader>" .. k .. " (normal)", has_map("n", L .. k) ~= nil)
 end
+-- visual mode: selection-aware entry points. `av` (add selection to chat) is
+-- the replacement for upstream's `v ga`, which is unusable here because
+-- mini.align owns `ga`/`gA` in normal AND visual mode.
+for _, k in ipairs({ "aA", "av", "ai", "ar", "hi", "hc" }) do
+  check("keymap <leader>" .. k .. " (visual)", has_map("x", L .. k) ~= nil)
+end
+check("keymap <leader>av is NOT normal-mode only mistake", has_map("n", L .. "av") == nil)
 -- The insert-mode exclusion is a regression guard: <Space>a + a letter used to
 -- fire mid-prose with the old agentic group (nixvim-config 0eb7abb).
-for _, k in ipairs({ "aa", "aA", "hc", "hS" }) do
+for _, k in ipairs({ "aa", "aA", "av", "ai", "ar", "as", "ac", "hc", "hS" }) do
   check("keymap <leader>" .. k .. " not in insert", has_map("i", L .. k) == nil)
 end
 check(
@@ -288,6 +296,17 @@ check("codecompanion loads", ok_cc)
 -- 19.22, so this proves the pinned package override is actually in effect).
 check("codecompanion v20 (herdr integration present)", pcall(require, "codecompanion.integrations.herdr"))
 check("codecompanion opencode ACP adapter present", pcall(require, "codecompanion.adapters.acp.opencode"))
+-- The history extension is provided by the `codecompanion-history` plugin, NOT
+-- by codecompanion itself. It used to be enabled without that plugin, which made
+-- setup() fail on EVERY load:
+--   Error loading extension history: ... module
+--   'codecompanion._extensions.history' not found
+-- This check only passes if the extension actually loaded.
+check("codecompanion history extension loaded", require("codecompanion").extensions.history ~= nil)
+check(
+  "codecompanion setup produced no extension errors",
+  not (vim.fn.execute("messages"):find("Error loading extension"))
+)
 
 local ok_hn = pcall(require, "herdr-nvim")
 check("herdr-nvim loads", ok_hn)

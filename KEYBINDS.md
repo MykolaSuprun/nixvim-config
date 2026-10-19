@@ -242,8 +242,24 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<leader>aa` | n, x | Toggle chat |
-| `<leader>aA` | n, x | Action palette (prompts / inline / cmd) |
+| `<leader>aa` | n | Toggle chat |
+| `<leader>aA` | n, x | Action palette (prompts / tools / chat) |
+| `<leader>av` | x | **Add selection to chat** (creates one if needed) |
+| `<leader>ai` | n, x | Inline edit — selection in place, or prompt in normal mode |
+| `<leader>ar` | n, x | Code review (selection / branch diff) |
+| `<leader>as` | n | Saved chats (session picker) |
+| `<leader>ac` | n | Generate a command for the cmdline |
+
+> **Why not `v ga`?** Upstream's getting-started suggests binding `v ga` to
+> `:CodeCompanionChat Add`. That is unusable here — **mini.align owns `ga`/`gA`
+> in normal _and_ visual mode**. `<leader>av` is our equivalent.
+>
+> `<leader>av` uses a `<Cmd>` mapping deliberately: `<Cmd>` **preserves visual
+> mode**, and codecompanion reads the selection itself
+> (`utils.context.get_visual_selection()` → `vim.fn.mode()` + the `v`/`.`
+> marks). The `:` form exits visual mode first and therefore sends nothing.
+> Note `<Cmd>` does *not* pass a range to the command's `line1`/`line2` — that
+> is fine, because codecompanion does not use it.
 
 ### Chat-buffer keys (buffer-local, plugin defaults)
 

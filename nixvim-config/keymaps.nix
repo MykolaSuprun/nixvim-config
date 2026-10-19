@@ -1082,28 +1082,98 @@
       action.__raw = ''function() require("sidekick.cli").focus() end'';
     }
 
-    # ── codecompanion (chat / inline / ACP) — <leader>a ─────────────────────
-    # Only the entry points live here: codecompanion's own bindings are
-    # buffer-local to its chat/inline windows (g1-g4 approvals, gv diff,
-    # <C-s> send, ga adapter/model, gr regenerate, gR goto file, ]h/[h hunks —
-    # full table in KEYBINDS.md), so nothing here can collide with them.
+    # ── codecompanion (chat / inline / code-review / ACP) — <leader>a ───────
+    # Entry points only: codecompanion's own bindings are buffer-local to its
+    # chat/inline windows (g1-g4 approvals, gv diff, <C-s> send, ga adapter/
+    # model, gr regenerate, gR goto file, ]h/[h hunks — full table in
+    # KEYBINDS.md), so nothing here can collide with them.
+    #
+    # NOTE: upstream's getting-started suggests `v ga` for "add selection to
+    # chat". That is NOT usable here — mini.align owns `ga`/`gA` in normal AND
+    # visual mode. Our visual-selection entry point is `<leader>av` instead.
+    #
+    # On `<cmd>`: it does NOT hand the visual range to the command's
+    # `line1`/`line2` (verified — a `range=true` probe sees {4,4}, the cursor
+    # line). It does not need to: codecompanion reads the selection itself in
+    # `utils.context.get_visual_selection()` via `vim.fn.mode()` + `v`/`.`
+    # marks, and `<cmd>` is precisely what PRESERVES visual mode (`:` exits it
+    # first, which is why the `:`-form sees nothing). Verified live: from a
+    # visual selection over lines 2-3, a `<cmd>` mapping gives the plugin
+    # `{ "two", "three" } sl=2 el=3`. Keep `<cmd>` here.
     {
       key = "<leader>aa";
       options = {
         silent = true;
         desc = "CodeCompanion: toggle chat";
       };
-      mode = ["n" "x"];
+      mode = ["n"];
       action = "<cmd>CodeCompanionChat Toggle<cr>";
     }
     {
       key = "<leader>aA";
       options = {
         silent = true;
-        desc = "CodeCompanion: action palette";
+        desc = "CodeCompanion: action palette (prompts / tools / chat)";
       };
       mode = ["n" "x"];
       action = "<cmd>CodeCompanionActions<cr>";
+    }
+    # Visual: push the selection into the current chat (creates one if absent).
+    # This is the replacement for upstream's `v ga`, and the reason the old
+    # x-mode `aa` bind was misleading: Toggle never sent the selection.
+    {
+      key = "<leader>av";
+      options = {
+        silent = true;
+        desc = "CodeCompanion: add selection to chat";
+      };
+      mode = ["x"];
+      action = "<cmd>CodeCompanionChat Add<cr>";
+    }
+    # Inline edit: normal mode opens the input prompt; visual mode seeds it with
+    # the selection. Same command — `CodeCompanion.inline` calls
+    # `ui.open_input` when no prompt arg is given (verified in the source).
+    {
+      key = "<leader>ai";
+      options = {
+        silent = true;
+        desc = "CodeCompanion: inline edit (selection / prompt)";
+      };
+      mode = ["n" "x"];
+      action = "<cmd>CodeCompanion<cr>";
+    }
+    # Code review: visual = review the selection's diff, normal = the whole
+    # branch. `CodeCompanionCodeReview` ignores the visual range either way
+    # (it opens its own review window / diffs against the branch).
+    {
+      key = "<leader>ar";
+      options = {
+        silent = true;
+        desc = "CodeCompanion: code review (selection / branch)";
+      };
+      mode = ["n" "x"];
+      action = "<cmd>CodeCompanionCodeReview<cr>";
+    }
+    # Saved chats (restore / open previous sessions). NOTE: `:CodeCompanionChat`
+    # with no args creates a NEW chat — the picker is the `sessions()` API.
+    {
+      key = "<leader>as";
+      options = {
+        silent = true;
+        desc = "CodeCompanion: saved chats";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("codecompanion").sessions() end'';
+    }
+    # Prompt the LLM to write a shell/editor command for the cmdline.
+    {
+      key = "<leader>ac";
+      options = {
+        silent = true;
+        desc = "CodeCompanion: generate a command";
+      };
+      mode = ["n"];
+      action = "<cmd>CodeCompanionCmd<cr>";
     }
 
     # ── herdr-nvim (herdr bridge) — <leader>h ──────────────────────────────
