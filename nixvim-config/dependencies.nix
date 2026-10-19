@@ -66,7 +66,12 @@
     # (overseer/dbt_tasks.lua) and betterTerm. See snowflakeCli comment in
     # flake.nix: pinned to nixos-25.05 because current nixpkgs fails to build
     # snowflake-connector-python's test suite on aarch64-linux.
-    snowflakeCli
+    # Its HTTP-server test fixtures need localhost resolution and loopback
+    # sockets on Darwin; keep the sandbox and the complete test suite enabled.
+    (snowflakeCli.overrideAttrs (_:
+      lib.optionalAttrs stdenv.hostPlatform.isDarwin {
+        __darwinAllowLocalNetworking = true;
+      }))
     # sqlit TUI (github:Maxteabag/sqlit), built via upstream's flake with the
     # duckdb/postgres/mysql/ssh extras (+ snowflake where the connector
     # builds — see flake.nix). Driven from keymaps via lua/sql_runner.lua;
@@ -80,7 +85,13 @@
     opencode
     # claude-code CLI — sidekick's `claude` tool (and codecompanion's
     # claude_code ACP adapter if it is ever enabled via claude-agent-acp).
-    claude-code
+    # Backport nixpkgs#566625: the old Darwin sandbox exemption is no longer
+    # needed. Keep the package's version check enabled under strict sandboxing.
+    # Remove this override once the nixpkgs pin includes that fix.
+    (claude-code.overrideAttrs (_:
+      lib.optionalAttrs stdenv.hostPlatform.isDarwin {
+        __noChroot = false;
+      }))
     # lsof + procps — sidekick's opencode external-session backend finds the
     # running `opencode serve` by scanning listening TCP ports; without lsof
     # that backend silently does not exist (guarded by executable("lsof")).
