@@ -75,8 +75,14 @@ nix build .#CodeVim
 # Build nixvim's own test derivation for the NixVim profile specifically
 nix build .#checks.x86_64-linux.NixVim
 
-# Headless smoke tests (keymaps, overseer templates, dap, render-markdown, …)
-# Builds .#NixVim, runs tests/headless-smoke.lua, exits non-zero on failure.
+# Headless tests (keymaps, overseer templates, dap, render-markdown, AI stack).
+# Builds .#NixVim then runs BOTH suites; exits non-zero on failure:
+#   1. tests/headless-smoke.lua — targeted behaviour, incl. the real-load
+#      assertion for codecompanion's history extension (the bug that a
+#      require()-only sweep could not see, because it never calls setup()).
+#   2. tests/plugin-sweep.lua   — broad/shallow plugin-load + keymap-existence
+#      gate, plus <leader>a*/<leader>h* ownership. ⚠️ require()-only: it is a
+#      plugin-load gate, NOT proof the config comes up clean at startup.
 tests/run.sh
 
 # Run a profile without installing
