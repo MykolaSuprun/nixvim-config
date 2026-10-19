@@ -24,7 +24,11 @@
         };
       };
       html.enable = true;
-      htmx.enable = true;
+      # htmx-lsp disabled: it emits `LSP[htmx]: Error INVALID_SERVER_MESSAGE`
+      # on every markdown buffer (the server returns malformed JSON-RPC ids).
+      # Present in ~/.local/state/nvim/lsp.log since 2026-05-23; nothing to do
+      # with our config. Re-enable only if upstream fixes the id handling.
+      htmx.enable = false;
       gopls.enable = true;
       metals.enable = true;
       cssls.enable = true;
