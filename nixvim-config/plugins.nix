@@ -165,7 +165,15 @@
         };
         # ── v20-only extras (ignored on the 19.x fallback) ─────────────────
         integrations.herdr.enabled = true;
-        extensions.history.enabled = true;
+        # NOTE: `extensions.history` is deliberately NOT declared here — it is
+        # owned by the `codecompanion-history` block below, which installs the
+        # plugin that actually provides `codecompanion._extensions.history`.
+        # Declaring the extension without that plugin made setup() fail on
+        # every load with:
+        #   Error loading extension history: ... module
+        #   'codecompanion._extensions.history' not found
+        # (headless smoke tests never caught it: they require() modules but
+        # never call setup(), so the extension loader never ran.)
         opts = {
           log_level = "ERROR";
           language = "English";
@@ -173,6 +181,26 @@
         };
       };
       lazyLoad.settings.event = ["VimEnter"];
+    };
+
+    # Chat history for codecompanion. nixvim's module installs
+    # `codecompanion-history-nvim` (the plugin providing
+    # `codecompanion._extensions.history`) AND sets
+    # `plugins.codecompanion.settings.extensions.history = { enabled = true; opts = ...; }`.
+    # Keep the two together: the extension only loads if this plugin is on the
+    # rtp, which is exactly what broke when `extensions.history.enabled` was
+    # declared by hand under `codecompanion` with nothing providing it.
+    # `settings` here is merged into `extensions.history.opts` verbatim.
+    codecompanion-history = {
+      enable = true;
+      settings = {
+        # Persist every chat automatically (off => save manually with `sc`).
+        auto_save = true;
+        # Resume the previous chat when opening codecompanion in a new session.
+        continue_last_chat = true;
+        # Auto-resolved to the best available interface; we ship snacks.
+        picker = "snacks";
+      };
     };
 
     # web-devicons is declared in ../shared/plugins.nix
