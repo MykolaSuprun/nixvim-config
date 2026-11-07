@@ -49,28 +49,7 @@ require("overseer").register_template({
 	},
 })
 
--- Auto-run ruff check whenever a Python file is saved. Guarded on the binary
--- (consistent with the dbt/snow/astro templates) and debounced so rapid saves
--- coalesce into one run; the template's `unique` component replaces any
--- still-running check, so tasks never stack.
-local ruff_debounce_generation = 0
-vim.api.nvim_create_autocmd("BufWritePost", {
-	pattern = "*.py",
-	callback = function()
-		if vim.fn.executable("ruff") ~= 1 then
-			return
-		end
-		ruff_debounce_generation = ruff_debounce_generation + 1
-		local generation = ruff_debounce_generation
-		vim.defer_fn(function()
-			if generation ~= ruff_debounce_generation then
-				return
-			end
-			require("overseer").run_task({
-				name = "ruff check",
-				-- Take the first match without showing a picker
-				first = true,
-			})
-		end, 300)
-	end,
-})
+-- No BufWritePost auto-run: the ruff LSP (lsp.nix) already publishes live
+-- per-file diagnostics, so re-running a project-wide `ruff check` on every
+-- save duplicated every finding in the buffer. Run this template on demand
+-- (<leader>Or → "ruff check") for a project-wide sweep.

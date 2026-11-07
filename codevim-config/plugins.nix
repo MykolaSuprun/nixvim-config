@@ -77,6 +77,16 @@
         formatters = {
           injected.options.ignore_errors = true;
         };
+        format_on_save.__raw =
+          #lua
+          ''
+            function(bufnr)
+              if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+                return
+              end
+              return { timeout_ms = 500, lsp_format = "fallback" }
+            end
+          '';
       };
       luaConfig.post =
         #lua
@@ -97,17 +107,12 @@
             vim.b.disable_autoformat = false
             vim.g.disable_autoformat = false
           end, { desc = "Re-enable autoformat-on-save" })
-
-          require("conform").setup({
-            format_on_save = function(bufnr)
-              if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-                return
-              end
-              return { timeout_ms = 500, lsp_format = "fallback" }
-            end,
-          })
         '';
     };
+
+    # Declared in ../shared/editing.nix for nixvim; VSCode closes brackets
+    # natively and autopairs' insert-mode <CR>/<BS> maps fight vscode-neovim.
+    nvim-autopairs.enable = lib.mkForce false;
 
     # Diagnostic list view — reads from vim.diagnostic which vscode-neovim
     # automatically populates with all VSCode diagnostics.

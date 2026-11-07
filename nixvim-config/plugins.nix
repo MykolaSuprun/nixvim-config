@@ -272,6 +272,9 @@
 
     noice = {
       enable = true;
+      # blink.cmp owns signature help (lsp.nix `signature.enabled`); noice's
+      # auto-open signature popup would show a second window on every `(`.
+      settings.lsp.signature.enabled = false;
     };
 
     snacks = {
@@ -293,7 +296,12 @@
           enabled = true;
           style = "compact";
         };
-        explorer.enabled = true;
+        explorer = {
+          enabled = true;
+          # oil (default_file_explorer = true) owns `nvim <dir>`; without this
+          # both plugins race to hijack netrw directory buffers.
+          replace_netrw = false;
+        };
         quickfile.enabled = true;
         git.enabled = true;
         gitbrowse.enabled = true;
@@ -364,7 +372,12 @@
     };
     hardtime = {
       enable = true;
-      settings.enabled = true;
+      settings = {
+        enabled = true;
+        # hardtime defaults to `mouse=""`, which silently breaks bufferline
+        # hover/right-click and dap-ui's <2-LeftMouse>. Keep motion hints only.
+        disable_mouse = false;
+      };
       lazyLoad = {
         settings = {
           event = ["VimEnter"];
@@ -411,10 +424,17 @@
           quiet = false;
           lsp_format = "fallback";
         };
-        format_on_save = {
-          timeout_ms = 500;
-          lsp_format = "fallback";
-        };
+        # Toggle-aware: :FormatDisable[!] / <leader>uf set g:/b:disable_autoformat.
+        format_on_save.__raw =
+          #lua
+          ''
+            function(bufnr)
+              if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+                return
+              end
+              return { timeout_ms = 500, lsp_format = "fallback" }
+            end
+          '';
         formatters_by_ft = {
           lua = ["stylua"];
           go = ["gofmt"];
@@ -458,16 +478,6 @@
       luaConfig.post =
         #lua
         ''
-          require("conform").setup({
-          	format_on_save = function(bufnr)
-          		-- Disable with a global or buffer-local variable
-          		if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-          			return
-          		end
-          		return { timeout_ms = 500, lsp_format = "fallback" }
-          	end,
-          })
-
           vim.api.nvim_create_user_command("FormatDisable", function(args)
           	if args.bang then
           		-- FormatDisable! will disable formatting just for this buffer
@@ -820,8 +830,10 @@
         --- Write SQL text to a temp file, returning the path to pass to the
         --- tool. Host-run tools can't see the VM filesystem, so the file goes
         --- through the OrbStack mount (/mnt/mac) and the returned path is the
-        --- host-visible equivalent. Files land in tmp on both sides and are
-        --- left for the OS to clean (boot-time cleanup on macOS and NixOS).
+        --- host-visible equivalent.
+        --- Returns: tool_path (what to pass to the tool), local_path (the
+        --- same file as seen from Neovim — delete it once the tool exits;
+        --- queries can contain sensitive SQL and /tmp is shared with the host).
         function M.write_query_tmp(for_host, content)
           local name = ("nvim-query-%d-%d.sql"):format(
             vim.fn.getpid(),
@@ -830,11 +842,11 @@
           if for_host then
             local vm_path = "/mnt/mac/tmp/" .. name
             vim.fn.writefile(vim.split(content, "\n", { plain = true }), vm_path)
-            return "/tmp/" .. name
+            return "/tmp/" .. name, vm_path
           end
           local path = vim.fn.tempname() .. ".sql"
           vim.fn.writefile(vim.split(content, "\n", { plain = true }), path)
-          return path
+          return path, path
         end
 
         --- One-time startup setup (cheap: fs/executable checks only, no host
@@ -1166,25 +1178,21 @@
           return vim.api.nvim_get_current_line()
         end
 
+        -- Live selection when called from visual mode (see overseer_helpers).
         local function visual_selection()
-          local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
-          local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
-          local lines = vim.api.nvim_buf_get_lines(0, sr - 1, er, false)
-          if #lines == 0 then
-            return ""
-          end
-          lines[#lines] = string.sub(lines[#lines], 1, ec + 1)
-          lines[1] = string.sub(lines[1], sc + 1)
-          return table.concat(lines, "\n")
+          return require("overseer_helpers").visual_selection() or ""
         end
 
         local function whole_buffer()
           return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
         end
 
-        local function run(argv, title)
+        local function run(argv, title, cleanup_path)
           notify("running query…")
           vim.system(argv, { text = true }, function(res)
+            if cleanup_path then
+              os.remove(cleanup_path)
+            end
             vim.schedule(function()
               if res.code ~= 0 then
                 notify(
@@ -1213,12 +1221,12 @@
         -- shim) and immune to shell-quoting issues (exec argv, no shell).
         local function run_with_file(tool, sql, args, title)
           local runner = host_tool.runner(tool)
-          local path = host_tool.write_query_tmp(runner.host, sql)
+          local path, local_path = host_tool.write_query_tmp(runner.host, sql)
           local argv = vim.deepcopy(runner.prefix)
           for _, a in ipairs(args(path)) do
             argv[#argv + 1] = a
           end
-          run(argv, title)
+          run(argv, title, local_path)
         end
 
         -- --enable-templating NONE: editor text (esp. dbt Jinja) must reach
@@ -1324,8 +1332,15 @@
         function M.snow_line()
           M.snow_run(current_line())
         end
+        -- Capture the live selection, then leave visual mode before the
+        -- confirm dialog / picker takes over.
+        local function take_selection()
+          local sql = visual_selection()
+          vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "nx", false)
+          return sql
+        end
         function M.snow_selection()
-          M.snow_run(visual_selection())
+          M.snow_run(take_selection())
         end
         function M.snow_buffer()
           M.snow_run(whole_buffer())
@@ -1334,7 +1349,7 @@
           M.sqlit_run(current_line())
         end
         function M.sqlit_selection()
-          M.sqlit_run(visual_selection())
+          M.sqlit_run(take_selection())
         end
         function M.sqlit_buffer()
           M.sqlit_run(whole_buffer())
@@ -1365,10 +1380,52 @@
           }
         end
 
-        -- Text of the last visual selection (end column inclusive), or nil when
-        -- there is no selection. Marks are 0-indexed byte offsets; the end
-        -- column is inclusive, hence the +1.
+        -- Wrap a template definition so overseer only offers it while
+        -- `available()` is true, evaluated each time the picker opens
+        -- (condition.callback) — NOT once at startup. Tools such as dbt, astro
+        -- or airflow usually arrive on PATH later (direnv, a project venv, or
+        -- `nix develop` via nix-develop.nvim), so a startup check would hide
+        -- the templates for the whole session. Existing conditions are kept.
+        -- Returns `defn`; callers still pass it to overseer.register_template.
+        function M.when(available, reason, defn)
+          defn.condition = defn.condition or {}
+          local prev = defn.condition.callback
+          defn.condition.callback = function(search)
+            if not available() then
+              return false, reason
+            end
+            if prev then
+              return prev(search)
+            end
+            return true
+          end
+          return defn
+        end
+
+        -- Shorthand: template is offered only while `bin` is executable.
+        function M.requiring(bin, defn)
+          return M.when(function()
+            return vim.fn.executable(bin) == 1
+          end, "`" .. bin .. "` is not on PATH", defn)
+        end
+
+        -- Text of the visual selection, or nil when there is none.
+        -- * Called while STILL in visual mode (a keymap whose rhs is a Lua
+        --   function): the '< / '> marks still hold the PREVIOUS selection —
+        --   they are only set on leaving visual mode — so read the live
+        --   region between the cursor and the `v` anchor instead.
+        -- * Called after visual mode has ended (overseer template builders,
+        --   run from the OverseerRun picker): fall back to the marks. Marks
+        --   are 0-indexed byte offsets; the end column is inclusive (+1).
         function M.visual_selection()
+          local mode = vim.fn.mode()
+          if mode == "v" or mode == "V" or mode == "\22" then
+            local lines = vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode })
+            if #lines == 0 then
+              return nil
+            end
+            return table.concat(lines, "\n")
+          end
           local sr, sc = unpack(vim.api.nvim_buf_get_mark(0, "<"))
           local er, ec = unpack(vim.api.nvim_buf_get_mark(0, ">"))
           if sr == 0 or er == 0 then
@@ -1390,28 +1447,32 @@
       #lua
       ''
         -- Jinja-brace highlighting for dbt models. Keeps `filetype=sql` (so the
-        -- `sqls` LSP and sqruff formatter keep working) and only adds distinct
-        -- highlighting for `{{ … }}` and `{% … %}` blocks on top of the SQL
-        -- syntax. No new treesitter parser or plugin is loaded.
-        vim.api.nvim_create_autocmd("FileType", {
-          pattern = "sql",
-          callback = function()
-            if vim.b.sql_jinja_highlighted then return end
-            vim.b.sql_jinja_highlighted = true
-            vim.cmd("syntax region sqlJinjaStatement matchgroup=sqlJinjaDelim start=/{%/ end=/%}/ contains=@SQL transparent keepend")
-            vim.cmd("syntax region sqlJinjaExpr      matchgroup=sqlJinjaDelim start=/{{/ end=/}}/ contains=@SQL transparent keepend")
-            vim.cmd("syntax match  sqlJinjaComment  /{#[^#]*#}/")
-            vim.cmd("highlight default link sqlJinjaDelim Special")
-            vim.cmd("highlight default link sqlJinjaComment Comment")
-          end,
-        })
-
-        -- Force compiled dbt output under target/ to be read-only to avoid
-        -- accidentally editing expanded Jinja instead of the source model.
-        vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-          pattern = "*/target/**/*.sql",
-          callback = function() vim.bo.readonly = true end,
-        })
+        -- `sqls` LSP and sqruff formatter keep working) and adds distinct
+        -- highlighting for `{{ … }}`, `{% … %}` and `{# … #}` blocks.
+        --
+        -- This file IS the FileType=sql handler, so it runs once per buffer and
+        -- must not create autocmds (an earlier version did, leaking one global
+        -- autocmd per SQL buffer). Treesitter highlighting turns regex syntax
+        -- off, so it is re-enabled for this buffer: vim syntax and treesitter
+        -- coexist, with treesitter's extmark highlights taking priority —
+        -- only the Jinja regions below add anything visible.
+        -- The target/** compiled-SQL readonly guard lives in extraConfigLua.
+        if vim.b.sql_jinja_highlighted then
+          return
+        end
+        vim.b.sql_jinja_highlighted = true
+        if vim.bo.syntax == "" then
+          vim.bo.syntax = "sql"
+        end
+        vim.cmd([[
+          syntax region sqlJinjaStatement matchgroup=sqlJinjaDelim start=/{%-\?/ end=/-\?%}/ keepend
+          syntax region sqlJinjaExpr      matchgroup=sqlJinjaDelim start=/{{-\?/ end=/-\?}}/ keepend
+          syntax region sqlJinjaComment   start=/{#/ end=/#}/ keepend
+          highlight default link sqlJinjaDelim Special
+          highlight default link sqlJinjaStatement PreProc
+          highlight default link sqlJinjaExpr Identifier
+          highlight default link sqlJinjaComment Comment
+        ]])
       '';
   };
 
@@ -1445,6 +1506,16 @@
       -- config dirs with the macOS host and set BROWSER=open so in-VM
       -- externalbrowser OAuth can open the Mac browser. Cheap no-op elsewhere.
       require("host_tool").setup()
+
+      -- Force compiled dbt output under target/ to be read-only to avoid
+      -- accidentally editing expanded Jinja instead of the source model.
+      vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+        group = vim.api.nvim_create_augroup("dbt_compiled_readonly", { clear = true }),
+        pattern = "*/target/**/*.sql",
+        callback = function(args)
+          vim.bo[args.buf].readonly = true
+        end,
+      })
 
       -- otter: activate embedded-language LSP only for buffers that (a) have an
       -- embedded language we care about, and (b) actually loaded the otter plugin

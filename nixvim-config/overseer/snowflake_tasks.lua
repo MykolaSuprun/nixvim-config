@@ -151,7 +151,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: current line")
 		end
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-q", line, "--enhanced-exit-codes" }),
+			cmd = host_tool.cmd("snow", { "sql", "-q", line, "--enable-templating", "NONE", "--enhanced-exit-codes" }),
 			name = "snowflake run: current line",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -171,7 +171,7 @@ overseer.register_template({
 			return cancelled_task("snowflake run: selection")
 		end
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-q", query, "--enhanced-exit-codes" }),
+			cmd = host_tool.cmd("snow", { "sql", "-q", query, "--enable-templating", "NONE", "--enhanced-exit-codes" }),
 			name = "snowflake run: selection",
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(120),
@@ -210,7 +210,7 @@ overseer.register_template({
 		local runner = host_tool.runner("snow")
 		local arg_path = runner.host and host_tool.write_query_tmp(true, table.concat(vim.fn.readfile(path), "\n")) or path
 		return {
-			cmd = host_tool.cmd("snow", { "sql", "-f", arg_path, "--enhanced-exit-codes" }),
+			cmd = host_tool.cmd("snow", { "sql", "-f", arg_path, "--enable-templating", "NONE", "--enhanced-exit-codes" }),
 			name = "snowflake run compiled: " .. model,
 			cwd = vim.fn.getcwd(),
 			components = bottom_output(300),

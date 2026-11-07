@@ -17,8 +17,8 @@
     # line numbers
     number = true;
     relativenumber = true;
-    # 24-bit RGB color support
-    termguicolors = true;
+    # termguicolors is left unset: Neovim 0.10+ enables it automatically when
+    # the terminal reports truecolor support (and keeps it off on a Linux TTY).
     timeout = true;
     timeoutlen = 300;
     # window splits

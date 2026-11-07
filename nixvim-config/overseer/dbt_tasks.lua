@@ -1,9 +1,15 @@
 -- dbt overseer task templates
--- Tasks are only registered when `dbt` is found on PATH at startup.
 -- Output goes to a bottom split via the `open_output` component (overseer's
 -- own rendering — does NOT use snacks.terminal or betterTerm). For interactive
 -- `snow sql` / astro shells use betterTerm (<leader>Xt> + send keys).
+-- Templates are offered only while `dbt` is on PATH — checked each time the
+-- picker opens (overseer_helpers.requiring), not once at startup,
+-- so a dbt that arrives later via direnv / venv / `nix develop` still works.
 local overseer = require("overseer")
+local helpers = require("overseer_helpers")
+local function register(defn)
+	overseer.register_template(helpers.requiring("dbt", defn))
+end
 
 -- Shared component bundle (lua/overseer_helpers.lua) — one definition for
 -- every template that shows output in a bottom split.
@@ -63,10 +69,8 @@ local function open_compiled_model(model)
 	vim.cmd("setlocal readonly nomodifiable")
 end
 
-if vim.fn.executable("dbt") == 1 then
-
 -- ── run / build / test ────────────────────────────────────────────────────
-overseer.register_template({
+register({
 	name = "dbt run",
 	builder = function()
 		if not confirm_unscoped("dbt run") then
@@ -76,7 +80,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt run (current model)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -91,7 +95,7 @@ overseer.register_template({
 })
 
 -- dbt build = run + test + seed + snapshot in one pass (modern default).
-overseer.register_template({
+register({
 	name = "dbt build",
 	builder = function()
 		if not confirm_unscoped("dbt build") then
@@ -101,7 +105,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt build (current model)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -115,14 +119,14 @@ overseer.register_template({
 	condition = { filetype = { "sql", "jinja2" } },
 })
 
-overseer.register_template({
+register({
 	name = "dbt test",
 	builder = function()
 		return { cmd = { "dbt", "test" }, cwd = vim.fn.getcwd(), components = bottom_output() }
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt test (current model)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -141,7 +145,7 @@ overseer.register_template({
 -- read-only. Review the expanded Jinja, then run it against Snowflake with
 -- the "snowflake: run compiled SQL for current dbt model" overseer template
 -- (overseer/snowflake_tasks.lua) — no copy/paste needed.
-overseer.register_template({
+register({
 	name = "dbt compile (current model) — open compiled SQL",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -168,7 +172,7 @@ overseer.register_template({
 	condition = { filetype = { "sql", "jinja2" } },
 })
 
-overseer.register_template({
+register({
 	name = "dbt compile",
 	builder = function()
 		return {
@@ -185,7 +189,7 @@ overseer.register_template({
 })
 
 -- dbt show — preview compiled SQL inline without materialising the model.
-overseer.register_template({
+register({
 	name = "dbt show (current model)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -200,7 +204,7 @@ overseer.register_template({
 })
 
 -- ── selector variants (run with parents / children / state / tag) ────────
-overseer.register_template({
+register({
 	name = "dbt run (current model + parents)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -214,7 +218,7 @@ overseer.register_template({
 	condition = { filetype = { "sql", "jinja2" } },
 })
 
-overseer.register_template({
+register({
 	name = "dbt run (current model + children)",
 	builder = function()
 		local model = vim.fn.expand("%:t:r")
@@ -228,7 +232,7 @@ overseer.register_template({
 	condition = { filetype = { "sql", "jinja2" } },
 })
 
-overseer.register_template({
+register({
 	name = "dbt run (state:modified — slim CI)",
 	builder = function()
 		-- Requires `--state <path>` to a previous manifest. Edit if you keep
@@ -242,7 +246,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt run (tag prompt)",
 	builder = function(params)
 		local tag = params and params.tag or ""
@@ -262,7 +266,7 @@ overseer.register_template({
 })
 
 -- ── seed / snapshot / deps / docs ────────────────────────────────────────
-overseer.register_template({
+register({
 	name = "dbt seed",
 	builder = function()
 		if not confirm_unscoped("dbt seed") then
@@ -272,7 +276,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt snapshot",
 	builder = function()
 		if not confirm_unscoped("dbt snapshot") then
@@ -282,14 +286,14 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt deps",
 	builder = function()
 		return { cmd = { "dbt", "deps" }, cwd = vim.fn.getcwd(), components = bottom_output(300) }
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt docs generate",
 	builder = function()
 		return {
@@ -301,7 +305,7 @@ overseer.register_template({
 })
 
 -- ── fast pre-flight checks (no DB connection) ────────────────────────────
-overseer.register_template({
+register({
 	name = "dbt parse",
 	builder = function()
 		return {
@@ -312,7 +316,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt ls",
 	builder = function()
 		return {
@@ -323,7 +327,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register({
 	name = "dbt debug",
 	builder = function()
 		return {
@@ -333,4 +337,3 @@ overseer.register_template({
 		}
 	end,
 })
-end -- vim.fn.executable("dbt")

@@ -205,71 +205,26 @@ in {
     };
   };
 
+  # Truecolor: Neovim (0.10+) detects terminal truecolor support itself; the
+  # former $COLORTERM gate fell back to habamax over ssh/tmux/docker, where
+  # COLORTERM is usually not forwarded even though truecolor works.
+  # Macro recording state is shown by the lualine component above and by
+  # noice's mode message — no extra notification (the old one never closed).
   extraConfigLuaPost = ''
-    -- $COLORTERM is the accepted standard: terminals with 24-bit truecolor set
-    -- it to 'truecolor' or '24bit'. The Linux kernel TTY and serial consoles
-    -- leave it unset, which is the only case we need to guard against.
-    local has_truecolor = vim.env.COLORTERM == 'truecolor' or vim.env.COLORTERM == '24bit'
-
-    if not has_truecolor then
-      -- Disable 24-bit color and apply a built-in colorscheme that renders
-      -- correctly on 8/16-color terminals (Linux TTY, serial console, etc.)
-      vim.opt.termguicolors = false
-      pcall(vim.cmd, 'colorscheme habamax')
-    else
-      local local_colorscheme = vim.env.STYLIX_COLORSCHEME
-
-      -- If the environment variable is set, override with the Stylix colorscheme
-      if local_colorscheme then
-        -- local colorscheme = 'base16-' .. local_colorscheme
-        pcall(vim.cmd, 'colorscheme ' .. local_colorscheme)
-      end
+    -- Stylix override: $STYLIX_COLORSCHEME names a colorscheme to use instead
+    -- of catppuccin.
+    local local_colorscheme = vim.env.STYLIX_COLORSCHEME
+    if local_colorscheme and local_colorscheme ~= "" then
+      pcall(vim.cmd.colorscheme, local_colorscheme)
     end
 
-    -- Macro recording indicator using autocommands
-    local function notify_macro_recording()
-      local recording_register = vim.fn.reg_recording()
-      if recording_register ~= "" then
-        if package.loaded["snacks"] then
-          require("snacks").notifier.notify("Recording macro @" .. recording_register, {
-            title = "Macro Recording",
-            icon = "󰻂",
-            timeout = false,
-          })
-        end
-      else
-        if package.loaded["snacks"] then
-          require("snacks").notifier.hide()
-        end
-      end
-    end
-
-    -- Set up autocommands for macro recording feedback
-    vim.api.nvim_create_augroup("MacroRecording", { clear = true })
-
-    vim.api.nvim_create_autocmd("RecordingEnter", {
-      group = "MacroRecording",
+    -- Refresh lualine's recording component immediately on start/stop.
+    vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+      group = vim.api.nvim_create_augroup("MacroRecording", { clear = true }),
       callback = function()
-        notify_macro_recording()
-        vim.defer_fn(function()
+        vim.schedule(function()
           vim.cmd("redrawstatus")
-        end, 10)
-      end,
-    })
-
-    vim.api.nvim_create_autocmd("RecordingLeave", {
-      group = "MacroRecording",
-      callback = function()
-        if package.loaded["snacks"] then
-          require("snacks").notifier.notify("Macro recording stopped", {
-            title = "Macro Recording",
-            icon = "󰻂",
-            timeout = 2000,
-          })
-        end
-        vim.defer_fn(function()
-          vim.cmd("redrawstatus")
-        end, 10)
+        end)
       end,
     })
   '';

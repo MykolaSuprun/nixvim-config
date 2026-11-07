@@ -1,17 +1,31 @@
 -- Airflow overseer task templates.
--- Astro CLI templates register when `astro` is on PATH (preferred). Fallback
--- vanilla `airflow` CLI templates register only when `astro` is absent but
--- `airflow` is present, so the two never clobber each other.
+-- Astro CLI templates are offered while `astro` is on PATH (preferred). The
+-- vanilla `airflow` fallbacks are offered only while `astro` is absent but
+-- `airflow` is present, so the two never clobber each other. Availability is
+-- checked each time the picker opens (overseer_helpers.when), not once
+-- at startup — these CLIs usually come from a project venv / devshell.
 local overseer = require("overseer")
+local helpers = require("overseer_helpers")
+local function has(bin)
+	return vim.fn.executable(bin) == 1
+end
+local function register_astro(defn)
+	overseer.register_template(helpers.when(function()
+		return has("astro")
+	end, "`astro` is not on PATH", defn))
+end
+local function register_airflow(defn)
+	overseer.register_template(helpers.when(function()
+		return not has("astro") and has("airflow")
+	end, "`airflow` not on PATH (or `astro` present)", defn))
+end
 
 -- Shared component bundle (lua/overseer_helpers.lua).
 local bottom_output = require("overseer_helpers").bottom_output
 
 -- ── Astro CLI (preferred — wraps Airflow with a better dev loop) ──────────
-if vim.fn.executable("astro") == 1 then
-
 -- `astro dev parse` validates every DAG in the project parses without error.
-overseer.register_template({
+register_astro({
 	name = "astro dev parse",
 	builder = function()
 		return {
@@ -23,7 +37,7 @@ overseer.register_template({
 })
 
 -- `astro dev test` runs pytest inside the astro runtime (DAG integrity tests).
-overseer.register_template({
+register_astro({
 	name = "astro dev test (project)",
 	builder = function()
 		return {
@@ -43,7 +57,7 @@ overseer.register_template({
 -- subcommand name and failed (or, worse, silently done nothing useful) —
 -- the fix is to spell out the real Airflow subcommand (`tasks test` /
 -- `dags test`) so `astro dev run` has something valid to forward.
-overseer.register_template({
+register_astro({
 	name = "astro dev run: tasks test (prompt dag/task/date)",
 	builder = function(params)
 		local dag = params and params.dag or ""
@@ -70,7 +84,7 @@ overseer.register_template({
 	},
 })
 
-overseer.register_template({
+register_astro({
 	name = "astro dev run: dags test (prompt dag/date)",
 	builder = function(params)
 		local dag = params and params.dag or ""
@@ -93,12 +107,9 @@ overseer.register_template({
 	},
 })
 
-end -- astro
 
 -- ── Vanilla Airflow CLI fallback (only when astro is NOT on PATH) ─────────
-if vim.fn.executable("astro") == 0 and vim.fn.executable("airflow") == 1 then
-
-overseer.register_template({
+register_airflow({
 	name = "airflow dags list",
 	builder = function()
 		return {
@@ -109,7 +120,7 @@ overseer.register_template({
 	end,
 })
 
-overseer.register_template({
+register_airflow({
 	name = "airflow dags test (prompt dag + date)",
 	builder = function(params)
 		local dag = params and params.dag or ""
@@ -127,7 +138,7 @@ overseer.register_template({
 	},
 })
 
-overseer.register_template({
+register_airflow({
 	name = "airflow tasks test (prompt dag/task/date)",
 	builder = function(params)
 		local dag = params and params.dag or ""
@@ -147,4 +158,3 @@ overseer.register_template({
 	},
 })
 
-end -- vanilla airflow
