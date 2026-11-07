@@ -1,4 +1,4 @@
-{pkgs, ...}: let
+_: let
   # Hoisted to avoid Nix treesitter parser confusion when __raw sits inside
   # a heterogeneous list alongside bare strings (breaks editor highlighting).
   macroRecordingComponent = {
@@ -44,22 +44,25 @@ in {
       autoLoad = true;
       settings = {
         flavour = "latte";
+        # Only integrations for plugins this config actually ships (no cmp,
+        # fzf-lua, nvim-notify, telescope or headlines).
         integrations = {
-          cmp = true;
-          blink = true;
+          blink_cmp = true; # catppuccin 2.x name; plain `blink` is ignored
+          colorful_winsep = true;
           gitsigns = true;
           bufferline = true;
-          # telescope/headlines integrations removed: neither plugin is shipped
-          # (telescope refused per AGENTS.md; render-markdown replaced headlines).
           illuminate = true;
-          fzf = true;
           flash = true;
           treesitter = true;
           treesitter_context = true;
           harpoon = true;
-          notifier = true;
           noice = true;
-          notify = true;
+          render_markdown = true;
+          aerial = true;
+          neotest = true;
+          diffview = true;
+          lsp_trouble = true;
+          grug_far = true;
           snacks = {
             enabled = true;
             indent_scope_color = "lavender";
@@ -124,16 +127,10 @@ in {
             '';
           };
 
-          # File explorer offset
+          # File explorer offset — the snacks explorer sidebar (<leader>E).
           offsets = [
             {
-              filetype = "neo-tree";
-              text = "󰉋 File Explorer";
-              text_align = "center";
-              separator = true;
-            }
-            {
-              filetype = "NvimTree";
+              filetype = "snacks_layout_box";
               text = "󰉋 File Explorer";
               text_align = "center";
               separator = true;
@@ -150,7 +147,7 @@ in {
           # Sort tabs by extension for better organization
           # sort_by = "insert_at_end";
 
-          # Create new tabs to the right of current tab
+          # Give every tab the same width (tab_size), regardless of name length.
           enforce_regular_tabs = true;
 
           # Configure tab creation behavior

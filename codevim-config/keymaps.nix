@@ -1,7 +1,7 @@
 # codevim keymaps — VSCode-specific delegation only.
 # All shared keymaps (diagnostics, flash, gitsigns, format, grug-far, trouble,
 # persistence, snacks git/notifications) are in ../shared/keymaps.nix.
-{...}: {
+_: {
   keymaps = [
     # --- LSP / Navigation (delegate to VSCode) ---
     # Shared keymaps use vim.diagnostic; these use VSCode's native LSP for nav.

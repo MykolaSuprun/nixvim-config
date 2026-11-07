@@ -16,25 +16,24 @@
     direnv.enable = true;
     curl.enable = true;
   };
+  # Only tools something in this config actually invokes (conform formatters,
+  # nvim-lint linters, overseer templates, DAP adapters). ripgrep comes from
+  # `dependencies.ripgrep` above; python formatting/linting is ruff (LSP +
+  # conform), and dap.nix bundles its own debugpy python.
   extraPackages = with pkgs; [
     fd
-    ripgrep
     jq
-    black
     ast-grep
-    isort
     stylua
     selene
     deadnix
     statix
-    # dockle
-    rustfmt
     codespell
     alejandra
     shellcheck
-    shellharden
     markdownlint-cli2
-    prettier
+    # prettierd: prettier as a daemon — no node startup per save.
+    prettierd
     markdown-toc
     shfmt
     sqruff
@@ -46,11 +45,11 @@
     # binary (js-beautify), NOT the python cssbeautifier.
     js-beautify
     hadolint # dockerfile linter (lsp.nix lintersByFt)
-    python313Packages.flake8
-    python313Packages.debugpy
     go
     delve
     golangci-lint
+    gotools # goimports (conform)
+    gofumpt # stricter gofmt (conform)
     zsh
     # C/C++ (clang ecosystem) — clangd LSP + clang-format + clang-tidy,
     # static analysis, compile_commands.json generation, CMake.

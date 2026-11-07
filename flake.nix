@@ -148,8 +148,8 @@
           default = nixvim-wrapper;
 
           # Docker images
-          docker-nixvim = docker-nixvim;
-          docker-codevim = docker-codevim;
+          inherit docker-nixvim;
+          inherit docker-codevim;
         };
         apps = {
           NixVim = {

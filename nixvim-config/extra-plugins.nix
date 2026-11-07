@@ -53,12 +53,12 @@
       meta.license = lib.licenses.mit;
     })
 
-    # vim-windowswap — effortless window swapping. Disable its default
-    # <C-w><C-w> trigger prefix and bind <leader>W instead (keymaps.nix).
+    # vim-windowswap — mark a window, then swap it with another. Its default
+    # maps are disabled below; bound to <leader>W (keymaps.nix).
     pkgs.vimPlugins.vim-windowswap
 
-    # nvim-window-picker — pick a window by letter hint. Configured with
-    # statusline/winbar hints; bound to <leader>Wp (keymaps.nix).
+    # nvim-window-picker — pick a window by big floating-letter hint; bound
+    # to <leader>w and <S-Space> (keymaps.nix).
     pkgs.vimPlugins.nvim-window-picker
   ];
 
@@ -75,7 +75,7 @@
       })
 
       -- vim-windowswap: disable the default <leader>ww / <leader>yw / <leader>pw
-      -- mappings so they don't clash with our <leader>w (harpoon) group.
+      -- mappings so they don't clash with <leader>w (window-picker).
       -- <leader>W (keymaps.nix) calls WindowSwap#EasyWindowSwap() directly.
       vim.g.windowswap_map_keys = 0
 

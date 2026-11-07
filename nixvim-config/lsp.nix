@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+_: {
   lsp = {
     inlayHints.enable = true;
     servers = {
@@ -205,8 +205,11 @@
         };
       };
       settings = {
+        auto_close = false;
         auto_preview = true;
         auto_refresh = true;
+        focus = true;
+        modes.diagnostics.auto_open = false;
       };
     };
   };

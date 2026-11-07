@@ -1,6 +1,6 @@
 # nixvim-specific option overrides — settings that only apply to full Neovim
 # (not the VSCode embedded codevim build). Shared opts live in ../shared/options.nix.
-{...}: {
+_: {
   opts = {
     # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;

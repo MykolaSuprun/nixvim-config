@@ -1,7 +1,7 @@
 # Shared editing plugins — imported by both nixvim-config and codevim-config.
 # These are pure editing primitives with no UI, terminal, or LSP dependencies,
 # so they work identically in both full Neovim and VSCode embedded mode.
-{...}: {
+_: {
   plugins = {
     lz-n.enable = true;
 

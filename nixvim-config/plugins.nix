@@ -1,8 +1,4 @@
-{
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   # NOTE: lz-n, treesitter, treesitter-textobjects, nvim-autopairs, mini-align,
   # ts-comments, flash, nvim-surround, illuminate, and todo-comments are declared
   # in ../shared/editing.nix and apply to both nixvim and codevim.
@@ -243,10 +239,6 @@
       enable = true;
     };
 
-    # NOTE: tmux-navigator was removed — <M-h/j/k/l> pane navigation has been
-    # dropped in favour of in-editor window navigation (<leader>h/j/k/l) and
-    # the herd/sidekick agent backends. See AGENTS.md "Things to avoid".
-
     colorful-winsep = {
       enable = true;
       settings = {
@@ -264,10 +256,6 @@
         ];
         animate.enabled = "shift";
       };
-    };
-
-    zellij-nav = {
-      enable = false;
     };
 
     noice = {
@@ -386,22 +374,7 @@
     };
     # ts-comments is in ../shared/editing.nix
     # gitsigns is in ../shared/plugins.nix
-
-    # LLM
-    copilot-lua = {
-      enable = false;
-      settings = {
-        suggestion = {
-          enabled = false;
-          auto_trigger = false;
-        };
-      };
-      lazyLoad = {
-        settings = {
-          event = ["VimEnter"];
-        };
-      };
-    };
+    # copilot-lua / copilot-lsp are intentionally absent — see AGENTS.md.
 
     # Code — nvim-autopairs, mini-align, flash, nvim-surround, illuminate, ts-comments
     # are now in ../shared/editing.nix. Only nixvim-specific code plugins below.
@@ -425,6 +398,8 @@
           lsp_format = "fallback";
         };
         # Toggle-aware: :FormatDisable[!] / <leader>uf set g:/b:disable_autoformat.
+        # Markdown's 4-step chain is too slow for the synchronous 500ms
+        # on-save budget, so it formats asynchronously AFTER the write.
         format_on_save.__raw =
           #lua
           ''
@@ -432,12 +407,28 @@
               if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
                 return
               end
+              if vim.bo[bufnr].filetype == "markdown" then
+                return
+              end
               return { timeout_ms = 500, lsp_format = "fallback" }
+            end
+          '';
+        format_after_save.__raw =
+          #lua
+          ''
+            function(bufnr)
+              if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+                return
+              end
+              if vim.bo[bufnr].filetype ~= "markdown" then
+                return
+              end
+              return { lsp_format = "fallback" }
             end
           '';
         formatters_by_ft = {
           lua = ["stylua"];
-          go = ["gofmt"];
+          go = ["goimports" "gofumpt"];
           # clang-format binary comes from clang-tools (dependencies.nix);
           # style comes from .clang-format in the project or --fallback-style=llvm.
           c = ["clang-format"];
@@ -458,8 +449,8 @@
           # Fenced code blocks are formatted by their own language formatter
           # (treesitter `injected`), not by a markdown formatter — pairs with
           # otter (LSP/intellisense) without overlap. M14.
-          # prettier → markdownlint-cli2 → markdown-toc → injected (M13).
-          markdown = ["prettier" "markdownlint-cli2" "markdown-toc" "injected"];
+          # prettierd → markdownlint-cli2 → markdown-toc → injected (M13).
+          markdown = ["prettierd" "markdownlint-cli2" "markdown-toc" "injected"];
           "_" = ["trim_whitespace"];
         };
         formatters = {
@@ -523,7 +514,6 @@
             "*.sql"
             "*.jinja"
             "*.jinja2"
-            "*.quarto"
             "*.qmd"
           ];
         }
@@ -561,21 +551,7 @@
     };
 
     # persistence is in ../shared/plugins.nix
-
-    # Diagnostic list panel
-    trouble = {
-      enable = true;
-      settings = {
-        auto_close = false;
-        auto_preview = true;
-        focus = true;
-        modes = {
-          diagnostics = {
-            auto_open = false;
-          };
-        };
-      };
-    };
+    # trouble is configured in lsp.nix
 
     # Symbol outline panel (LSP + treesitter backends)
     aerial = {
@@ -1089,7 +1065,7 @@
           vim.wo[win].cursorline = true
           view = { win = win, buf = buf, data = data, note = opts.note }
           render()
-          pcall(vim.api.nvim_buf_add_highlight, buf, -1, "Title", 0, 0, -1)
+          vim.hl.range(buf, vim.api.nvim_create_namespace("query_result"), "Title", { 0, 0 }, { 0, -1 })
 
           local group = vim.api.nvim_create_augroup("query_result_view", { clear = true })
           vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
@@ -1476,21 +1452,6 @@
       '';
   };
 
-  autoCmd = [
-    {
-      event = ["VimLeave"];
-      pattern = ["*"];
-      # Only run zellij mode reset when actually inside a Zellij session
-      callback.__raw = ''
-        function()
-          if os.getenv("ZELLIJ") then
-            vim.fn.system("zellij action switch-mode normal")
-          end
-        end
-      '';
-    }
-  ];
-
   extraPlugins = with pkgs.vimPlugins; [
     # neotest-gtest: not a nixvim adapter submodule (see the neotest block)
     # — packaged explicitly so the raw-Lua adapter can require it.
@@ -1500,8 +1461,6 @@
   extraConfigLua =
     #lua
     ''
-      -- require("fyler").setup()
-
       -- OrbStack host-tool setup (lua/host_tool.lua): share Snowflake/sqlit
       -- config dirs with the macOS host and set BROWSER=open so in-VM
       -- externalbrowser OAuth can open the Mac browser. Cheap no-op elsewhere.

@@ -2,7 +2,7 @@
 # These keymaps work identically in full Neovim and VSCode embedded mode.
 # Requires: gitsigns, grug-far, persistence, snacks, conform-nvim, trouble
 # (all available in both configs via shared/plugins.nix and per-config plugins).
-{...}: {
+_: {
   keymaps = [
     # --- Diagnostic navigation ---
     # vim.diagnostic is populated automatically by vscode-neovim in VSCode embedded mode.

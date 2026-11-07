@@ -317,7 +317,7 @@ local conform = require("conform")
 local md_chain = conform.formatters_by_ft.markdown or {}
 check(
   "conform markdown chain",
-  table.concat(md_chain, ",") == "prettier,markdownlint-cli2,markdown-toc,injected",
+  table.concat(md_chain, ",") == "prettierd,markdownlint-cli2,markdown-toc,injected",
   vim.inspect(md_chain)
 )
 

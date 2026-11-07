@@ -1,6 +1,6 @@
 # Shared plugins — imported by both nixvim-config and codevim-config.
 # These plugins have identical configuration in both setups.
-{...}: {
+_: {
   plugins = {
     # Git change indicators — works natively in both full Neovim and VSCode embedded mode.
     gitsigns = {
