@@ -4,7 +4,7 @@
 #   tests/run.sh                 # build .#NixVim and run the suite
 #   tests/run.sh /path/to/nvim   # run against an existing nvim binary
 #
-# Runs three suites:
+# Runs four suites:
 #   1. tests/headless-smoke.lua  — targeted behaviour checks, incl. the
 #      real-load assertion that would have caught the codecompanion
 #      `extensions.history` bug (it never calls setup()).
@@ -14,8 +14,12 @@
 #      NOT proof that the config comes up clean. See the header of that file.
 #   3. tests/host-tool.lua      — isolated native/OrbStack tool resolution,
 #      explicit executable overrides, and SQL cancellation boundaries.
+#   4. tests/post-startup.lua   — state that only exists after the real
+#      VimEnter (noice/hardtime config, post-startup :messages).
 #
-# Exits non-zero when any check fails.
+# Exits non-zero when any check fails. Each suite ends itself (qa!/cquit);
+# the trailing `-c "cquit 2"` only runs if a suite died on a Lua error, which
+# would otherwise leave headless nvim waiting at a prompt forever.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -27,7 +31,7 @@ else
 fi
 
 echo "── smoke suite ─────────────────────────────────────────────────────"
-"$NVIM" --headless -c "luafile tests/headless-smoke.lua"
+"$NVIM" --headless -c "luafile tests/headless-smoke.lua" -c "cquit 2"
 
 echo
 echo "── plugin/keymap sweep ─────────────────────────────────────────────"
@@ -59,8 +63,25 @@ awk '
 ' nixvim-config/keymaps.nix shared/keymaps.nix > "$EXPECTED"
 
 echo "expected keymaps extracted: $(wc -l < "$EXPECTED")"
-SWEEP_EXPECTED="$EXPECTED" "$NVIM" --headless -c "luafile tests/plugin-sweep.lua"
+
+# Ex commands invoked by keymaps (`<cmd>Foo`, `<cmd>:Foo`, `":Foo<cr>"`), so
+# the post-startup suite can assert each one exists. Count/range-prefixed forms such as
+# `<cmd>1tabnext` / `<cmd>-tabmove` start with a non-letter and are skipped.
+CMDS="$(mktemp)"
+trap 'rm -f "$EXPECTED" "$CMDS"' EXIT
+grep -ohE '<cmd>:?[A-Za-z][A-Za-z0-9]*|action = ":[A-Za-z][A-Za-z0-9]*' \
+  nixvim-config/keymaps.nix shared/keymaps.nix |
+  sed -E 's/^(<cmd>:?|action = ":)//' | sort -u > "$CMDS"
+echo "keymap commands extracted: $(wc -l < "$CMDS")"
+
+SWEEP_EXPECTED="$EXPECTED" "$NVIM" --headless -c "luafile tests/plugin-sweep.lua" -c "cquit 2"
 
 echo
 echo "── native/OrbStack tool resolution ──────────────────────────────────"
-"$NVIM" --headless -c "luafile tests/host-tool.lua"
+"$NVIM" --headless -c "luafile tests/host-tool.lua" -c "cquit 2"
+
+echo
+echo "── post-startup state (after the real VimEnter) ─────────────────────"
+# No trailing `cquit 2` here: this suite deliberately returns to the event
+# loop so its checks run after VimEnter. `timeout` guards against a hang.
+POST_CMDS="$CMDS" timeout 60 "$NVIM" --headless -c "luafile tests/post-startup.lua"

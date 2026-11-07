@@ -237,6 +237,50 @@ ok(
   has_lhs("n", L .. "hc") and has_lhs("n", L .. "hS")
 )
 
+-- ── 4b. regression checks from the 2026-11 config review ─────────────────
+-- Each of these was a real, silent bug in a build that passed every check
+-- above: a key that existed but was owned by the wrong plugin, an option a
+-- plugin quietly overrode, or an autocmd that leaked per buffer.
+
+-- Keymap ownership vs Neovim defaults.
+ok("bare `gr` unmapped (prefix of built-in grn/gra/grr/gri)", vim.fn.maparg("gr", "n") == "")
+ok("grn is the built-in rename", (desc_of("n", "grn") or ""):match("rename") ~= nil, desc_of("n", "grn"))
+ok("gra is the built-in code action", (desc_of("n", "gra") or ""):match("code_action") ~= nil, desc_of("n", "gra"))
+ok("grr owned by Snacks references", desc_of("n", "grr") == "References", desc_of("n", "grr"))
+ok("`{` / `}` keep paragraph motions", vim.fn.maparg("{", "n") == "" and vim.fn.maparg("}", "n") == "")
+ok(
+  "visual S owned by nvim-surround (not flash)",
+  (desc_of("x", "S") or ""):lower():match("surround") ~= nil,
+  desc_of("x", "S")
+)
+for _, k in ipairs({ "ui", "uD", "uz", "ud", "uI", "uf", "uth" }) do
+  ok("<leader>" .. k .. " is a Snacks toggle", has_lhs("n", L .. k), k)
+end
+
+-- Options/plugins that silently override each other. (noice + hardtime only
+-- apply their config on VimEnter — those checks live in post-startup.lua.)
+ok(
+  "conform format_on_save registered exactly once",
+  #vim.api.nvim_get_autocmds({ group = "Conform", event = "BufWritePre" }) == 1
+)
+ok("no ruff BufWritePost project sweep", #vim.api.nvim_get_autocmds({ event = "BufWritePost", pattern = "*.py" }) == 0)
+
+-- ftplugin/sql.lua must not create autocmds (it used to leak one global
+-- FileType + BufRead autocmd per SQL buffer).
+local function n_autocmds()
+  return #vim.api.nvim_get_autocmds({ event = "FileType", pattern = "sql" })
+    + #vim.api.nvim_get_autocmds({ event = "BufRead", pattern = "*/target/**/*.sql" })
+end
+local before = n_autocmds()
+for i = 1, 2 do
+  local b = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_name(b, vim.fn.tempname() .. i .. ".sql")
+  vim.api.nvim_buf_call(b, function()
+    vim.bo.filetype = "sql"
+  end)
+end
+ok("sql ftplugin leaks no autocmds", n_autocmds() == before, ("%d -> %d"):format(before, n_autocmds()))
+
 -- ── 5. startup error scan (uses the messages captured at step 0) ──────────
 local errs = {}
 for line in startup_msgs:gmatch("[^\n]+") do

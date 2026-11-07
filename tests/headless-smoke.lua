@@ -156,6 +156,31 @@ for _, f in ipairs(template_files) do
   end
 end
 
+-- dbt/astro/airflow availability is decided when the picker opens (the
+-- condition callback), not once at startup — a startup check hid every
+-- template when the CLI only arrived later via direnv / venv / nix develop.
+for _, f in ipairs({ "dbt_tasks.lua", "airflow_tasks.lua" }) do
+  local ok, captured = pcall(capture_templates, "nixvim-config/overseer/" .. f)
+  if ok then
+    local lazy = #captured > 0
+    for _, t in ipairs(captured) do
+      if not (t.condition and type(t.condition.callback) == "function") then
+        lazy = false
+      end
+    end
+    check("templates check their CLI lazily: " .. f, lazy)
+  end
+end
+local ok_dbt, dbt_t = pcall(capture_templates, "nixvim-config/overseer/dbt_tasks.lua")
+if ok_dbt and dbt_t[1] then
+  local available = dbt_t[1].condition.callback({ filetype = "sql", dir = vim.fn.getcwd() })
+  check(
+    "dbt template availability follows PATH",
+    (available == true) == (vim.fn.executable("dbt") == 1),
+    tostring(available)
+  )
+end
+
 -- snowflake flags (D13)
 local ok_sf, sf = pcall(capture_templates, "nixvim-config/overseer/snowflake_tasks.lua")
 if ok_sf then
@@ -292,8 +317,20 @@ end
 
 local ok_cc = pcall(require, "codecompanion")
 check("codecompanion loads", ok_cc)
--- v20 marker: integrations/herdr only exists from v20 (nixpkgs still ships
--- 19.22, so this proves the pinned package override is actually in effect).
+-- Single-copy guard. A "v20 marker" module check used to stand in for this and
+-- passed while codecompanion was BROKEN: codecompanion-history's nixpkgs
+-- dependency installed a second (19.22) copy into pack/*/start, so init.lua
+-- and config.lua came from 19.22 while v20-only submodules resolved from the
+-- opt/ copy. Prove there is exactly one copy and that setup() comes from it.
+local cc_dirs = {}
+for _, dir in ipairs(vim.split(vim.o.packpath, ",", { plain = true })) do
+  vim.list_extend(cc_dirs, vim.fn.glob(dir .. "/pack/*/*/codecompanion.nvim", false, true))
+end
+check("exactly one codecompanion.nvim on packpath", #cc_dirs == 1, vim.inspect(cc_dirs))
+if ok_cc and #cc_dirs == 1 then
+  local src = debug.getinfo(require("codecompanion").setup, "S").source
+  check("codecompanion setup() comes from the packaged copy", src:find(cc_dirs[1], 1, true) ~= nil, src)
+end
 check("codecompanion v20 (herdr integration present)", pcall(require, "codecompanion.integrations.herdr"))
 check("codecompanion opencode ACP adapter present", pcall(require, "codecompanion.adapters.acp.opencode"))
 -- The history extension is provided by the `codecompanion-history` plugin, NOT
