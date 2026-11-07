@@ -10,7 +10,7 @@
     sed.enable = true;
     tree-sitter.enable = true;
     imagemagick.enable = true;
-    ueberzug.enable = pkgs.stdenv.isLinux;
+    ueberzug.enable = pkgs.stdenv.hostPlatform.isLinux;
     git.enable = true;
     gh.enable = true;
     direnv.enable = true;
@@ -85,13 +85,8 @@
     opencode
     # claude-code CLI — sidekick's `claude` tool (and codecompanion's
     # claude_code ACP adapter if it is ever enabled via claude-agent-acp).
-    # Backport nixpkgs#566625: the old Darwin sandbox exemption is no longer
-    # needed. Keep the package's version check enabled under strict sandboxing.
-    # Remove this override once the nixpkgs pin includes that fix.
-    (claude-code.overrideAttrs (_:
-      lib.optionalAttrs stdenv.hostPlatform.isDarwin {
-        __noChroot = false;
-      }))
+    # nixpkgs#566625 (Darwin builds stay sandboxed) is in the pinned nixpkgs.
+    claude-code
     # lsof + procps — sidekick's opencode external-session backend finds the
     # running `opencode serve` by scanning listening TCP ports; without lsof
     # that backend silently does not exist (guarded by executable("lsof")).

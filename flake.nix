@@ -3,26 +3,29 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    # Pinned separately from the main nixpkgs input: at nixpkgs-unstable (and
-    # current nixos-unstable), `snowflake-cli` fails to build on aarch64-linux
-    # because its `snowflake-connector-python` dependency has a unit test
+    # Pinned separately from the main nixpkgs input: at nixpkgs-unstable,
+    # `snowflake-cli` does not build on aarch64-linux because its
+    # `snowflake-connector-python` dependency has a unit test
     # (test_log_debug_config_file_parent_dir_permissions) that assumes it is
     # not running as root — Nix's build sandbox always runs as root, so the
     # chmod-based permission check never triggers and the test fails. This
     # pin only feeds `snowflake-cli` (see dependencies.nix); everything else
-    # still comes from the main `nixpkgs` input above. Bump/drop this once
-    # the fix lands upstream — no dedicated issue for the root-permission
-    # test as of 2026-09-22; related open work: NixOS/nixpkgs#545397
-    # (snowflake-connector-python 4.3.0 -> 4.7.1, disables some tests) and
-    # NixOS/nixpkgs#543941 (snowflake-cli check phase).
-    nixpkgs-snowflake.url = "github:nixos/nixpkgs/nixos-25.05";
+    # still comes from the main `nixpkgs` input above.
+    # 2026-11-07: moved off the EOL nixos-25.05 to nixos-26.05, where
+    # snowflake-cli 3.13.1 is in cache.nixos.org for aarch64-linux (it is
+    # still uncached on unstable). Drop this pin once unstable builds it.
+    # Related: NixOS/nixpkgs#545397, NixOS/nixpkgs#543941.
+    nixpkgs-snowflake.url = "github:nixos/nixpkgs/nixos-26.05";
     # sqlit — terminal UI for SQL databases (github:Maxteabag/sqlit). NOT wired
     # through `follows`: upstream's flake.lock pins a nixpkgs rev that its CI
     # builds against (sqlit's textual/hatchling version floors move fast), so
     # using its own input is the tested path. Used via lib.makeSqlit below.
     sqlit.url = "github:Maxteabag/sqlit";
     nixvim.url = "github:nix-community/nixvim";
-    flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
   };
 
   outputs = {

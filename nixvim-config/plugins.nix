@@ -83,31 +83,15 @@
     # the chat half of the AI stack; sidekick (above) owns the CLI-terminal
     # half, and the two never fight over keys (codecompanion installs no global
     # <leader> maps — every bind of its own is buffer-local to its windows).
-    # Pinned to v20.0.1 via `package` because nixpkgs still ships 19.22.0:
-    # v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the
-    # `insert_edit_into_file` → `edit_file` tool rename. Bump deliberately
-    # (rev + hash). `settings` is freeform in the nixvim module (no
-    # settingsOptions), so everything below reaches
+    # Requires v20+ (`skills`, `integrations.herdr`, the `insert_edit_into_file`
+    # → `edit_file` tool rename); nixpkgs ships 20.0.1 since 2026-11, so the
+    # former packageDecorator pin is gone. `settings` is freeform in the
+    # nixvim module (no settingsOptions), so everything below reaches
     # require("codecompanion").setup() verbatim — no extraConfigLua needed.
     # NEVER set `strategies` (stale alias for `interactions`, silently ignored).
     # The editor-context trigger is `#` (v19+), not `@` (which is tools only).
     codecompanion = {
       enable = true;
-      # nixpkgs ships 19.22.0; pin v20.0.1 through the package decorator. The
-      # `package` option itself is a pkgs *path* (string/list), not a
-      # derivation — passing one there is silently ignored, which is how the
-      # first attempt at this ended up building 19.22.0 anyway.
-      # Bump rev + hash together.
-      packageDecorator = pkg:
-        pkg.overrideAttrs (_: {
-          version = "20.0.1";
-          src = pkgs.fetchFromGitHub {
-            owner = "olimorris";
-            repo = "codecompanion.nvim";
-            rev = "v20.0.1";
-            hash = "sha256-29Z/aTSK6xtLCNp+FJH1D89MpNztm6Hjgfz80XZVTlI=";
-          };
-        });
       settings = {
         # ── adapters, per interaction ─────────────────────────────────────
         # chat → opencode over ACP (`opencode acp`): the agent runs with the
@@ -193,6 +177,19 @@
     # `settings` here is merged into `extensions.history.opts` verbatim.
     codecompanion-history = {
       enable = true;
+      # nixpkgs' codecompanion-history-nvim declares `codecompanion-nvim` as a
+      # dependency, which nixvim installs EAGERLY into pack/*/start — a second
+      # copy alongside the lazy-loaded one in opt/. When the two differed in
+      # version (2026-11 review), `require("codecompanion")` resolved init.lua
+      # from the start/ copy and v20-only submodules from opt/: a silent
+      # mixed-version plugin. Drop that dependency so plugins.codecompanion is
+      # the single owner of the package (and its lazy-load stays effective).
+      # nativeCheckInputs keeps nixpkgs' require-check able to load it at
+      # build time without putting it on the runtime packpath.
+      package = pkgs.vimPlugins.codecompanion-history-nvim.overrideAttrs (_: {
+        dependencies = [pkgs.vimPlugins.plenary-nvim];
+        nativeCheckInputs = [pkgs.vimPlugins.codecompanion-nvim];
+      });
       settings = {
         # Persist every chat automatically (off => save manually with `sc`).
         auto_save = true;

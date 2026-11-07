@@ -9,18 +9,18 @@
   extraPlugins = [
     # betterTerm.nvim — tabbed persistent terminals with send-to-terminal API.
     # Repo:  CRAG666/betterTerm.nvim
-    # Rev:   8111818c82a5ed01a24317f32892ad67765375b2 (2026-05-31)
+    # Rev:   39bac98e7635ee3131b1ac4dfbb2f0ab88d6300b (2026-07-31)
     # API:   require("betterTerm").open/send/select/rename/cycle/toggle_termwindow
     # Used for: interactive dbt / `snow sql` / airflow shells (send current line,
     #          selection or file to a persistent, numbered terminal).
     (pkgs.vimUtils.buildVimPlugin {
       pname = "betterTerm";
-      version = "unstable-2026-05-31";
+      version = "unstable-2026-07-31";
       src = pkgs.fetchFromGitHub {
         owner = "CRAG666";
         repo = "betterTerm.nvim";
-        rev = "8111818c82a5ed01a24317f32892ad67765375b2";
-        hash = "sha256-N9HxE0S8a952p+H9qm2crwxrPPC79BOYHZpaiGJfucU=";
+        rev = "39bac98e7635ee3131b1ac4dfbb2f0ab88d6300b";
+        hash = "sha256-DI228qSKA8XzvicDR6/Hg+uTSCKdOTSRMo3W78KNLrI=";
       };
       meta.homepage = "https://github.com/CRAG666/betterTerm.nvim";
       meta.license = lib.licenses.mit;
@@ -33,7 +33,7 @@
     # lua/ + plugin/ + doc/, so the Rust half is ignored automatically — the
     # sidebar comes from the herdr-side install, not from here.
     # Repo:  ChmaraX/herdr-nvim
-    # Rev:   d2dd1899dd7b4ee36719e315e97f326b8aada171 (v1.2.1, 2026-10-16)
+    # Rev:   88a68c77fe82476bdfcba39d36c3fa37109f35a8 (v1.3.1, 2026-11-06)
     # Requires: nvim >= 0.10 (have 0.12.5); herdr >= 0.7.5 on PATH (nixpkgs
     #           ships 0.9.5); annotations need nvim running INSIDE a herdr
     #           session (HERDR_WORKSPACE_ID / HERDR_TAB_ID — provided by
@@ -42,12 +42,12 @@
     # Keymaps: <leader>h* in keymaps.nix.
     (pkgs.vimUtils.buildVimPlugin {
       pname = "herdr-nvim";
-      version = "1.2.1";
+      version = "1.3.1";
       src = pkgs.fetchFromGitHub {
         owner = "ChmaraX";
         repo = "herdr-nvim";
-        rev = "d2dd1899dd7b4ee36719e315e97f326b8aada171";
-        hash = "sha256-EghtchK820sWZmq67qdHhKSWkLnG2CqLza/dmUqNNi0=";
+        rev = "88a68c77fe82476bdfcba39d36c3fa37109f35a8";
+        hash = "sha256-/026mNSbhZIAMJeNdSsbi9vhUuQEfdjqI99QzKAHW6w=";
       };
       meta.homepage = "https://github.com/ChmaraX/herdr-nvim";
       meta.license = lib.licenses.mit;
