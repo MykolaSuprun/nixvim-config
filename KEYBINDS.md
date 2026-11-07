@@ -15,7 +15,7 @@ Scope: `nixvim-config` only.
 | `<C-l>` | Accept selected suggestion |
 | `<C-j>` | Select next item |
 | `<C-k>` | Select previous item |
-| `<CR>` | Select next item (fallback to newline) |
+| `<CR>` | Accept the selected item (nothing preselected → plain newline) |
 | `<Tab>` | Jump to next snippet placeholder |
 | `<S-Tab>` | Jump to previous snippet placeholder |
 | `<C-n>` | Scroll documentation panel down |
@@ -45,9 +45,13 @@ Scope: `nixvim-config` only.
 |-----|--------|
 | `gd` | Go to definition (Snacks picker) |
 | `gD` | Go to declaration (Snacks picker) |
-| `gr` | References (Snacks picker) |
+| `grr` | References (Snacks picker; overrides the built-in) |
+| `gri` | Go to implementation (Snacks picker; overrides the built-in) |
+| `grn` / `gra` | Rename / code action (Neovim built-ins; also `<leader>cr` / `<leader>ca`) |
 | `gI` | Go to implementation (Snacks picker) |
 | `gy` | Go to type definition (Snacks picker) |
+
+> There is deliberately **no bare `gr`** map: it is the prefix of the built-in `grn`/`gra`/`grr`/`gri`/`grt`.
 
 ---
 
@@ -55,8 +59,8 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `[d` | n | Previous diagnostic (with float) |
-| `]d` | n | Next diagnostic (with float) |
+| `[d` | n | Previous diagnostic (Neovim built-in; float via `jump.on_jump`) |
+| `]d` | n | Next diagnostic (Neovim built-in; float via `jump.on_jump`) |
 | `[e` | n | Previous error (with float) |
 | `]e` | n | Next error (with float) |
 
@@ -66,7 +70,7 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<S-s>` | n, x | Flash jump |
+| `<S-s>` | n | Flash jump (visual `S` is nvim-surround's add-surrounding) |
 | `<C-s>` | n | Flash treesitter selection |
 
 ---
@@ -104,7 +108,8 @@ Scope: `nixvim-config` only.
 | `<leader>w` | n | Pick window (nvim-window-picker, big floating letter) |
 | `<C-w>h/j/k/l` | n | Standard Neovim window navigation |
 | `<C-\>` | n | Toggle snacks.terminal |
-| `<C-/>` | n | Toggle snacks.terminal float (moved off `<leader>tf`, which collided with "First Tab") |
+| `<C-/>` / `<C-_>` | n | Toggle snacks.terminal float (`<C-_>` is what many terminals send for `<C-/>`) |
+| `<leader>W` | n | Swap windows (vim-windowswap: press in one window, then in another) |
 | `<S-Esc>` | t | Send `<C-\><C-n>` to exit terminal mode |
 
 > The previous `<M-h/j/k/l>` tmux pane-navigation mappings and the `<leader>h/j/k/l` in-editor window navigation were removed. Use `<leader>w` to pick a window by its big floating-letter hint, or `<C-w>` motions for direct navigation.
@@ -127,8 +132,26 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `{` | n | Previous symbol |
-| `}` | n | Next symbol |
+| `[o` | n | Previous symbol |
+| `]o` | n | Next symbol |
+
+> `{`/`}` stay Neovim's paragraph motions; `[s`/`]s` are spelling motions.
+
+---
+
+## Treesitter Textobjects & Selection
+
+> Defined in `shared/editing.nix` (also active in codevim).
+
+| Key | Mode | Action |
+|-----|------|--------|
+| `af` / `if` | x, o | Outer / inner function |
+| `ac` / `ic` | x, o | Outer / inner class |
+| `aa` / `ia` | x, o | Outer / inner parameter |
+| `]f` / `[f` | n, x, o | Next / previous function start |
+| `]k` / `[k` | n, x, o | Next / previous class start (`]c`/`[c` stay diff-hunk motions) |
+| `an` / `in` | x | Grow / shrink selection to the parent / child node (Neovim 0.12 built-in) |
+| `]n` / `[n` | x | Select next / previous sibling node (Neovim 0.12 built-in) |
 
 ---
 
@@ -136,14 +159,14 @@ Scope: `nixvim-config` only.
 
 | Key | Mode | Action |
 |-----|------|--------|
-| `<leader>ha` | n | Add current file to harpoon |
-| `<leader>hh` | n | Open harpoon quick menu |
-| `<leader>h1` | n | Jump to harpoon file 1 |
-| `<leader>h2` | n | Jump to harpoon file 2 |
-| `<leader>h3` | n | Jump to harpoon file 3 |
-| `<leader>h4` | n | Jump to harpoon file 4 |
-| `<leader>hp` | n | Previous harpoon file |
-| `<leader>hn` | n | Next harpoon file |
+| `<leader>Ha` | n | Add current file to harpoon |
+| `<leader>Hh` | n | Open harpoon quick menu |
+| `<leader>H1` | n | Jump to harpoon file 1 |
+| `<leader>H2` | n | Jump to harpoon file 2 |
+| `<leader>H3` | n | Jump to harpoon file 3 |
+| `<leader>H4` | n | Jump to harpoon file 4 |
+| `<leader>Hp` | n | Previous harpoon file |
+| `<leader>Hn` | n | Next harpoon file |
 
 ---
 

@@ -74,15 +74,21 @@ nix build .#CodeVim
 nix build .#checks.x86_64-linux.NixVim
 
 # Headless tests (keymaps, overseer templates, dap, render-markdown, AI stack).
-# Builds .#NixVim then runs all three suites; exits non-zero on failure:
+# Builds .#NixVim then runs all four suites; exits non-zero on failure:
 #   1. tests/headless-smoke.lua — targeted behaviour, incl. the real-load
-#      assertion for codecompanion's history extension (the bug that a
-#      require()-only sweep could not see, because it never calls setup()).
+#      assertion for codecompanion's history extension and the single-copy
+#      guard (exactly one codecompanion.nvim on packpath, setup() from it).
 #   2. tests/plugin-sweep.lua   — broad/shallow plugin-load + keymap-existence
-#      gate, plus <leader>a*/<leader>h* ownership. ⚠️ require()-only: it is a
-#      plugin-load gate, NOT proof the config comes up clean at startup.
+#      gate, <leader>a*/<leader>h* ownership, and keymap ownership against
+#      Neovim defaults (no bare gr, {/} untouched, visual S = surround, …).
+#      ⚠️ require()-only: a plugin-load gate, NOT proof of a clean startup.
 #   3. tests/host-tool.lua — native/OrbStack resolution, explicit binary overrides,
 #      and cancellation before arbitrary SQL execution.
+#   4. tests/post-startup.lua — runs after the REAL VimEnter: options plugins
+#      only apply there (mouse, noice), every `<cmd>X` a keymap calls exists,
+#      clean :messages. Its output uses io.stdout (print() is swallowed then).
+# A suite that dies on a Lua error exits via the trailing `-c "cquit 2"`
+# instead of leaving headless nvim hanging at a prompt.
 tests/run.sh
 
 # Run a profile without installing
@@ -114,14 +120,15 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>g` | git | shared/keymaps.nix |
 | `<leader>gh` | hunk | shared/keymaps.nix |
 | `<leader>gl` | line | shared/keymaps.nix |
-| `<leader>c` | code | shared/keymaps.nix |
+| `<leader>c` | code (`ca` code action, `cr` rename, `cR` rename file, `cs` aerial, `ch` clangd header switch) | shared/keymaps.nix + keymaps.nix |
 | `<leader>cf` | format | shared/keymaps.nix |
 | `<leader>ct` | treesitter | shared/keymaps.nix |
-| `<leader>C` | config dashboard (agents backend) | keymaps.nix |
+| `<leader>b` | buffer (`bd` delete, `bo` delete others — Snacks.bufdelete) | keymaps.nix |
 | `<leader>r` | find and replace | shared/keymaps.nix |
 | `<leader>x` | trouble | shared/keymaps.nix |
 | `<leader>q` | session | shared/keymaps.nix |
-| `<leader>u` | ui | keymaps.nix |
+| `<leader>u` | ui — Snacks.toggle maps with live state: `ui` indent, `uD` dim, `uz` zen, `ud` diagnostics, `uI` inlay hints, `uf` format-on-save, `uth` treesitter highlight; `uC` colorschemes, `uN` no-neck-pain | keymaps.nix |
+| `<leader>uh` | hardtime (`uht` toggle, `uhr` report) | keymaps.nix |
 | `<leader>um` | markdown | keymaps.nix |
 | `<leader>ut` | treesitter | keymaps.nix |
 | `<leader>t` | tabs | keymaps.nix |
@@ -135,23 +142,30 @@ The `which-key` spec lives in `nixvim-config/keymaps.nix` (nixvim-specific group
 | `<leader>Qs` | sqlit (run line/selection/buffer, open TUI) | keymaps.nix |
 | `<leader>X` | betterTerm send-to-terminal | keymaps.nix |
 | `<leader>d` | debug (DAP) | keymaps.nix |
-| `<leader>h` | harpoon | keymaps.nix |
+| `<leader>H` | harpoon | keymaps.nix |
 | `<leader>w` | window-picker (single-key, no sub-keys) | keymaps.nix |
+| `<leader>W` | window swap (vim-windowswap: mark, then swap) | keymaps.nix |
 | `<leader>n` | notifications history (single-key) | shared/keymaps.nix |
 
 `<leader>O` is shared: pressing it alone opens Obsidian; `O<sub>` runs overseer
 commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 
 ### Non-`<leader>` keys (documented in KEYBINDS.md)
-- `gd/gD/gr/gI/gy` — LSP navigation via Snacks picker
-- `[d/]d/[e/]e` — diagnostic navigation
-- `[h/]h` — git hunk navigation
+- `gd/gD/gI/gy` + `grr`/`gri` — LSP navigation via Snacks picker. **No bare `gr`**: it
+  is the prefix of Neovim's built-in `grn` (rename) / `gra` (code action) /
+  `grr` / `gri` / `grt`; mapping it delayed every `gr` by `timeoutlen`.
+- `[d/]d` (Neovim built-ins) / `[e/]e` — diagnostic navigation; the float opens via
+  `diagnostic.settings.jump.on_jump` (shared/options.nix — `jump.float` is deprecated in 0.12)
+- `[h/]h` — git hunk navigation (`Gitsigns nav_hunk`)
 - `[T/]T` — neotest failed-test navigation
-- `{/}` — Aerial symbol navigation
+- `[o/]o` — Aerial symbol navigation (`{`/`}` stay paragraph motions; `[s/]s` are spelling)
+- Treesitter textobjects (shared/editing.nix): `af/if` function, `ac/ic` class,
+  `aa/ia` parameter; `]f/[f` function, `]k/[k` class (`]c/[c` are diff hunks).
+  Incremental selection is Neovim 0.12's built-in visual `an`/`in`.
 - `<S-h>/<S-l>` — bufferline tab cycling
 - `<C-w>h/j/k/l` — standard Neovim window navigation (no leader mapping)
 - `<C-\>` — snacks.terminal toggle (normal mode only; use `<S-Esc>` in terminal mode to exit)
-- `<C-/>` — snacks.terminal float toggle (moved off `<leader>tf`, which collided with "First Tab")
+- `<C-/>` / `<C-_>` — snacks.terminal float toggle (`<C-_>` is what many terminals send for `<C-/>`)
 - `<F5>/<F10>/<F11>/<F12>` — DAP continue/over/into/out
 
 ### Lazy loading
@@ -159,7 +173,7 @@ commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 - Heavy/optional plugins gate on a command: `lazyLoad.settings.cmd = "..."`.
 - LLM/AI plugins gate on `["VimEnter"]` so they don't block initial UI.
 - `otter` gates on `BufReadPost` for `md,sql,jinja,quarto,ipynb` (embedded languages). The nixvim module's `autoActivate` is **disabled** (its global LspAttach hook would `require('otter')` on every LSP attach and throw on non-matching buffers that haven't lazy-loaded). A guarded, `pcall`-protected `LspAttach` autocmd (in `plugins.nix` `extraConfigLua`) replaces it.
-- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666) and `herdr-nvim` (ChmaraX, rev `d2dd189` = v1.2.1 — Lua half only; its Rust sidebar half is installed imperatively via `herdr plugin install`).
+- Plugins built from source via `buildVimPlugin` (in `nixvim-config/extra-plugins.nix`): `betterTerm.nvim` (CRAG666) and `herdr-nvim` (ChmaraX, rev `88a68c7` = v1.3.1 — Lua half only; its Rust sidebar half is installed imperatively via `herdr plugin install`).
 - `nix-develop` gates on `BufReadPost *.nix`.
 
 ### When adding a new plugin
@@ -175,7 +189,7 @@ commands (Ot/Or/Oa/Oo/Oc/Os/Ow). See the overseer notes below.
 ### Why the Snowflake tooling looks the way it does
 `vim-dadbod`'s built-in `snowflake://` adapter shells out to `snowsql`, which nixpkgs only packages for `x86_64-linux` — it fails to evaluate on `aarch64-linux` (e.g. this repo's OrbStack/NixOS target on Apple Silicon). This is a local-eval observation, not an upstream-documented fact — re-verify before relying on it. `nvim-dbee` was evaluated as a dadbod replacement but has **no Snowflake driver** (tracked upstream: kndndrj/nvim-dbee#23, unmerged PRs #109/#186) and no CLI-shelling adapter mechanism to bolt one on. So both dadbod and dbee are out for Snowflake specifically. The replacement is the official **Snowflake CLI (`snow`)**, packaged as `snowflake-cli` in nixpkgs, driven through **overseer task templates** and **betterTerm**.
 
-`snowflake-cli` itself has a build wrinkle: at `nixpkgs-unstable`/`nixos-unstable`, its `snowflake-connector-python` dependency fails its test suite on `aarch64-linux` (`test_log_debug_config_file_parent_dir_permissions` assumes the process isn't root; Nix's build sandbox always runs as root, so the test's `chmod`-based permission check never fires and the assertion fails). It builds cleanly — as a cached binary, no compile — on the `nixos-25.05` release channel. `flake.nix` therefore pins a second nixpkgs input, `nixpkgs-snowflake` (`github:nixos/nixpkgs/nixos-25.05`), used **only** to source `snowflake-cli`; everything else in the flake still comes from the main `nixpkgs-unstable` input. See the comment above `nixpkgs-snowflake.url` in `flake.nix`. Revisit/drop this pin once the upstream test is fixed.
+`snowflake-cli` itself has a build wrinkle: at `nixpkgs-unstable`/`nixos-unstable`, its `snowflake-connector-python` dependency fails its test suite on `aarch64-linux` (`test_log_debug_config_file_parent_dir_permissions` assumes the process isn't root; Nix's build sandbox always runs as root, so the test's `chmod`-based permission check never fires and the assertion fails). It is in the binary cache — no compile — on the `nixos-26.05` release channel (moved off the EOL `nixos-25.05` on 2026-11-07; still uncached on unstable). `flake.nix` therefore pins a second nixpkgs input, `nixpkgs-snowflake` (`github:nixos/nixpkgs/nixos-26.05`), used **only** to source `snowflake-cli`; everything else in the flake still comes from the main `nixpkgs-unstable` input. See the comment above `nixpkgs-snowflake.url` in `flake.nix`. Revisit/drop this pin once the upstream test is fixed.
 
 ### Run / compile / preview dbt models
 All dbt operations are surfaced as **overseer templates** (`nixvim-config/overseer/dbt_tasks.lua`). Templates only register when `dbt` is on `PATH`. Run via `<leader>Or` (OverseerRun) and pick from the list:
@@ -287,17 +301,25 @@ See README.md for full details.
 - Do **not** display `snow sql` / `sqlit query` default TABLE output for interactive query runs — static ASCII tables are sized at render time and unreadable in resizable terminals; use the CSV → `query_result` float (`lua/sql_runner.lua`) instead. Overseer task panes (batch-oriented, one-shot) are the exception.
 - Do **not** expect Snowflake to work from nixpkgs' `sqlit-tui` package — it omits `snowflake-connector-python`, and sqlit's driver wizard can't install into the Nix store. sqlit here is built from upstream's flake with driver extras (see `flake.nix`).
 - Do **not** enable `none-ls` — the block is intentionally removed in favour of `nvim-lint` + `conform-nvim`.
-- Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single large file by choice (currently ~1980 lines).
+- Do **not** split `keymaps.nix` into per-area files without a follow-up; it's a single large file by choice (currently ~2200 lines).
+- Do **not** map a bare prefix of a Neovim default (e.g. `gr` — prefix of `grn`/`gra`/`grr`/`gri`), or override core motions like `{`/`}`: the sweep asserts both. Check `:map <key>` against the built-ins before claiming a key.
+- Do **not** create autocmds inside `ftplugin/*.lua` (`extraFiles`): the file already runs once per buffer, so every autocmd it creates leaks globally per buffer. Buffer-local setup only; global autocmds go in `extraConfigLua` with an augroup.
+- Do **not** declare a nixvim plugin whose nixpkgs package lists another configured plugin in `dependencies` without checking `pack/*/start`: nixvim installs dependencies eagerly, so a lazy-loaded plugin can end up on the rtp twice (see codecompanion-history below).
 
 ## Pinned versions (relevant to plugin availability)
 
-From `flake.lock`:
-- `nixvim` rev: `f316e949e0ed9df0e1e0bf645c6dce721d4e230e`
-- `nixpkgs`: `nixpkgs-unstable` (rev `7525d999cd850b9a488817abc89c75dc733acf17`)
-- `nixpkgs-snowflake`: `nixos-25.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from the main `nixpkgs` above.
+From `flake.lock` (updated 2026-11-07):
+- `nixvim` rev: `453dc9c5037e6d1bec81d2a51ddacd58a2f44e9c`
+- `nixpkgs`: `nixpkgs-unstable` (rev `4fe25e12eb9f4c744966dd3de5a05246cf098601`)
+- `nixpkgs-snowflake`: `nixos-26.05` — feeds **only** `snowflake-cli` (see "Why the Snowflake tooling looks the way it does" above); everything else still comes from the main `nixpkgs` above.
 - `sqlit`: `github:Maxteabag/sqlit` — deliberately **no** `follows`; upstream's own pinned nixpkgs is the CI-tested build. Driver extras are set in `flake.nix` (`snowflake` only where the connector builds — not `aarch64-linux`).
+- `flake-parts`: its `nixpkgs-lib` follows the main `nixpkgs`.
 
-Available as nixvim by-name modules at this rev: `sidekick`, `codecompanion`, `otter`, `nix-develop`, `dbee`, `copilot-lsp`, `blink-compat`.
+Available as nixvim by-name modules at this rev: `sidekick`, `codecompanion`, `codecompanion-history`, `otter`, `nix-develop`, `dbee`, `dap-virtual-text`, `treesitter-textobjects`, `copilot-lsp`, `blink-compat`.
 
-**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`) and `herdr-nvim` (ChmaraX, `extra-plugins.nix`, rev `d2dd189` = v1.2.1 — the Lua half; the Rust sidebar daemon comes from `herdr plugin install ChmaraX/herdr-nvim`, which is imperative by design). `codecompanion` **is** a by-name module but is pinned to **v20.0.1** via `plugins.codecompanion.packageDecorator` because nixpkgs still ships 19.22.0 — v20 adds `skills`, `integrations.herdr` (herdr state reporting) and the `insert_edit_into_file` → `edit_file` tool rename; bump rev + hash together. ⚠️ Use `packageDecorator`, never `package`: `package` is a pkgs *path* (string/list) and a derivation passed there is **silently ignored** (no eval error — the first attempt just built 19.22.0 anyway). Its `settings` is freeform, so everything reaches `require("codecompanion").setup()` verbatim (no `extraConfigLua`); never set the stale `strategies` alias. Chat history comes from the separate `codecompanion-history` module (own `plugins.codecompanion-history` block) — `extensions.history.enabled` alone is a **load error**, because that extension ships in that plugin, not in codecompanion.
-`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (our locked rev ships 0.8.2, satisfying herdr-nvim's 0.7.5 requirement — no separate pin needed).
+**nvim-treesitter is the `main` branch.** nixvim maps `highlight`/`indent` onto `vim.treesitter.start()`/`indentexpr`, but the `master`-era API is gone: no `:TSModuleInfo`/`:TSBufToggle`, no `incremental_selection` module (use Neovim 0.12's `an`/`in`), and `treesitter-textobjects` is configured by calling its own `setup()` + keymaps (shared/editing.nix) — nixvim's module only installs it.
+
+**Not** as nixvim modules (built from source): `betterTerm.nvim` (CRAG666, `extra-plugins.nix`, rev `39bac98`) and `herdr-nvim` (ChmaraX, `extra-plugins.nix`, rev `88a68c7` = v1.3.1 — the Lua half; the Rust sidebar daemon comes from `herdr plugin install ChmaraX/herdr-nvim`, which is imperative by design).
+
+`codecompanion` is a by-name module at nixpkgs' **20.0.1** (v20 adds `skills`, `integrations.herdr` and the `insert_edit_into_file` → `edit_file` tool rename). The former `packageDecorator` pin is gone. ⚠️ If a pin is ever needed again, use `packageDecorator`, never `package` (a pkgs *path*; a derivation passed there is **silently ignored**). Its `settings` is freeform, so everything reaches `require("codecompanion").setup()` verbatim (no `extraConfigLua`); never set the stale `strategies` alias. Chat history comes from the separate `codecompanion-history` module (own `plugins.codecompanion-history` block) — `extensions.history.enabled` alone is a **load error**, because that extension ships in that plugin, not in codecompanion. ⚠️ nixpkgs' `codecompanion-history-nvim` declares `codecompanion-nvim` as a dependency, which nixvim would install **eagerly into `start/`** next to the lazy `opt/` copy — two copies on the rtp, and when their versions differed `require("codecompanion")` silently mixed them. `plugins.codecompanion-history.package` therefore drops that dependency (keeping it only as a `nativeCheckInputs` for nixpkgs' require-check). The smoke suite asserts exactly one copy.
+`snowflakeCli` (from the `nixpkgs-snowflake` input, see `flake.nix`) and `sqlitPkg` (from the `sqlit` input) are passed into `nixvim-config` via `extraSpecialArgs` and added to `extraPackages` in `dependencies.nix`. `herdr` comes from the main `nixpkgs` input (0.9.5 at the locked rev, satisfying herdr-nvim's ≥ 0.7.5 requirement — no separate pin needed).
