@@ -250,13 +250,13 @@
       key = "<leader>sb";
       options = {
         silent = true;
-        desc = "Grep Current Buffer";
+        desc = "Search Current Buffer Lines";
       };
       mode = ["n"];
       action.__raw =
         #lua
         ''
-          function() Snacks.picker.grep({ buffers = true, layout = "ivy_split" }) end
+          function() Snacks.picker.lines({ layout = "ivy_split" }) end
         '';
     }
     {
@@ -535,10 +535,15 @@
           function() Snacks.picker.lsp_declarations() end
         '';
     }
+    # References/implementations override nvim 0.11+'s built-in `grr`/`gri`
+    # with the Snacks picker. A bare `gr` is deliberately NOT mapped: it is
+    # the prefix of the built-in grn/gra/grr/gri/grt, so mapping it made every
+    # `gr` wait timeoutlen before firing.
     {
-      key = "gr";
+      key = "grr";
       options = {
         silent = true;
+        nowait = true;
         desc = "References";
       };
       mode = ["n"];
@@ -547,6 +552,46 @@
         ''
           function() Snacks.picker.lsp_references() end
         '';
+    }
+    {
+      key = "gri";
+      options = {
+        silent = true;
+        desc = "Goto Implementation";
+      };
+      mode = ["n"];
+      action.__raw =
+        #lua
+        ''
+          function() Snacks.picker.lsp_implementations() end
+        '';
+    }
+    {
+      key = "<leader>ca";
+      options = {
+        silent = true;
+        desc = "Code Action";
+      };
+      mode = ["n" "x"];
+      action.__raw = ''function() vim.lsp.buf.code_action() end'';
+    }
+    {
+      key = "<leader>cr";
+      options = {
+        silent = true;
+        desc = "Rename Symbol";
+      };
+      mode = ["n"];
+      action.__raw = ''function() vim.lsp.buf.rename() end'';
+    }
+    {
+      key = "<leader>cR";
+      options = {
+        silent = true;
+        desc = "Rename File (LSP-aware)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() Snacks.rename.rename_file() end'';
     }
     {
       key = "gI";
@@ -639,25 +684,17 @@
       action = "<cmd>:LazyGit<CR>";
     }
     # <leader>glt/gll/glb/glB and <leader>n are in ../shared/keymaps.nix
-    # Visual — center active window with equal side padding (no UI hiding)
-    {
-      key = "<leader>m";
-      options = {
-        silent = true;
-        desc = "Center / No-neck-pain toggle";
-      };
-      mode = ["n"];
-      action = "<cmd>NoNeckPain<CR>";
-    }
     # Code — <leader>cff/cfF/cft/cfT/cti/ctt are in ../shared/keymaps.nix
+    # nvim-treesitter `main` has no :TSModuleInfo — its health check lists
+    # installed parsers and their query support instead.
     {
       key = "<leader>ctm";
       options = {
         silent = true;
-        desc = "Treesitter - module info";
+        desc = "Treesitter - health / parsers";
       };
       mode = ["n"];
-      action = "<cmd>:TSModuleInfo<CR>";
+      action = "<cmd>checkhealth nvim-treesitter<CR>";
     }
     # UI
     {
@@ -698,48 +735,8 @@
       mode = ["n"];
       action = "<cmd>NoNeckPain<CR>";
     }
-    # snacks dim / zen (modules enabled in plugins.nix)
-    {
-      key = "<leader>uD";
-      options = {
-        silent = true;
-        desc = "Toggle dim (snacks)";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("snacks").toggle.dim():toggle() end'';
-    }
-    {
-      key = "<leader>uz";
-      options = {
-        silent = true;
-        desc = "Toggle zen mode (snacks)";
-      };
-      mode = ["n"];
-      action.__raw = ''function() require("snacks").toggle.zen():toggle() end'';
-    }
-    {
-      key = "<leader>ui";
-      options = {
-        silent = true;
-        desc = "Toggle indent guides";
-      };
-      mode = ["n"];
-      action.__raw =
-        #lua
-        ''
-          function()
-            if vim.g.snacks_indent_enabled then
-              Snacks.indent.disable()
-              vim.g.snacks_indent_enabled = false
-              Snacks.notifier.notify("Indent guides disabled", { title = "Snacks Indent" })
-            else
-              Snacks.indent.enable()
-              vim.g.snacks_indent_enabled = true
-              Snacks.notifier.notify("Indent guides enabled", { title = "Snacks Indent" })
-            end
-          end
-        '';
-    }
+    # <leader>ui/uD/uz/ud/uI/uf/uth are Snacks.toggle maps (extraConfigLua
+    # below) — which-key shows their live on/off state.
     {
       key = "<leader>uht";
       options = {
@@ -757,15 +754,6 @@
       };
       mode = ["n"];
       action = "<cmd>:Hardtime report<CR>";
-    }
-    {
-      key = "<leader>uth";
-      options = {
-        silent = true;
-        desc = "Toggle Treesitter highlight";
-      };
-      mode = ["n"];
-      action = "<cmd>:TSBufToggle highlight<CR>";
     }
     # Navigation
     # NOTE: tmux-navigator and the <M-h/j/k/l> pane-navigation keymaps were
@@ -803,6 +791,36 @@
           if winid then vim.api.nvim_set_current_win(winid) end
         end
       '';
+    }
+    # vim-windowswap: mark a window, then press again in another to swap them.
+    {
+      key = "<leader>W";
+      options = {
+        silent = true;
+        desc = "Swap Windows (mark / swap)";
+      };
+      mode = ["n"];
+      action = "<cmd>call WindowSwap#EasyWindowSwap()<CR>";
+    }
+    # Buffers (bufferline runs in tabs mode, so buffers are otherwise
+    # invisible — these are the only way to drop one without :bd).
+    {
+      key = "<leader>bd";
+      options = {
+        silent = true;
+        desc = "Delete Buffer";
+      };
+      mode = ["n"];
+      action.__raw = ''function() Snacks.bufdelete() end'';
+    }
+    {
+      key = "<leader>bo";
+      options = {
+        silent = true;
+        desc = "Delete Other Buffers";
+      };
+      mode = ["n"];
+      action.__raw = ''function() Snacks.bufdelete.other() end'';
     }
     # Tabs
     # Bufferline tab navigation with Shift+H/L
@@ -844,15 +862,7 @@
         desc = "New Tab";
       };
       mode = ["n"];
-      action = {
-        __raw = ''
-          function()
-            local current_tab = vim.fn.tabpagenr()
-            vim.cmd("tabnew")
-            -- vim.cmd("tabmove " .. current_tab)
-          end
-        '';
-      };
+      action = "<cmd>tabnew<CR>";
     }
     {
       key = "<leader>tc";
@@ -1359,6 +1369,42 @@
       action.__raw = ''function() require("neotest").output.open({ enter = true }) end'';
     }
     {
+      key = "<leader>Td";
+      options = {
+        silent = true;
+        desc = "Debug Nearest Test (DAP)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("neotest").run.run({ strategy = "dap" }) end'';
+    }
+    {
+      key = "<leader>Ta";
+      options = {
+        silent = true;
+        desc = "Run All Tests (cwd)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("neotest").run.run(vim.uv.cwd()) end'';
+    }
+    {
+      key = "<leader>TS";
+      options = {
+        silent = true;
+        desc = "Stop Test Run";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("neotest").run.stop() end'';
+    }
+    {
+      key = "<leader>Tw";
+      options = {
+        silent = true;
+        desc = "Toggle Watch (current file)";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("neotest").watch.toggle(vim.fn.expand("%")) end'';
+    }
+    {
       key = "]T";
       options = {
         silent = true;
@@ -1474,6 +1520,37 @@
       action.__raw = ''function() require("dap").run_last() end'';
     }
     {
+      key = "<leader>dt";
+      options = {
+        silent = true;
+        desc = "Terminate Session";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").terminate() end'';
+    }
+    {
+      key = "<leader>dr";
+      options = {
+        silent = true;
+        desc = "Toggle REPL";
+      };
+      mode = ["n"];
+      action.__raw = ''function() require("dap").repl.toggle() end'';
+    }
+    {
+      key = "<leader>dp";
+      options = {
+        silent = true;
+        desc = "Log Point";
+      };
+      mode = ["n"];
+      action.__raw = ''
+        function()
+          require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+        end
+      '';
+    }
+    {
       key = "<leader>dL";
       options = {
         silent = true;
@@ -1493,8 +1570,10 @@
       mode = ["n"];
       action = "<cmd>AerialToggle<CR>";
     }
+    # [o / ]o ("outline"): `{`/`}` stay Neovim's paragraph motions, and
+    # [s/]s are the built-in spelling motions.
     {
-      key = "{";
+      key = "[o";
       options = {
         silent = true;
         desc = "Prev Symbol (Aerial)";
@@ -1503,7 +1582,7 @@
       action.__raw = ''function() require("aerial").prev() end'';
     }
     {
-      key = "}";
+      key = "]o";
       options = {
         silent = true;
         desc = "Next Symbol (Aerial)";
@@ -1618,6 +1697,7 @@
     # <C-/> — float terminal toggle. Moved off <leader>tf, which collided with
     # "First Tab" in the <leader>t tabs group (later mapping won, so First Tab
     # was unreachable). <C-\> stays the quick throwaway toggle.
+    # Many terminals transmit <C-/> as <C-_>, so both are bound.
     {
       key = "<C-/>";
       options = {
@@ -1625,7 +1705,16 @@
         desc = "Toggle Float Terminal";
       };
       mode = ["n"];
-      action.__raw = ''function() Snacks.terminal.toggle() end'';
+      action.__raw = ''function() Snacks.terminal.toggle(nil, { win = { position = "float" } }) end'';
+    }
+    {
+      key = "<C-_>";
+      options = {
+        silent = true;
+        desc = "Toggle Float Terminal";
+      };
+      mode = ["n"];
+      action.__raw = ''function() Snacks.terminal.toggle(nil, { win = { position = "float" } }) end'';
     }
 
     # ── Overseer extras ──────────────────────────────────────────────────────
@@ -1977,6 +2066,14 @@
       group = "treesitter";
     }
     {
+      __unkeyed-1 = "<leader>uh";
+      group = "hardtime";
+    }
+    {
+      __unkeyed-1 = "<leader>b";
+      group = "buffer";
+    }
+    {
       __unkeyed-1 = "<leader>s";
       group = "search (Grep)";
     }
@@ -2046,6 +2143,27 @@
       icon = "󰙨";
     }
   ];
-  lsp.keymaps = [
-  ];
+  # Snacks.toggle maps: one source of truth for on/off state, rendered by
+  # which-key as a live toggle icon. Snacks is loaded eagerly (no lazyLoad),
+  # so these can be registered at startup.
+  extraConfigLua =
+    #lua
+    ''
+      Snacks.toggle.indent():map("<leader>ui")
+      Snacks.toggle.dim():map("<leader>uD")
+      Snacks.toggle.zen():map("<leader>uz")
+      Snacks.toggle.diagnostics():map("<leader>ud")
+      Snacks.toggle.inlay_hints():map("<leader>uI")
+      Snacks.toggle.treesitter():map("<leader>uth")
+      Snacks.toggle.new({
+        id = "format_on_save",
+        name = "Format on Save",
+        get = function()
+          return not vim.g.disable_autoformat
+        end,
+        set = function(state)
+          vim.g.disable_autoformat = not state
+        end,
+      }):map("<leader>uf")
+    '';
 }

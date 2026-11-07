@@ -5,10 +5,6 @@
     # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;
   };
-  globals = {
-    # Enable snacks indent guides by default; exposed as a toggle via <leader>ui
-    snacks_indent_enabled = true;
-  };
   clipboard = {
     # Always use OSC 52 for clipboard. This works in Docker, SSH, tmux, and
     # virtually all modern terminals without needing xclip, wl-copy, or pbcopy.

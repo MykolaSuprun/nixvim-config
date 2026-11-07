@@ -6,24 +6,9 @@
   keymaps = [
     # --- Diagnostic navigation ---
     # vim.diagnostic is populated automatically by vscode-neovim in VSCode embedded mode.
-    {
-      key = "[d";
-      options = {
-        silent = true;
-        desc = "Previous Diagnostic";
-      };
-      mode = ["n"];
-      action.__raw = ''function() vim.diagnostic.goto_prev({ float = true }) end'';
-    }
-    {
-      key = "]d";
-      options = {
-        silent = true;
-        desc = "Next Diagnostic";
-      };
-      mode = ["n"];
-      action.__raw = ''function() vim.diagnostic.goto_next({ float = true }) end'';
-    }
+    # [d / ]d are Neovim's built-in defaults; the float on jump comes from
+    # `diagnostic.settings.jump.on_jump` (shared/options.nix), which also
+    # applies to the error-only jumps below.
     {
       key = "[e";
       options = {
@@ -31,7 +16,7 @@
         desc = "Previous Error";
       };
       mode = ["n"];
-      action.__raw = ''function() vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR, float = true }) end'';
+      action.__raw = ''function() vim.diagnostic.jump({ count = -1, severity = vim.diagnostic.severity.ERROR }) end'';
     }
     {
       key = "]e";
@@ -40,7 +25,7 @@
         desc = "Next Error";
       };
       mode = ["n"];
-      action.__raw = ''function() vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR, float = true }) end'';
+      action.__raw = ''function() vim.diagnostic.jump({ count = 1, severity = vim.diagnostic.severity.ERROR }) end'';
     }
 
     # --- Flash (pure editing, works natively in both) ---
@@ -53,13 +38,15 @@
       mode = ["n"];
       action.__raw = ''function() require("flash").treesitter() end'';
     }
+    # Normal mode only: visual `S` belongs to nvim-surround (add surrounding),
+    # which overwrote this map in `x` mode anyway.
     {
       key = "<S-s>";
       options = {
         silent = true;
         desc = "Flash Jump";
       };
-      mode = ["n" "x"];
+      mode = ["n"];
       action.__raw = ''function() require("flash").jump() end'';
     }
 
@@ -202,7 +189,7 @@
         desc = "Next Hunk";
       };
       mode = ["n"];
-      action = "<cmd>Gitsigns next_hunk<cr>";
+      action = "<cmd>Gitsigns nav_hunk next<cr>";
     }
     {
       key = "[h";
@@ -211,7 +198,7 @@
         desc = "Previous Hunk";
       };
       mode = ["n"];
-      action = "<cmd>Gitsigns prev_hunk<cr>";
+      action = "<cmd>Gitsigns nav_hunk prev<cr>";
     }
     {
       key = "<leader>ghs";
@@ -322,8 +309,9 @@
         silent = true;
         desc = "Find and Replace in Selection";
       };
-      mode = ["n"];
-      action = "<cmd>GrugFarWithin<cr>";
+      mode = ["x"];
+      # `:` (not <cmd>) so the visual range reaches the range command.
+      action = ":GrugFarWithin<cr>";
     }
 
     # --- Trouble (diagnostic list) ---

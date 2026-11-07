@@ -24,7 +24,7 @@
       action.__raw = ''function() require('vscode').action('editor.action.revealDeclaration') end'';
     }
     {
-      key = "gr";
+      key = "grr"; # bare `gr` is the prefix of the built-in grn/gra/gri
       options = {
         silent = true;
         desc = "Go to References";

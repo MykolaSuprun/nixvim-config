@@ -168,8 +168,10 @@
             "select_next"
             "fallback"
           ];
+          # preselect = false: Enter only accepts an item you explicitly
+          # selected (<C-j>/<C-k>); otherwise it falls through to a newline.
           "<CR>" = [
-            "select_next"
+            "accept"
             "fallback"
           ];
           "<C-k>" = [

@@ -28,6 +28,16 @@
     grepprg = "rg --vimgrep --no-heading --smart-case";
     grepformat = "%f:%l:%c:%m,%f:%l:%m";
   };
+  # Open the diagnostic float after every vim.diagnostic.jump() — the built-in
+  # [d/]d and the [e/]e maps in keymaps.nix. (`jump.float` is deprecated in
+  # 0.12 in favour of `on_jump`.)
+  diagnostic.settings.jump.on_jump.__raw = ''
+    function(diagnostic, bufnr)
+      if diagnostic then
+        vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+      end
+    end
+  '';
   globals = {
     mapleader = " ";
     maplocalleader = "\\";

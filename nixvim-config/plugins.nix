@@ -285,7 +285,7 @@
           fps = 120;
         };
         image.enabled = true;
-        # dim/zen toggles (<leader>uD / <leader>uz in keymaps.nix)
+        # dim/zen toggles (Snacks.toggle on <leader>uD / <leader>uz, keymaps.nix)
         dim.enabled = true;
         zen.enabled = true;
         bigfile = {
@@ -305,7 +305,7 @@
         quickfile.enabled = true;
         git.enabled = true;
         gitbrowse.enabled = true;
-        # uses snacks_indent_enabled global option for toggle functionality
+        # toggled with Snacks.toggle.indent() on <leader>ui (keymaps.nix)
         indent = {
           enabled = true;
           only_scope = true;
