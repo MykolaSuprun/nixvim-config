@@ -105,28 +105,27 @@
 
     # Go adapter using delve (delve must be in extraPackages)
     dap-go.enable = true;
+
+    # Variable values inline while debugging.
+    dap-virtual-text = {
+      enable = true;
+      settings = {
+        enabled_commands = true;
+        highlight_changed_variables = true;
+        highlight_new_as_changed = false;
+        show_stop_reason = true;
+        commented = false;
+        virt_text_pos = "eol";
+      };
+    };
   };
 
-  # nvim-dap-virtual-text + one-small-step-for-vimkind (OSV, Lua/Neovim DAP)
-  extraPlugins = with pkgs.vimPlugins; [
-    nvim-dap-virtual-text
-    one-small-step-for-vimkind
-  ];
+  # one-small-step-for-vimkind (OSV, Lua/Neovim DAP) has no nixvim module.
+  extraPlugins = [pkgs.vimPlugins.one-small-step-for-vimkind];
 
   extraConfigLua =
     #lua
     ''
-      -- nvim-dap-virtual-text: show variable values inline while debugging
-      require("nvim-dap-virtual-text").setup({
-        enabled = true,
-        enabled_commands = true,
-        highlight_changed_variables = true,
-        highlight_new_as_changed = false,
-        show_stop_reason = true,
-        commented = false,
-        virt_text_pos = "eol",
-      })
-
       -- OSV: Lua/Neovim debug adapter
       -- Usage: in the target nvim instance run
       --   :lua require("osv").launch({port=8086})

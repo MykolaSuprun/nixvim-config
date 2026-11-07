@@ -307,6 +307,9 @@
         input = {
           enabled = true;
         };
+        # Sign/number/fold column in one: gitsigns + diagnostic signs on the
+        # left, fold markers (treesitter folding, options.nix) on the right.
+        statuscolumn.enabled = true;
         picker = {
           enabled = true;
           layout.__raw =

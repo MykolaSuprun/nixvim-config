@@ -4,6 +4,14 @@ _: {
   opts = {
     # Show the tab bar always (VSCode manages tabs in codevim, so this stays here)
     showtabline = 2;
+    # Treesitter folding, all folds open by default (zc/zM to close).
+    # Buffers without a parser get no folds (foldexpr returns 0).
+    foldmethod = "expr";
+    foldexpr = "v:lua.vim.treesitter.foldexpr()";
+    foldlevel = 99;
+    foldlevelstart = 99;
+    # Empty foldtext = keep the line's own syntax highlighting when folded.
+    foldtext = "";
   };
   clipboard = {
     # Always use OSC 52 for clipboard. This works in Docker, SSH, tmux, and
