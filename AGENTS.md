@@ -4,13 +4,12 @@ Guidance for AI coding agents (and humans) working in this repository.
 
 ## What this is
 
-A personal Neovim configuration built with [nixvim](https://github.com/nix-community/nixvim) and [flake-parts](https://flake.parts). Three profiles share a common base of editing primitives, options, and keymaps:
+A personal Neovim configuration built with [nixvim](https://github.com/nix-community/nixvim) and [flake-parts](https://flake.parts). Two profiles share a common base of editing primitives, options, and keymaps:
 
 | Profile | Flake output | Purpose |
 |---------|--------------|---------|
 | **NixVim** | `.#NixVim` | Full-featured standalone Neovim — LSP, pickers, git, DAP, AI, dbt + Snowflake CLI workflow |
 | **CodeVim** | `.#CodeVim` | Lean config for [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) — editing primitives only, LSP/nav delegated to VSCode |
-| **LazyVim** | `.#LazyVim` | LazyVim-based stub |
 
 ## Documentation sources
 
@@ -56,7 +55,6 @@ nixvim-config/         # Full Neovim profile
     nix_tasks.lua        # alejandra, statix, deadnix, nix flake check, nix build
 codevim-config/        # VSCode-embedded profile
   default.nix lsp.nix plugins.nix keymaps.nix dependencies.nix
-lazyvim-config/        # LazyVim stub (work in progress)
 docker/                # Helper scripts for docker build/load/run/export/push
 KEYBINDS.md            # Reference for non-which-key binds (insert mode, function keys, plugin-internal)
 README.md             # User-facing docs
@@ -65,7 +63,7 @@ README.md             # User-facing docs
 ## Build, run, validate
 
 ```bash
-# Validate the whole flake (runs nixvim's test derivation for all 3 profiles)
+# Validate the whole flake (runs nixvim's test derivation for both profiles)
 nix flake check
 
 # Build a single profile

@@ -4,11 +4,10 @@
 # Usage:
 #   docker-push.sh [PROFILE]
 #
-#   PROFILE is one of: nixvim, lazyvim, codevim  (default: nixvim)
+#   PROFILE is one of: nixvim, codevim  (default: nixvim)
 #
 # Examples:
 #   docker-push.sh              # push nixvim image
-#   docker-push.sh lazyvim      # push lazyvim image
 #   docker-push.sh codevim      # push codevim image
 #
 # Prerequisites:
@@ -20,7 +19,7 @@
 set -euo pipefail
 
 DEFAULT_PROFILE="nixvim"
-VALID_PROFILES=("nixvim" "lazyvim" "codevim")
+VALID_PROFILES=("nixvim" "codevim")
 LOCAL_TAG="latest"
 DOCKERHUB_USER="mykolasuprun"
 DOCKERHUB_REPO="nixvim"

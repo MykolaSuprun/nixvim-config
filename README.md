@@ -8,7 +8,6 @@ Personal Neovim configuration built with [nixvim](https://github.com/nix-communi
 |------|-------------|
 | **NixVim** | Full-featured standalone Neovim — LSP, pickers, git tools, UI, AI, dbt + Snowflake/sqlit query workflow |
 | **CodeVim** | Lean config for [vscode-neovim](https://github.com/vscode-neovim/vscode-neovim) — editing primitives only, LSP/nav delegated to VSCode |
-| **LazyVim** | Stub / work-in-progress |
 
 ## Directory Structure
 
@@ -46,8 +45,6 @@ codevim-config/   # VSCode-embedded profile
   lsp.nix         # Minimal LSP (no servers — VSCode owns that)
   plugins.nix     # which-key, snacks, conform, trouble
   keymaps.nix     # VSCode delegation keymaps only
-
-lazyvim-config/   # Stub
 ```
 
 ## Usage
@@ -83,12 +80,11 @@ nix build .#checks.x86_64-linux.CodeVim
 
 Self-contained Docker images are built with Nix's `dockerTools.buildImage`. This produces a minimal, layered image that can be built once on a machine with Nix and then loaded onto any machine with Docker — no Nix installation or network access required on the target. This is ideal for corporate environments with custom certificates or restricted network access.
 
-Three images are available:
+Two images are available:
 
 | Image | Flake target | Description |
 |-------|-------------|-------------|
 | `nixvim` | `.#docker-nixvim` | Full Neovim configuration |
-| `lazyvim` | `.#docker-lazyvim` | LazyVim-based configuration |
 | `codevim` | `.#docker-codevim` | VSCode-embedded Neovim |
 
 ### Quick Start (recommended)
@@ -121,7 +117,6 @@ Use this on machines without Nix installed. It pulls directly from Docker Hub an
 ./docker/docker-run-registry.sh src/main.rs
 
 # Use a different profile
-./docker/docker-run-registry.sh lazyvim -- .
 ./docker/docker-run-registry.sh codevim -- src/main.rs
 
 # Pass nvim flags
@@ -145,7 +140,7 @@ What the script does automatically:
 ./docker/docker-export.sh
 
 # Export a specific profile
-./docker/docker-export.sh lazyvim
+./docker/docker-export.sh codevim
 ```
 
 Transfer to another machine (no Nix needed on the target):
@@ -163,7 +158,6 @@ ssh target 'docker run --rm -it nixvim:latest'
 ./docker/docker-push.sh
 
 # Push a specific profile
-./docker/docker-push.sh lazyvim
 ./docker/docker-push.sh codevim
 ```
 
@@ -182,9 +176,6 @@ docker run --rm -it mykolasuprun/nixvim:nixvim-latest
 
 # With a host directory mounted
 docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:nixvim-latest .
-
-# LazyVim
-docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:lazyvim-latest .
 
 # CodeVim
 docker run --rm -it -v "$(pwd)":/workspace -w /workspace mykolasuprun/nixvim:codevim-latest .
@@ -206,9 +197,6 @@ docker run --rm -it nixvim:latest
 
 # Run with a host directory mounted
 docker run --rm -it -v "$(pwd)":/workspace -w /workspace nixvim:latest .
-
-# Run LazyVim
-docker run --rm -it -v "$(pwd)":/workspace -w /workspace lazyvim:latest .
 
 # Run CodeVim
 docker run --rm -it -v "$(pwd)":/workspace -w /workspace codevim:latest .

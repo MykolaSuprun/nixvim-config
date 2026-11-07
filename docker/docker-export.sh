@@ -4,11 +4,10 @@
 # Usage:
 #   docker-export.sh [PROFILE]
 #
-#   PROFILE is one of: nixvim, lazyvim, codevim  (default: nixvim)
+#   PROFILE is one of: nixvim, codevim  (default: nixvim)
 #
 # Examples:
 #   docker-export.sh              # exports nixvim image
-#   docker-export.sh lazyvim      # exports lazyvim image
 #   docker-export.sh codevim      # exports codevim image
 #
 # Output:  <profile>-docker.tar.gz  in the current directory.
@@ -17,7 +16,7 @@
 set -euo pipefail
 
 DEFAULT_PROFILE="nixvim"
-VALID_PROFILES=("nixvim" "lazyvim" "codevim")
+VALID_PROFILES=("nixvim" "codevim")
 LOCAL_TAG="latest"
 DOCKERHUB_USER="mykolasuprun"
 DOCKERHUB_REPO="nixvim"

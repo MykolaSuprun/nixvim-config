@@ -6,12 +6,12 @@
 # Usage:
 #   docker-run-registry.sh [PROFILE] [--] [NVIM_ARGS...]
 #
-#   PROFILE is one of: nixvim, lazyvim, codevim  (default: nixvim)
+#   PROFILE is one of: nixvim, codevim  (default: nixvim)
 #   Everything after -- is passed directly to nvim inside the container.
 #
 # Examples:
 #   docker-run-registry.sh
-#   docker-run-registry.sh lazyvim -- .
+#   docker-run-registry.sh codevim -- .
 #   docker-run-registry.sh codevim -- src/main.rs
 #   docker-run-registry.sh -- +"Telescope find_files"
 #
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 DEFAULT_PROFILE="nixvim"
-VALID_PROFILES=("nixvim" "lazyvim" "codevim")
+VALID_PROFILES=("nixvim" "codevim")
 DOCKERHUB_USER="mykolasuprun"
 DOCKERHUB_REPO="nixvim"
 WORKSPACE="/workspace"

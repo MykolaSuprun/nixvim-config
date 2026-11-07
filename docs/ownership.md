@@ -33,11 +33,3 @@ chat / ACP → agentic.nvim; a quick CLI agent in a terminal → sidekick/herd.
 **Rule of thumb:** one-shot task output → overseer pane; interactive REPL →
 betterTerm; throwaway shell → snacks.terminal; agent CLI → sidekick/herd.
 
-## lazyvim-config (S13)
-
-`lazyvim-config/` is a documented stub: it imports `dependencies.nix` +
-`plugins.nix` (LazyVim + lazy.nvim bootstrap) and clones `lazy.nvim` from
-GitHub at runtime — impure by Nix standards, breaks offline/Docker builds, and
-`checker.enabled = true` phones home for updates. It is still built as a
-package, check, app, and Docker image. Status: WIP — decide later whether to
-exclude it from CI/Docker until it is real, or to remove it.

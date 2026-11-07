@@ -90,14 +90,6 @@
           };
         };
 
-        lazyvimModule = {
-          inherit pkgs; # pkgs has config.allowUnfree = true
-          module = import ./lazyvim-config;
-          extraSpecialArgs = {
-            # inherit (inputs) foo;
-          };
-        };
-
         codevimModule = {
           inherit pkgs; # pkgs has config.allowUnfree = true
           module = import ./codevim-config;
@@ -107,7 +99,6 @@
         };
 
         nix_vim = nixvim'.makeNixvimWithModule nixvimModule;
-        lazy_vim = nixvim'.makeNixvimWithModule lazyvimModule;
         code_vim = nixvim'.makeNixvimWithModule codevimModule;
 
         # Wrapper scripts to create executables for different builds
@@ -116,9 +107,6 @@
         '';
         nvim-wrapper = pkgs.writeShellScriptBin "nvim" ''
           exec ${nix_vim}/bin/nvim "$@"
-        '';
-        lazyvim-wrapper = pkgs.writeShellScriptBin "lazyvim" ''
-          exec ${lazy_vim}/bin/nvim "$@"
         '';
         codevim-wrapper = pkgs.writeShellScriptBin "codevim" ''
           exec ${code_vim}/bin/nvim "$@"
@@ -135,13 +123,6 @@
           config.Entrypoint = ["/bin/nvim"];
         };
 
-        docker-lazyvim = pkgs.dockerTools.buildImage {
-          name = "lazyvim";
-          tag = "latest";
-          copyToRoot = lazy_vim;
-          config.Entrypoint = ["/bin/nvim"];
-        };
-
         docker-codevim = pkgs.dockerTools.buildImage {
           name = "codevim";
           tag = "latest";
@@ -152,18 +133,15 @@
         checks = {
           # Run `nix flake check .` to verify that your config is not broken
           NixVim = nixvimLib.check.mkTestDerivationFromNixvimModule nixvimModule;
-          LazyVim = nixvimLib.check.mkTestDerivationFromNixvimModule lazyvimModule;
           CodeVim = nixvimLib.check.mkTestDerivationFromNixvimModule codevimModule;
         };
         packages = {
           # Original packages
           NixVim = nix_vim;
-          LazyVim = lazy_vim;
           CodeVim = code_vim;
 
           # Wrapper scripts
           nixvim = nixvim-wrapper;
-          lazyvim = lazyvim-wrapper;
           codevim = codevim-wrapper;
           nvim = nvim-wrapper;
 
@@ -171,7 +149,6 @@
 
           # Docker images
           docker-nixvim = docker-nixvim;
-          docker-lazyvim = docker-lazyvim;
           docker-codevim = docker-codevim;
         };
         apps = {
@@ -180,13 +157,6 @@
             program = "${nix_vim}/bin/nvim";
             meta = {
               description = "Custom NixVim configuration";
-            };
-          };
-          LazyVim = {
-            type = "app";
-            program = "${lazy_vim}/bin/nvim";
-            meta = {
-              description = "LazyVim-based NixVim configuration";
             };
           };
           CodeVim = {

@@ -6,14 +6,14 @@
 # Usage:
 #   docker-run.sh [PROFILE] [--] [NVIM_ARGS...]
 #
-#   PROFILE is one of: nixvim, lazyvim, codevim  (default: nixvim)
+#   PROFILE is one of: nixvim, codevim  (default: nixvim)
 #   Everything after -- is passed directly to nvim inside the container.
 #
 # Examples:
 #   docker-run.sh                         # opens current directory in nixvim
 #   docker-run.sh .                       # same
 #   docker-run.sh file.rs                 # opens file.rs
-#   docker-run.sh lazyvim -- .            # opens current dir in lazyvim
+#   docker-run.sh codevim -- .            # opens current dir in codevim
 #   docker-run.sh codevim -- src/main.rs  # opens file in codevim
 #   docker-run.sh -- +"Telescope find_files"
 #   docker-run.sh nixvim -- --headless -c "echo 'hello' | q"
@@ -33,7 +33,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 
 DEFAULT_PROFILE="nixvim"
-VALID_PROFILES=("nixvim" "lazyvim" "codevim")
+VALID_PROFILES=("nixvim" "codevim")
 LOCAL_TAG="latest"
 DOCKERHUB_USER="mykolasuprun"
 DOCKERHUB_REPO="nixvim"
