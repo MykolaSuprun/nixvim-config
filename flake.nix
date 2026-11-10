@@ -50,24 +50,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          overlays = [
-            # Temporary (nixos-unstable f4a03c0, 2026-11): markitdown's check phase
-            # pulls in every optional extra (pdfplumber, speechrecognition, ...) and
-            # their transitive test inputs (pandas-stubs -> pyiceberg -> geopandas),
-            # none of which end up in the runtime closure. Those test suites
-            # currently fail in the sandbox (geopandas io tests, speechrecognition
-            # network tests) and are not binary-cached, so skip markitdown's checks.
-            # Drop once nixpkgs builds them again.
-            (_final: prev: {
-              pythonPackagesExtensions =
-                prev.pythonPackagesExtensions
-                ++ [
-                  (_pyFinal: pyPrev: {
-                    markitdown = pyPrev.markitdown.overridePythonAttrs {doCheck = false;};
-                  })
-                ];
-            })
-          ];
+          overlays = [];
         };
 
         # snowflake-cli specifically, from the nixos-25.05-pinned nixpkgs (see
